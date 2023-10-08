@@ -18,7 +18,7 @@ void TilemapCollider::Update(){
         }
 
         ClearRects();
-        CreateColliders();
+        CreateCollidersOptimized();
 
     }
 

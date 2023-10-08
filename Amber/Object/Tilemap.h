@@ -36,6 +36,7 @@ class Tilemap : public Component
 
         void Draw_EdgeLighting(sf::RenderTarget& surface);
 
+        void ClearEdges();
         void CalculateEdges();
         /*
             @param texture_label What the tile texture is saved as (in AssetManager)
@@ -58,7 +59,11 @@ class Tilemap : public Component
 
         int GetTile(unsigned int x, unsigned int y);
 
+        
         void SetTile(int tile_index, unsigned int x, unsigned int y);
+        // performs a bounds check to ensure tile can be set... ignores out of bounds operations
+        void SetTileSafe(int tile_index, int x, int y);
+
         void SetRow(int tile_index, unsigned int row);
         void SetColumn(int tile_index, unsigned int column);
         void SetArea(int tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
@@ -80,7 +85,6 @@ class Tilemap : public Component
         sf::RenderTexture shadow_render_texture;
         sf::RenderTexture single_light_render_texture;
 
-        std::vector<sf::Vector2f> corners;
         std::vector<Edge> edges;
 
         bool has_changed;

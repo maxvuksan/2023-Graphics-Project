@@ -68,6 +68,10 @@ bool Tilemap::TileConfigurationNeedsCorner(unsigned int x, unsigned int y){
     return false;
 }
 
+void Tilemap::ClearEdges(){
+    edges.clear();
+}
+
 void Tilemap::CalculateEdges(){
    
     Transform* transform = object->GetTransform();
@@ -384,6 +388,16 @@ void Tilemap::SetTile(int tile_index, unsigned int x, unsigned int y){
     tilemap_primitive.SetTile(tile_index, x, y);
     has_changed = true;
 }
+void Tilemap::SetTileSafe(int tile_index, int x, int y){
+
+    if(x >= 0 && x < size.x){
+        if(y >= 0 && y < size.y){
+            tilemap_primitive.SetTile(tile_index, x, y);
+            has_changed = true;
+        }
+    }
+}
+
 void Tilemap::SetRow(int tile_index, unsigned int row){    
     for(unsigned int x = 0; x < tilemap_primitive.size.x; x++){
         tilemap_primitive.SetTile(tile_index, x, row);

@@ -101,13 +101,11 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
                 
                 transform->position.y = other_rect->Bottom() - rects[0].y;
                 pb->velocity.y = 0;
-                pb->velocity.x *= 0.95;
             }
             else{ 
                 
                 transform->position.y = other_rect->Top() - rects[0].height - rects[0].y;
                 pb->velocity.y = 0;
-                pb->velocity.x *= 0.95;
             }
         }
         overlapping.clear();
@@ -125,13 +123,11 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
                 
                 transform->position.x = other_rect->Right() - rects[0].x;
                 pb->velocity.x = 0;
-                pb->velocity.y *= 0.95;
             }
             else{ 
                 
                 transform->position.x = other_rect->Left() - rects[0].width - rects[0].x;
                 pb->velocity.x = 0;
-                pb->velocity.y *= 0.95;
             }
         }
     }

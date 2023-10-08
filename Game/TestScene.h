@@ -11,17 +11,18 @@ class TestScene : public Scene {
 
         void Start() override{
 
-            //Player* player = AddObject<Player>();
-            //player->GetTransform()->position = sf::Vector2f(280, 260);
+            Player* player = AddObject<Player>();
+            player->GetTransform()->position = sf::Vector2f(50, -500);
 
             World* world = AddObject<World>();
 
+    /*
             Object* o = AddObject<Object>();
             o->AddComponent<Camera>();
             SetActiveCamera(o->GetComponent<Camera>());
             cam = o->GetTransform();
-
-            world->SetFocus(cam);
+    */
+            world->SetFocus(player->GetTransform());
 
             /*
             Object* o = AddObject<Object>();    
