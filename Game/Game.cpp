@@ -2,12 +2,12 @@
 #include "TestScene.h"
 
 void Game::Start(){
-    GetAssetManager()->CreateTexture("demoTexture", "demo.png");
+    AssetManager::CreateTexture("light_shaft", "light_shaft.png");
+    AssetManager::CreateTexture("demoTexture", "demo.png");
+    
+    AssetManager::CreateScene<TestScene>("TestScene");
 
-    GetAssetManager()->CreateScene<TestScene>("TestScene");
     LoadScene("TestScene");
-    
-    
 }
 
 void Game::Update(){

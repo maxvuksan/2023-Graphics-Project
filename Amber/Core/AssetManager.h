@@ -21,21 +21,21 @@ class Core;
 class AssetManager {
 
     public:
-        AssetManager(Core* core);
-        ~AssetManager();
+        static void Construct(Core*);
+        static void Destruct();
 
-        // only fragment shaders are supported
-        sf::Shader* CreateShader(const char* label, const std::string fragment_file_location);
-        sf::Shader* GetShader(const char* label);
+        // assuming all shaders are fragment
+        static sf::Shader* CreateShader(const char* label, const std::string fragment_file_location);
+        static sf::Shader* GetShader(const char* label);
         
-        sf::Texture* CreateTexture(const char* label, const sf::RenderTexture& render_texture, bool repeat = false);
-        sf::Texture* CreateTexture(const char* label, const char* file_location, bool repeat = false);
-        sf::Texture* GetTexture(const char* label);
+        static sf::Texture* CreateTexture(const char* label, const sf::RenderTexture& render_texture, bool repeat = false);
+        static sf::Texture* CreateTexture(const char* label, const char* file_location, bool repeat = false);
+        static sf::Texture* GetTexture(const char* label);
         /*
             Creates a scene of the specified type T (allowing only classes which inherit Scene)
         */
         template <typename T>
-        Scene* CreateScene(const char* label) {
+        static Scene* CreateScene(const char* label) {
 
             Scene* new_scene = new T;
             new_scene->LinkCore(core);
@@ -48,12 +48,12 @@ class AssetManager {
             @returns A pointer to a desired scene
             @param label The name the scene is saved as  
         */
-        Scene* GetScene(const char* label); 
+        static Scene* GetScene(const char* label); 
 
     protected:
-        Core* core;
+        static Core* core;
 
-        std::unordered_map<const char*, sf::Texture> textures; 
-        std::unordered_map<const char*, Scene*> scenes; /*scenes are stored as pointers to allow for inherited scenes*/
-        std::unordered_map<const char*, sf::Shader*> shaders;
+        static std::unordered_map<const char*, sf::Texture> textures; 
+        static std::unordered_map<const char*, Scene*> scenes; /*scenes are stored as pointers to allow for inherited scenes*/
+        static std::unordered_map<const char*, sf::Shader*> shaders;
 };

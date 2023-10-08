@@ -9,12 +9,14 @@
 void Tilemap::Start(){
     
     object->GetScene()->AddTilemap(this);
+    shadow_render_texture.create(object->GetCore()->GetDisplaySize().x, object->GetCore()->GetDisplaySize().y);
+    single_light_render_texture.create(object->GetCore()->GetDisplaySize().x, object->GetCore()->GetDisplaySize().y);
 }
 void Tilemap::OnDestroy(){
     object->GetScene()->RemoveTilemap(this);
 }
 
-void Tilemap::Update(){
+void Tilemap::UpdateSecondary(){
     
     tilemap_primitive.setPosition(object->GetScene()->GetActiveCamera()->WorldToScreenPosition(
         object->GetTransform()->position
@@ -256,15 +258,13 @@ void Tilemap::Draw_Debug(sf::RenderTarget& surface){
         vertex_array.setPrimitiveType(sf::Lines);
 
         sf::Vertex vertex;
-        vertex.color = Globals::DEBUG_COLOUR;
+        vertex.color = Globals::DEBUG_COLOUR_SECONDARY;
         vertex.position = cam->WorldToScreenPosition(edges[i].end);   
         vertex_array.append(vertex);
         vertex.position = cam->WorldToScreenPosition(edges[i].start);   
         vertex_array.append(vertex);  
 
-        vertex.color = Globals::DEBUG_COLOUR_SECONDARY;
 
-        surface.draw(vertex_array);
         surface.draw(&vertex, 1, sf::Points);
     }
 }
@@ -278,6 +278,7 @@ void Tilemap::Draw_ShadowPass(sf::RenderTarget& surface){
     std::vector<PointLight*>* point_lights = object->GetScene()->GetPointLights(); 
 
     Camera* camera = object->GetScene()->GetActiveCamera();
+
 
     // drawing shadow projections
     for(auto& light : *point_lights){
@@ -304,16 +305,16 @@ void Tilemap::Draw_ShadowPass(sf::RenderTarget& surface){
             
             sf::Vector2f triangle_1_start;
             triangle_1_start = start;
-            triangle_1_start.x -= cos(angle) * 9999;
-            triangle_1_start.y -= sin(angle) * 9999;    
+            triangle_1_start.x -= cos(angle) * 99999;
+            triangle_1_start.y -= sin(angle) * 99999;    
             vertex.position = triangle_1_start;  
             shadows.append(vertex);
 
             angle = atan2(light_pos.y - end.y, light_pos.x - end.x);
             
             vertex.position = end;      
-            vertex.position.x -= cos(angle) * 9999;
-            vertex.position.y -= sin(angle) * 9999;    
+            vertex.position.x -= cos(angle) * 99999;
+            vertex.position.y -= sin(angle) * 99999;    
             shadows.append(vertex);
 
             vertex.position = end;      
@@ -343,11 +344,11 @@ void Tilemap::Draw_EdgeLighting(sf::RenderTarget& surface){
 
 bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned int tile_height, unsigned int width, unsigned int height, const int* tiles){
     
-    sf::Texture* texture = object->GetCore()->GetAssetManager()->GetTexture(texture_label);
+    sf::Texture* texture = AssetManager::GetTexture(texture_label);
     
-    shadow_texture = object->GetCore()->GetAssetManager()->GetTexture("Amber_Shadow");
-    white_texture = object->GetCore()->GetAssetManager()->GetTexture("Amber_White");
-    black_texture = object->GetCore()->GetAssetManager()->GetTexture("Amber_Black");
+    shadow_texture = AssetManager::GetTexture("Amber_Shadow");
+    white_texture = AssetManager::GetTexture("Amber_White");
+    black_texture = AssetManager::GetTexture("Amber_Black");
         
     bool state = tilemap_primitive.Load(texture, sf::Vector2u(tile_width, tile_height), width, height, tiles);
     if(state == false){
@@ -355,12 +356,28 @@ bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned 
         return false;
     }
 
-    size = sf::Vector2f(width, height);
-    tile_size = sf::Vector2f(tile_width, tile_height);
+    size = sf::Vector2i(width, height);
+    tile_size = sf::Vector2i(tile_width, tile_height);
 
     loaded = true;
     has_changed = true;
     return true;
+}
+
+sf::Vector2i Tilemap::GetTileSize(){
+    return tile_size;
+}
+
+sf::Vector2i Tilemap::GetSize(){
+    return size;
+}
+
+int Tilemap::GetWidth(){
+    return size.x;
+}
+
+int Tilemap::GetHeight(){
+    return size.y;
 }
 
 void Tilemap::SetTile(int tile_index, unsigned int x, unsigned int y){

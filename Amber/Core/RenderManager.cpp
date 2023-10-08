@@ -3,7 +3,14 @@
 #include "../Object/PointLight.h"
 #include "../Object/Tilemap.h"
 
-RenderManager::RenderManager(Core* core) : core(core) {
+
+Core* RenderManager::core = nullptr;
+std::vector<sf::RenderTexture*> RenderManager::render_textures;
+
+
+void RenderManager::Construct(Core* core) {
+    
+    RenderManager::core = core;
 
     render_textures.resize(NUMBER_OF_RENDER_PASSES);
 
@@ -15,7 +22,7 @@ RenderManager::RenderManager(Core* core) : core(core) {
 void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     sf::Vector2i display_size = core->GetDisplaySize();
     sf::Vector2i window_size = core->GetWindowSize();
-    sf::Shader* blur_shader = core->GetAssetManager()->GetShader("Amber_Blur");
+    sf::Shader* blur_shader = AssetManager::GetShader("Amber_Blur");
 
     // reset all render textures
     for(int i = 0; i < render_textures.size(); i++){
@@ -24,8 +31,9 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     }
 
     // draw lighting______________________________________________
-    
+        
     render_textures[LIGHTING]->clear(Globals::BASE_SHADOW_COLOUR);
+
     for(auto light : *scene->GetPointLights()){
         light->DrawLight(*render_textures[LIGHTING]);
     }
@@ -35,8 +43,8 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
             comp->Draw_ShadowPass(*render_textures[LIGHTING]);       
         }
     }
+    
     render_textures[LIGHTING]->display();
-
     // prepare for blurring lighting
     blur_shader->setUniform("u_strength", 3.0f);
     blur_shader->setUniform("u_texture", render_textures[LIGHTING]->getTexture());
@@ -114,7 +122,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     surface.draw(final_image);
 }
 
-RenderManager::~RenderManager(){
+void RenderManager::Destruct(){
     for(int i = 0; i < render_textures.size(); i++){
         delete render_textures[i];
     }

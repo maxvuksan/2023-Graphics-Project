@@ -28,7 +28,7 @@ class Tilemap : public Component
         void Start() override;
         void OnDestroy() override;
 
-        void Update() override;
+        void UpdateSecondary() override;
         void Draw(sf::RenderTarget& surface) override;
         void Draw_ShadowPass(sf::RenderTarget& surface) override;
         void Draw_ShadowPass_PostBlur(sf::RenderTarget& surface) override;
@@ -51,6 +51,11 @@ class Tilemap : public Component
         // determines if the given position should have a corner marked in the top left
         bool TileConfigurationNeedsCorner(unsigned int x, unsigned y);
 
+        sf::Vector2i GetTileSize();
+        sf::Vector2i GetSize();
+        int GetWidth();
+        int GetHeight();
+
         int GetTile(unsigned int x, unsigned int y);
 
         void SetTile(int tile_index, unsigned int x, unsigned int y);
@@ -60,8 +65,8 @@ class Tilemap : public Component
         void SetAll(int tile_index);
     private:
 
-        sf::Vector2f size;
-        sf::Vector2f tile_size;
+        sf::Vector2i size;
+        sf::Vector2i tile_size;
 
         bool cast_shadows;
         bool in_shadow;
@@ -71,6 +76,9 @@ class Tilemap : public Component
         sf::Texture* black_texture;
 
         TilemapPrimitive tilemap_primitive;
+        
+        sf::RenderTexture shadow_render_texture;
+        sf::RenderTexture single_light_render_texture;
 
         std::vector<sf::Vector2f> corners;
         std::vector<Edge> edges;

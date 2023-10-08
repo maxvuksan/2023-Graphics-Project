@@ -21,13 +21,13 @@ class Core{
     public:      
         Core(int window_width = 800, int window_height = 800, std::string window_title = "Untitled Project");
         Core(int window_width, int window_height, int display_width, int display_height, std::string window_title = "Untitled Project");
+        
         void Run();
 
         virtual void Start(){}
         virtual void Update(){}
         virtual void CatchEvent(sf::Event event){}
 
-        AssetManager* GetAssetManager();
         /*
             Loads a new scene
             @param label The name of the scene (saved in AssetManager)
@@ -50,9 +50,6 @@ class Core{
         sf::Clock delta_clock;
 
         Scene* current_scene;
-        
-        AssetManager asset_manager;
-        RenderManager render_manager;
         
         sf::RenderWindow window;
 

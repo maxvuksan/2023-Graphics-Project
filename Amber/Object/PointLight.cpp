@@ -5,13 +5,13 @@
 
 PointLight::PointLight():
     colour(1,1,1),
-    radius(2.2),
+    radius(1),
     strength(0) 
 {}
 
 void PointLight::Start()
 {
-    point_shader = object->GetCore()->GetAssetManager()->GetShader("Amber_LightSource");
+    point_shader = AssetManager::GetShader("Amber_LightSource");
     
     object->GetScene()->AddPointLight(this);
 
@@ -36,11 +36,9 @@ void PointLight::SetStrength(float strength){
 }
 
 
-
 void PointLight::DrawLight(sf::RenderTarget& surface){    
-    sf::Sprite sprite(texture.getTexture());
-
-    surface.draw(sprite, sf::BlendAdd);
+    DrawLightRenderTexture();
+    surface.draw(light_sprite, sf::BlendMax);
 }
 
 void PointLight::DrawLightRenderTexture(){
@@ -50,8 +48,9 @@ void PointLight::DrawLightRenderTexture(){
         object->GetTransform()->position
     );
 
-    light_position.x /= object->GetCore()->GetDisplaySize().x;
-    light_position.y /= object->GetCore()->GetDisplaySize().y;
+    light_position.x /= (float)object->GetCore()->GetDisplaySize().x;
+    light_position.y /= -(float)object->GetCore()->GetDisplaySize().y;
+    light_position.y += 1.0f; // flipping y axis, then shifting it back to location (+1.0f)
 
     point_shader->setUniform("u_light_position", light_position);
     point_shader->setUniform("u_colour", sf::Glsl::Vec4(colour.r, colour.g, colour.b, colour.a));
@@ -59,6 +58,9 @@ void PointLight::DrawLightRenderTexture(){
     point_shader->setUniform("u_radius", radius);
     
     texture.draw(sprite, point_shader);
+    texture.display();
+
+    light_sprite.setTexture(texture.getTexture());
 
 }
 

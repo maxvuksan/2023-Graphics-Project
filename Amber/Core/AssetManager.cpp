@@ -5,8 +5,16 @@
 #include <string.h>
 #include <SFML/OpenGL.hpp>
 
-AssetManager::AssetManager(Core* core): core(core)
+Core* AssetManager::core = nullptr;
+
+std::unordered_map<const char*, sf::Texture> AssetManager::textures; 
+std::unordered_map<const char*, Scene*> AssetManager::scenes; /*scenes are stored as pointers to allow for inherited scenes*/
+std::unordered_map<const char*, sf::Shader*> AssetManager::shaders;
+
+void AssetManager::Construct(Core* core)
 {
+    AssetManager::core = core;
+
     CreateShader("Amber_Blur", "Amber/Shaders/Blur.frag");
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
 
@@ -117,7 +125,7 @@ Scene* AssetManager::GetScene(const char* label){
     return nullptr;
 }
 
-AssetManager::~AssetManager(){
+void AssetManager::Destruct(){
     
     for (auto& scene : scenes) {
         delete scene.second;

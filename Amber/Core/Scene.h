@@ -8,6 +8,7 @@
 class PointLight;
 class Tilemap;
 class Core;
+class BoxCollider;
 
 class Scene {
 
@@ -36,6 +37,7 @@ class Scene {
 
         // Responsible for updating objects and object components
         void InternalUpdate();
+        void InternalCatchEvent(sf::Event);
 
         // Removes all objects from the scene and recalls the Start() method
         void Restart();
@@ -46,7 +48,7 @@ class Scene {
         // Adds an object of type T to the scene (T must have a base class of Object)
         template <typename T>
         T* AddObject(){
-            Object* obj = new T;
+            T* obj = new T;
             objects.push_back(obj);
 
             obj->LinkCore(core);
@@ -74,6 +76,10 @@ class Scene {
         }
         std::vector<Object*>* GetObjects();
 
+        void AddBoxCollider(BoxCollider* collider);
+        void RemoveBoxCollider(BoxCollider* collider);
+        std::vector<BoxCollider*>* GetBoxColliders();
+
         void AddPointLight(PointLight* point_light);
         void RemovePointLight(PointLight* point_light);
         std::vector<PointLight*>* GetPointLights();
@@ -88,8 +94,7 @@ class Scene {
 
     private:
 
-        std::vector<sf::RenderTexture> render_textures;
-
+        std::vector<BoxCollider*> box_colliders;
         std::vector<Object*> objects;
         std::vector<PointLight*> point_lights;
         std::vector<Tilemap*> tilemaps;

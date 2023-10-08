@@ -8,14 +8,19 @@
 
 class Scene;
 class Core;
+    
+/*
+    Acts as a building block for all entities in the program, taking a module approach,
+    an object can be extended through generic reusable components.
+
+    common methods to override...
+
+    void Start(){}
+    void Update(){}
+    void Draw(sf::RenderTarget&){}
+    void CatchEvent(sf::Event){}
+*/
 class Object{
-
-    /*
-        Object:
-
-        Acts as a building block for all entities in the program, taking a module approach,
-        an object can be extended through generic reusable components.
-    */
 
     public:
 
@@ -23,7 +28,7 @@ class Object{
 
         virtual void Start(){}
         virtual void Update(){}
-        virtual void Draw(sf::RenderTarget& surface){} // drawing the scene
+        virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
 
 

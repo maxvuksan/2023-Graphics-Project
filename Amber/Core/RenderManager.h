@@ -16,13 +16,13 @@ class RenderManager{
     };
 
     public:
-        RenderManager(Core* core);
+        static void Construct(Core* core);
+        static void Destruct();
+        
+        static void Render(sf::RenderTarget& surface, Scene*);
 
-        void Render(sf::RenderTarget& surface, Scene*);
-
-        ~RenderManager();
     private:
-        Core* core;
-        std::vector<sf::RenderTexture*> render_textures;
+        static Core* core;
+        static std::vector<sf::RenderTexture*> render_textures;
   
 };

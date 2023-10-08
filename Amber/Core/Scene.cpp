@@ -1,7 +1,7 @@
 #include "Scene.h"
 #include "../Utility/Time.h"
 #include "../Object/PointLight.h"
-
+#include "../Object/BoxCollider.h"
 #include <iostream>
 
 
@@ -45,13 +45,43 @@ void Scene::InternalUpdate(){
 
         for(auto comp : *obj->GetComponents()){
             comp->Update();
+            comp->UpdateSecondary();
         }
         obj->Update();
     }
 }
+
+void Scene::InternalCatchEvent(sf::Event event){
+
+    this->CatchEvent(event);
+    
+    for(auto obj : objects){
+
+        obj->CatchEvent(event);
+    }
+}
+
 std::vector<Object*>* Scene::GetObjects(){
     return &objects;
 }
+
+void Scene::AddBoxCollider(BoxCollider* collider){
+    this->box_colliders.push_back(collider);
+}
+
+void Scene::RemoveBoxCollider(BoxCollider* collider){
+    for(int i = 0; i < box_colliders.size(); i++){
+
+        if(collider == box_colliders[i]){
+            box_colliders.erase(box_colliders.begin() + i);
+            break;
+        }
+    }
+}
+std::vector<BoxCollider*>* Scene::GetBoxColliders(){
+    return &box_colliders;
+}
+
 void Scene::AddPointLight(PointLight* point_light){
     this->point_lights.push_back(point_light);
 }

@@ -19,6 +19,7 @@ class Time {
 		*/
 		static float GetMilliseconds() { return time * 1000.0f; }
 
+		static float FPS() { return 1.0f / deltaTime;}
 
 
 		/*

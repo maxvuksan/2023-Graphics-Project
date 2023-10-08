@@ -20,7 +20,7 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
 
 void SpriteRenderer::SetTexture(const char* label){
      
-    sprite.setTexture(*object->GetCore()->GetAssetManager()->GetTexture(label));
+    sprite.setTexture(*AssetManager::GetTexture(label));
     // making the origin in the center of the sprite
     sprite.setOrigin(sprite.getTexture()->getSize().x / 2.0f, sprite.getTexture()->getSize().y / 2.0f);
 }

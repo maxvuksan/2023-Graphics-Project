@@ -10,17 +10,19 @@ Core::Core(int window_width, int window_height, int display_width, int display_h
     display_width(display_width),
     display_height(display_height),
     window(sf::VideoMode(window_width, window_height), window_title),
-    asset_manager(this),
-    render_manager(this),
     current_scene(nullptr)
 {
+
+
     if(!sf::Shader::isAvailable()){
         std::cout << "ERROR : Shaders are not supported, !sf::Shader::isAvailable\n";
     } 
 }
 
-
 void Core::Run(){
+
+    AssetManager::Construct(this);
+    RenderManager::Construct(this);
 
     this->Start();
 
@@ -33,7 +35,7 @@ void Core::Run(){
                 window.close();
 
             this->CatchEvent(event);
-            current_scene->CatchEvent(event);
+            current_scene->InternalCatchEvent(event);
         }
 
         window.clear();
@@ -45,26 +47,30 @@ void Core::Run(){
 
         if(current_scene != nullptr){
             current_scene->InternalUpdate();
-            render_manager.Render(window, current_scene);
+            RenderManager::Render(window, current_scene);
         }
         else{
             std::cout << "ERROR: No scene is selected, please load using Core::LoadScene()\n";
             return;
+        }
+        if(Globals::DEBUG_MODE){
+            sf::Text fps_text;
+            fps_text.setString("FPS " + std::to_string(Time::FPS())); 
+            fps_text.setPosition(sf::Vector2f(10,10));
+            window.draw(fps_text);
         }
         window.display();
 
         Time::Increment();
     }
 
-}
-
-AssetManager* Core::GetAssetManager(){
-    return &asset_manager;
+    AssetManager::Destruct();
+    RenderManager::Destruct();
 }
 
 void Core::LoadScene(const char* label){
     
-    Scene* scene = asset_manager.GetScene(label);
+    Scene* scene = AssetManager::GetScene(label);
     
     // empty previous scene
     if(current_scene != nullptr){

@@ -25,6 +25,7 @@ class PointLight : public Component{
         float strength; //is clamped between 0-1
         float _strength; 
 
+        sf::Sprite light_sprite;
         sf::Shader* point_shader;
         sf::RenderTexture texture;
 };
