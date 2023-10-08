@@ -11,7 +11,7 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 
     public:
         
-        bool Load(sf::Texture* texture, sf::Vector2u tile_size, unsigned int width, unsigned int height, const int* tiles);
+        bool Load(sf::Texture* texture, sf::Vector2u tile_size, unsigned int width, unsigned int height, int default_tile = -1);
 
         /*
             @returns A 2D vector of integer values representing the tilemap

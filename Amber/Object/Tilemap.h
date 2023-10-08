@@ -46,7 +46,7 @@ class Tilemap : public Component
 
             @param tiles If we wanted to load a saved level as an array, by default will fill each space with -1
         */
-        bool Load(const char* texture_label, unsigned int tile_width, unsigned int tile_height, unsigned int width, unsigned int height, const int* tiles = nullptr);
+        bool Load(const char* texture_label, unsigned int tile_width, unsigned int tile_height, unsigned int width, unsigned int height, int default_tile = -1);
 
         // determines if the given position should have a corner marked in the top left
         bool TileConfigurationNeedsCorner(unsigned int x, unsigned y);

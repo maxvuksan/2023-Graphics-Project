@@ -43,6 +43,11 @@ void Scene::InternalUpdate(){
 
     for(auto obj : objects){
 
+        // skip disabled objects
+        if(!obj->IsActive()){
+            continue;
+        }
+
         for(auto comp : *obj->GetComponents()){
             comp->Update();
             comp->UpdateSecondary();
@@ -56,6 +61,10 @@ void Scene::InternalCatchEvent(sf::Event event){
     this->CatchEvent(event);
     
     for(auto obj : objects){
+        // skip disabled objects
+        if(!obj->IsActive()){
+            continue;
+        }
 
         obj->CatchEvent(event);
     }

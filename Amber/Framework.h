@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "Utility/PerlinNoise.h"
+#include "Utility/Calc.h"
 
 #include "Core/Core.h"
 

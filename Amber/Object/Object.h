@@ -31,16 +31,18 @@ class Object{
         virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
 
+        bool IsActive(){ return active; }
+        void SetActive(bool state){ active = state; }
 
         // provides a reference to the Core object, allowing communication to said parent
         void LinkCore(Core* core);
-        Core* GetCore();
+        Core* GetCore() { return core; }
         void LinkScene(Scene* scene);
-        Scene* GetScene();
+        Scene* GetScene(){ return scene; }
 
-        Transform* GetTransform();
+        Transform* GetTransform() { return transform; }
 
-        std::vector<Component*>* GetComponents();
+        std::vector<Component*>* GetComponents(){ return &components; }
 
         template <typename T>
         T* AddComponent(){
@@ -119,10 +121,13 @@ class Object{
         // Allows children classes to expand upon ~Object(), due to inheritied nature, children should not have destructors 
         virtual void OnDestroy(){}
 
-
     private:
+
+        bool active;
+
         Scene* scene;
         Core* core; 
-        std::vector<Component*> components; 
         Transform* transform;
+    
+        std::vector<Component*> components; 
 };

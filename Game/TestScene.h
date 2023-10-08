@@ -7,7 +7,7 @@ class TestScene : public Scene {
 
     public: 
 
-        Camera* cam;
+        Transform* cam;
 
         void Start() override{
 
@@ -15,8 +15,13 @@ class TestScene : public Scene {
             //player->GetTransform()->position = sf::Vector2f(280, 260);
 
             World* world = AddObject<World>();
-            cam = world->AddComponent<Camera>();
-            SetActiveCamera(world->GetComponent<Camera>());
+
+            Object* o = AddObject<Object>();
+            o->AddComponent<Camera>();
+            SetActiveCamera(o->GetComponent<Camera>());
+            cam = o->GetTransform();
+
+            world->SetFocus(cam);
 
             /*
             Object* o = AddObject<Object>();    
@@ -61,16 +66,16 @@ class TestScene : public Scene {
             }
 
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
-                cam->offset.x += Time::Dt() * speed;
+                cam->position.x -= Time::Dt() * speed;
             }
             else if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
-                cam->offset.x -= Time::Dt() * speed;
+                cam->position.x += Time::Dt() * speed;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-                cam->offset.y += Time::Dt() * speed;
+                cam->position.y -= Time::Dt() * speed;
             }
             else if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-                cam->offset.y -= Time::Dt() * speed;
+                cam->position.y += Time::Dt() * speed;
             }
         }
 

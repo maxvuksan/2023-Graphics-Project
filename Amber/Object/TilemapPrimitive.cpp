@@ -6,7 +6,7 @@ std::vector<std::vector<int>>& TilemapPrimitive::GetGrid(){
     return grid;
 }
 
-bool TilemapPrimitive::Load(sf::Texture* texture, sf::Vector2u tile_size, unsigned int width, unsigned int height, const int* tiles){
+bool TilemapPrimitive::Load(sf::Texture* texture, sf::Vector2u tile_size, unsigned int width, unsigned int height, int default_tile){
     
     grid.clear();
     grid.resize(width);
@@ -27,18 +27,8 @@ bool TilemapPrimitive::Load(sf::Texture* texture, sf::Vector2u tile_size, unsign
         
         for (unsigned int j = 0; j < height; ++j)
         {
-            // get the current tile number
-            int tile_index = -1;
-            if(tiles != nullptr){
-                tile_index = tiles[i + j * width];
-            }
 
-            // skip empty tiles
-            if(tile_index == -1){
-                continue;
-            }
-
-            SetTile(tile_index, i, j);
+            SetTile(default_tile, i, j);
         }
     }
 

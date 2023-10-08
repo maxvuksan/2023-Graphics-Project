@@ -35,10 +35,18 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[LIGHTING]->clear(Globals::BASE_SHADOW_COLOUR);
 
     for(auto light : *scene->GetPointLights()){
+        if(!light->GetObject()->IsActive()){
+            continue;
+        }
+
         light->DrawLight(*render_textures[LIGHTING]);
     }
     
     for(auto obj : *scene->GetObjects()){
+        if(!obj->IsActive()){
+            continue;
+        }
+
         for(auto comp : *obj->GetComponents()){
             comp->Draw_ShadowPass(*render_textures[LIGHTING]);       
         }
@@ -56,6 +64,10 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[LIGHTING_BLURRED]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_shader);
     
     for(auto obj : *scene->GetObjects()){
+        if(!obj->IsActive()){
+            continue;
+        }
+
         for(auto comp : *obj->GetComponents()){
             comp->Draw_ShadowPass_PostBlur(*render_textures[LIGHTING_BLURRED]);       
         }
@@ -68,6 +80,10 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     //  we can reuse the LIGHTING render texture because we are done with it
     render_textures[LIGHTING]->clear(sf::Color::White);
     for(auto tmap : *scene->GetTilemaps()){
+        if(!tmap->GetObject()->IsActive()){
+            continue;
+        }
+
         tmap->Draw_EdgeLighting(*render_textures[LIGHTING]);
     }
 
@@ -81,6 +97,10 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     render_textures[SCENE]->clear(scene->GetActiveCamera()->background_colour);
     for(auto obj : *scene->GetObjects()){
+        if(!obj->IsActive()){
+            continue;
+        }
+
         for(auto comp : *obj->GetComponents()){
             comp->Draw(*render_textures[SCENE]);       
         }

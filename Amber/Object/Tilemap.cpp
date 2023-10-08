@@ -342,7 +342,7 @@ void Tilemap::Draw_EdgeLighting(sf::RenderTarget& surface){
     tilemap_primitive.RevertTexture();
 }
 
-bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned int tile_height, unsigned int width, unsigned int height, const int* tiles){
+bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned int tile_height, unsigned int width, unsigned int height, int default_tile){
     
     sf::Texture* texture = AssetManager::GetTexture(texture_label);
     
@@ -350,7 +350,7 @@ bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned 
     white_texture = AssetManager::GetTexture("Amber_White");
     black_texture = AssetManager::GetTexture("Amber_Black");
         
-    bool state = tilemap_primitive.Load(texture, sf::Vector2u(tile_width, tile_height), width, height, tiles);
+    bool state = tilemap_primitive.Load(texture, sf::Vector2u(tile_width, tile_height), width, height, default_tile);
     if(state == false){
         std::cout << "ERROR : Failed to call TilemapPrimitive::Load()\n";
         return false;
