@@ -34,38 +34,34 @@ void Player::Start(){
 void Player::Update(){
 
 
+    // Movement...
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
-        if(pb->velocity.x > -0.2){
-            pb->velocity.x -= 0.008f;
-        }
-        else{
-            pb->velocity.x = -0.2;
-        }
+        pb->velocity.x = -0.08;
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
-        if(pb->velocity.x < 0.2){
-            pb->velocity.x += 0.008f;
-        }
-        else{
-            pb->velocity.x = 0.2;
-        }
+        pb->velocity.x = 0.08;
     }
     else{
-        if(fabsf(pb->velocity.x) > 0.001){
-            if(pb->velocity.x > 0){
-                pb->velocity.x -= 0.005;
-            }
-            else{
-                pb->velocity.x += 0.005;
-            }
-        }
-        else{
-            pb->velocity.x = 0;
-        }
+        pb->velocity.x = 0;       
     }
+
+    CalculateMouse();
     
+}
+
+void Player::CalculateMouse(){
+
+    sf::Vector2i _mouse_pos = Mouse::DisplayPosition();
+    sf::Vector2f player_center = GetScene()->GetActiveCamera()->WorldToScreenPosition(GetTransform()->position);
+
+    _mouse_pos.x -= round(player_center.x);
+    _mouse_pos.y -= round(player_center.y);
+
+    mouse_pos = sf::Vector2i(round(GetTransform()->position.x) + _mouse_pos.x, 
+                             round(GetTransform()->position.y) + _mouse_pos.y );
 }
 
 void Player::CatchEvent(sf::Event event){
@@ -91,16 +87,7 @@ void Player::CatchEvent(sf::Event event){
     if(event.type == sf::Event::MouseButtonPressed){
         if(event.mouseButton.button == 0){
             
-            sf::Vector2i mouse_pos = Mouse::DisplayPosition();
-            sf::Vector2f player_center = GetScene()->GetActiveCamera()->WorldToScreenPosition(GetTransform()->position);
-
-            mouse_pos.x -= round(player_center.x);
-            mouse_pos.y -= round(player_center.y);
-
-            sf::Vector2i placement_pos = sf::Vector2i(round(GetTransform()->position.x) + mouse_pos.x, 
-                                                      round(GetTransform()->position.y) + mouse_pos.y );
-
-            world->SetTile_FromWorld(-1, placement_pos.x, placement_pos.y);
+            world->SetTile_FromWorld(-1, mouse_pos.x, mouse_pos.y);
         }
     }
 }

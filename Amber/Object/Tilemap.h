@@ -57,8 +57,7 @@ class Tilemap : public Component
         int GetWidth();
         int GetHeight();
 
-        int GetTile(unsigned int x, unsigned int y);
-
+        int GetTile(int x, int y);
         
         void SetTile(int tile_index, unsigned int x, unsigned int y);
         // performs a bounds check to ensure tile can be set... ignores out of bounds operations

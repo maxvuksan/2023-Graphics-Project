@@ -31,8 +31,8 @@ void Tilemap::UpdateSecondary(){
     has_changed = false; // reset changed value
 }
 
-int Tilemap::GetTile(unsigned int x, unsigned int y){
 
+int Tilemap::GetTile(int x, int y){
     std::vector<std::vector<int>>& grid = tilemap_primitive.GetGrid();
 
     if(x < size.x && x >= 0){

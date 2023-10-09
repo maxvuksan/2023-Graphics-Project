@@ -101,14 +101,14 @@ public:
     ////////////////////////////////////////////////////////////
     template <typename F, typename A>
     Thread(F function, A argument);
-
+    
     ////////////////////////////////////////////////////////////
     /// \brief Construct the thread from a member function and an object
     ///
     /// This constructor is a template, which means that you can
     /// use it with any class.
     /// Use this constructor for this kind of function:
-    /// \code
+    /// \code  
     /// class MyClass
     /// {
     /// public:

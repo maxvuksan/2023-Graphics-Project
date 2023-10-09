@@ -129,6 +129,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
             for(auto comp : *obj->GetComponents()){
                 comp->Draw_Debug(*render_textures[COMPOSITE]);       
             }
+            obj->Draw_Debug(*render_textures[COMPOSITE]);
         }
     }
 
@@ -146,6 +147,10 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     final_image.setScale(sf::Vector2f(window_size.x / (float)display_size.x, window_size.y / (float)display_size.y));
 
     surface.draw(final_image);
+
+    for(auto obj : *scene->GetObjects()){
+        obj->Draw_Window(surface);
+    }
 }
 
 void RenderManager::Destruct(){

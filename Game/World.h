@@ -1,5 +1,6 @@
 #include "../Amber/Framework.h"
 #include "WorldSettings.h"
+#include "Minimap.h"
 
 class World : public Object{
     
@@ -7,12 +8,20 @@ class World : public Object{
         void Start() override;
         void Update() override;
 
+        // iterates over every chunk recalculating the minimap
+        void CalculateMinimap();
+
         /*
             converts a world position to the appropriate chunks SetTile call
             @returns true if the tile could be set, false otherwise
         */
         bool SetTile_FromWorld(int tile_index, int world_x, int world_y);
-                
+        bool SetTile(int tile_index, int x, int y);
+        // @returns the tile_index at a specific world position
+        int GetTile_World(int world_x, int world_y);
+        // @returns the tile_index at a specific coordinate
+        int GetTile(int x, int y);
+
         // shaping the terrain (hills, caves etc...)
         void SculptingPass(int chunk_x, int chunk_y, Tilemap* tilemap);
         // creating caves with direction
@@ -21,12 +30,19 @@ class World : public Object{
 
         // converting world space coordinates to chunk relative and tilemap offsets
         bool ChunkInBounds(int chunk_x, int chunk_y);
+        // @returns the coordinate position of a world position
+        sf::Vector2i WorldToCoord(int world_x, int world_y);
+        // @returns the world position of a coordinate
+        sf::Vector2i CoordToWorld(int x, int y);
+        // @returns the chunk the provided position falls in
         sf::Vector2i ChunkFromCoord(int x, int y);
+        // @returns the tilemap position of a coordinate, relative to the provided chunk
         sf::Vector2i OffsetFromCoord(int x, int y, int chunk_x, int chunk_y);
 
         // given a radius, will return all the tile positions in said radius ( assuming the origin is (0,0) )
         // can later be stored and reusued for circular drawing
         std::vector<sf::Vector2i> CalculateOffsetsInRadius(int radius);
+        std::vector<sf::Vector2i> GetOffsetsInRadius(int radius);
         void SetCircle(int tile_index, int x, int y, int radius);
 
         //the focus is what the world orients around (only load chunks around the focus transform, etc...)
@@ -42,7 +58,7 @@ class World : public Object{
         
 
         WorldSettings settings;
-        
+        Minimap* minimap;
 
         PerlinNoise::seed_type seed; 
         PerlinNoise perlin;

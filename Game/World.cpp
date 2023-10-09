@@ -19,6 +19,9 @@ void World::Start() {
         chunks[x].resize(height, nullptr);
     }
 
+    minimap = GetScene()->AddObject<Minimap>();
+    minimap->Create(width * tilemap_width, height * tilemap_height);
+
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
 
@@ -34,7 +37,35 @@ void World::Start() {
 
         }
     }
+
     TunnelingPass();
+
+    CalculateMinimap();
+}
+
+void World::CalculateMinimap(){
+    for(int x = 0; x < width; x++){
+        for(int y = 0; y < height; y++){
+            
+            Tilemap* tilemap = chunks.at(x).at(y)->GetComponent<Tilemap>();
+
+            for(int t_x = 0; t_x < tilemap_width; t_x++){
+                for(int t_y = 0; t_y < tilemap_height; t_y++){
+                    
+                    int final_x = x * tilemap_width + t_x;
+                    int final_y = y * tilemap_height + t_y;
+
+                    if(tilemap->GetTile(t_x, t_y) == -1){
+                        continue;
+                    }
+
+                    minimap->SetPixel(final_x, final_y);
+                }
+            }
+
+        }
+    }
+
 }
 
 void World::SculptingPass(int x, int y, Tilemap* tilemap){
@@ -108,9 +139,12 @@ void World::SculptingPass(int x, int y, Tilemap* tilemap){
 
 bool World::SetTile_FromWorld(int tile_index, int world_x, int world_y){
 
-    int x = round((world_x - tilesize_x / 2.0f) / (float)tilesize_x);
-    int y = round((world_y - tilesize_y / 2.0f) / (float)tilesize_y);
+    sf::Vector2i coord = WorldToCoord(world_x, world_y);
+    return SetTile(tile_index, coord.x, coord.y);
+}
 
+bool World::SetTile(int tile_index, int x, int y){
+    
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
         return false;
@@ -118,7 +152,34 @@ bool World::SetTile_FromWorld(int tile_index, int world_x, int world_y){
 
     sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
     chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->SetTile(tile_index, pos.x, pos.y);
+
+    // updating minimap... 
+    
+    if(tile_index == -1){
+        minimap->RemovePixel(x, y);
+    }
+    else{
+        minimap->SetPixel(x, y);
+    }
+
     return true;
+}
+
+
+int World::GetTile_World(int world_x, int world_y){
+    sf::Vector2i coord = WorldToCoord(world_x, world_y);
+    return GetTile(coord.x, coord.y);
+}
+
+int World::GetTile(int x, int y){
+    
+    sf::Vector2i chunk = ChunkFromCoord(x, y);
+    if(!ChunkInBounds(chunk.x, chunk.y)){
+        return false;
+    }
+
+    sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
+    return chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->GetTile(pos.x, pos.y);
 }
 
 void World::TunnelingPass(){
@@ -187,6 +248,35 @@ sf::Vector2i World::OffsetFromCoord(int x, int y, int chunk_x, int chunk_y){
     return pos;
 }
 
+sf::Vector2i World::WorldToCoord(int world_x, int world_y){
+    
+    sf::Vector2i coord;
+    
+    coord.x = round((world_x - tilesize_x / 2.0f) / (float)tilesize_x);
+    coord.y = round((world_y - tilesize_y / 2.0f) / (float)tilesize_y);
+
+    return coord;
+}
+
+sf::Vector2i World::CoordToWorld(int x, int y){
+    
+    sf::Vector2i world;
+    
+    world.x = round(x * tilesize_x);
+    world.y = round(y * tilesize_y);
+
+    return world;
+}
+
+std::vector<sf::Vector2i> World::GetOffsetsInRadius(int radius){
+    
+    if(radius_offsets.find(radius) == radius_offsets.end()){
+        radius_offsets[radius] = CalculateOffsetsInRadius(radius);
+    }
+
+    return radius_offsets[radius];
+}
+
 std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
 
     std::vector<sf::Vector2i> in_radius;
@@ -202,20 +292,19 @@ std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
     }
     return in_radius;
 }
+
 void World::SetCircle(int tile_index, int x, int y, int radius){
-    
-    // we have never calculated this radius before... calculate and store
-    if(radius_offsets.find(radius) == radius_offsets.end()){
-        radius_offsets[radius] = CalculateOffsetsInRadius(radius);
-    }
 
     // set all tiles
-    for(auto& offset : radius_offsets[radius]){
+    for(auto& offset : GetOffsetsInRadius(radius)){
 
         // converting offset to world position
         int _x = offset.x + x;
         int _y = offset.y + y;
 
+        SetTile(-1, _x, _y);
+
+        /*
         // what chunk is the position in
         sf::Vector2i chunk = ChunkFromCoord(_x, _y);
 
@@ -228,6 +317,7 @@ void World::SetCircle(int tile_index, int x, int y, int radius){
         sf::Vector2i pos = OffsetFromCoord(_x, _y, chunk.x, chunk.y);
 
         chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->SetTileSafe(tile_index, pos.x, pos.y);
+        */
     }
 }
 

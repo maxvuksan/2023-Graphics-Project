@@ -28,6 +28,8 @@ class Object{
 
         virtual void Start(){}
         virtual void Update(){}
+        virtual void Draw_Debug(sf::RenderTarget&){}
+        virtual void Draw_Window(sf::RenderTarget&){}
         virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
 
