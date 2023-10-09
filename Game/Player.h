@@ -1,5 +1,6 @@
 #include "../Amber/Framework.h"
 
+class World;
 class Player : public Object{
 
     public:
@@ -8,7 +9,12 @@ class Player : public Object{
         void Update() override;
         void CatchEvent(sf::Event) override;
 
+        void LinkWorld(World* world){this->world = world;}
+
     private:
+
+        World* world;
+        sf::Vector2i focused_block;
 
         BoxCollider* ground;
         BoxCollider* left;

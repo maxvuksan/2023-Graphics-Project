@@ -135,6 +135,12 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     // display final scene
     render_textures[COMPOSITE]->display();
 
+
+
+    sf::Vector2i mouse_pos = Mouse::WindowPosition(); 
+    Mouse::SetDisplayPosition(sf::Vector2i(mouse_pos.x * (display_size.x / (float)window_size.x), 
+                                           mouse_pos.y * display_size.y / (float)window_size.y));
+
     // rescaling our final image to fit window
     sf::Sprite final_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
     final_image.setScale(sf::Vector2f(window_size.x / (float)display_size.x, window_size.y / (float)display_size.y));

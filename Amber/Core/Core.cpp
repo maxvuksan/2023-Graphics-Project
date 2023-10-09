@@ -47,6 +47,8 @@ void Core::Run(){
 
         if(current_scene != nullptr){
             current_scene->InternalUpdate();
+
+            Mouse::SetWindowPosition(sf::Mouse::getPosition(window));
             RenderManager::Render(window, current_scene);
         }
         else{

@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "World.h"
 #include <cmath>
 
 void Player::Start(){
@@ -29,10 +30,11 @@ void Player::Start(){
     AddComponent<PointLight>();
 }
 
+
 void Player::Update(){
 
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
         if(pb->velocity.x > -0.2){
             pb->velocity.x -= 0.008f;
@@ -41,7 +43,7 @@ void Player::Update(){
             pb->velocity.x = -0.2;
         }
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
         if(pb->velocity.x < 0.2){
             pb->velocity.x += 0.008f;
@@ -70,7 +72,7 @@ void Player::CatchEvent(sf::Event event){
 
     if (event.type == sf::Event::KeyPressed)
     {
-        if (event.key.scancode == sf::Keyboard::Scan::Z){
+        if (event.key.scancode == sf::Keyboard::Scan::W){
        
             // only allow jumping when we have ground below
             if(ground->Triggered()){
@@ -85,5 +87,21 @@ void Player::CatchEvent(sf::Event event){
                 pb->velocity.x = -0.17f;
             }
         }       
+    }       
+    if(event.type == sf::Event::MouseButtonPressed){
+        if(event.mouseButton.button == 0){
+            
+            sf::Vector2i mouse_pos = Mouse::DisplayPosition();
+            sf::Vector2f player_center = GetScene()->GetActiveCamera()->WorldToScreenPosition(GetTransform()->position);
+
+            mouse_pos.x -= round(player_center.x);
+            mouse_pos.y -= round(player_center.y);
+
+            sf::Vector2i placement_pos = sf::Vector2i(round(GetTransform()->position.x) + mouse_pos.x, 
+                                                      round(GetTransform()->position.y) + mouse_pos.y );
+
+            world->SetTile_FromWorld(-1, placement_pos.x, placement_pos.y);
+        }
     }
 }
+

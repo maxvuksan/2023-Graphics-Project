@@ -2,6 +2,7 @@
 
 #include "Utility/PerlinNoise.h"
 #include "Utility/Calc.h"
+#include "Utility/Mouse.h"
 
 #include "Core/Core.h"
 

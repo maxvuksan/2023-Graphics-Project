@@ -10,6 +10,8 @@ void World::Start() {
 
     half_tilemap_width = floor(tilemap_width * 0.5f);
     half_tilemap_height = floor(tilemap_height * 0.5f);
+    one_divide_tilemap_width = 1 / (float)tilemap_width;
+    one_divide_tilemap_height = 1 / (float)tilemap_height;
 
     // creating chunk vector...
     chunks.resize(width);
@@ -33,7 +35,6 @@ void World::Start() {
         }
     }
     TunnelingPass();
-
 }
 
 void World::SculptingPass(int x, int y, Tilemap* tilemap){
@@ -105,16 +106,31 @@ void World::SculptingPass(int x, int y, Tilemap* tilemap){
     }
 }
 
+bool World::SetTile_FromWorld(int tile_index, int world_x, int world_y){
+
+    int x = round((world_x - tilesize_x / 2.0f) / (float)tilesize_x);
+    int y = round((world_y - tilesize_y / 2.0f) / (float)tilesize_y);
+
+    sf::Vector2i chunk = ChunkFromCoord(x, y);
+    if(!ChunkInBounds(chunk.x, chunk.y)){
+        return false;
+    }
+
+    sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
+    chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->SetTile(tile_index, pos.x, pos.y);
+    return true;
+}
+
 void World::TunnelingPass(){
 
     int spacing = 0;
     for(int x = 0; x < width * tilemap_width; x++){
 
-        float noise_val = perlin.octave1D_01((x * 0.07), 2, 5);
+        float noise_val = perlin.octave1D_01((x * 0.25), 2, 5);
         
         if(noise_val > 0.8 && spacing > settings.MIN_TUNNEL_SPACING){
 
-            int angle = 140 + rand() % 80;
+            int angle = 220 + rand() % 100;
             int angle_step = -4 + rand() % 8;
 
             int radius_min = 3 + rand() % 5;
@@ -133,11 +149,11 @@ void World::Tunnel(int x, int y, int radius_min, int radius_max, float angle, fl
     float radian_step = Calc::Radians(angle_step);
     float radians = Calc::Radians(angle);
 
-    for(int i = 0; i < 100; i++){
+    for(int i = 0; i < 45; i++){
         
         int rand_radius = rand() % (radius_max - radius_min + 1) + radius_min;
 
-        DrawCircle(-1, x, y, rand_radius);
+        SetCircle(-1, x, y, rand_radius);
 
         x += cos(radians) * rand_radius;
         y += sin(radians) * rand_radius;
@@ -146,6 +162,30 @@ void World::Tunnel(int x, int y, int radius_min, int radius_max, float angle, fl
     }
 }
 
+bool World::ChunkInBounds(int chunk_x, int chunk_y){
+    if(chunk_x < 0 || chunk_y < 0 || chunk_x >= width || chunk_y >= height){
+        return false;
+    }
+    return true;
+}
+sf::Vector2i World::ChunkFromCoord(int x, int y){
+    sf::Vector2i chunk;
+
+    chunk.x = floor((float)x * one_divide_tilemap_width);
+    chunk.y = floor((float)y * one_divide_tilemap_height);
+
+    return chunk;
+}
+
+sf::Vector2i World::OffsetFromCoord(int x, int y, int chunk_x, int chunk_y){
+    
+    sf::Vector2i pos;
+
+    pos.x = x - (chunk_x * tilemap_width);
+    pos.y = y - (chunk_y * tilemap_height);
+    
+    return pos;
+}
 
 std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
 
@@ -162,7 +202,7 @@ std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
     }
     return in_radius;
 }
-void World::DrawCircle(int tile_index, int x, int y, int radius){
+void World::SetCircle(int tile_index, int x, int y, int radius){
     
     // we have never calculated this radius before... calculate and store
     if(radius_offsets.find(radius) == radius_offsets.end()){
@@ -177,19 +217,17 @@ void World::DrawCircle(int tile_index, int x, int y, int radius){
         int _y = offset.y + y;
 
         // what chunk is the position in
-        int chunk_x = floor(_x / tilemap_width);
-        int chunk_y = floor(_y / tilemap_height);
+        sf::Vector2i chunk = ChunkFromCoord(_x, _y);
 
         // edge case for world borders
-        if(chunk_x < 0 || chunk_y < 0 || chunk_x >= width || chunk_y >= height){
+        if(!ChunkInBounds(chunk.x, chunk.y)){
             continue;
         }
 
         // making position relative to selected chunk
-        _x = _x - (chunk_x * tilemap_width);
-        _y = _y - (chunk_y * tilemap_height);
+        sf::Vector2i pos = OffsetFromCoord(_x, _y, chunk.x, chunk.y);
 
-        chunks.at(chunk_x).at(chunk_y)->GetComponent<Tilemap>()->SetTileSafe(tile_index, _x, _y);
+        chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->SetTileSafe(tile_index, pos.x, pos.y);
     }
 }
 
@@ -221,7 +259,6 @@ void World::Update(){
             else{
                 chunks[x][y]->GetComponent<TilemapCollider>()->ClearRects();
             }
-
 
 
             if(dis_x < loading_threshold &&
