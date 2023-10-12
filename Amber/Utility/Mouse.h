@@ -2,8 +2,11 @@
 #include <SFML/Graphics.hpp>
 
 /*
-    window_position 
-*/
+    Provides access to the mouse position,
+    
+    relative to the window ::WindowPosition()
+    or relative to the display ::DisplayPosition()
+*/ 
 class Mouse{
 
     public:
@@ -16,12 +19,9 @@ class Mouse{
             return window_position;
         }
 
-        static void SetDisplayPosition(sf::Vector2i _display_position){
-            display_position = _display_position;
-        }
-        static void SetWindowPosition(sf::Vector2i _window_position){
-            window_position = _window_position;
-        }
+        // calculates the display_position from the window_position
+        static void UpdateDisplayPosition();
+        static void SetWindowPosition(sf::Vector2i _window_position);
     private:
 
         static sf::Vector2i window_position;

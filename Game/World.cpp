@@ -28,7 +28,7 @@ void World::Start() {
             chunks[x][y] = GetScene()->AddObject<Object>();
 
             Tilemap* tmap = chunks[x][y]->AddComponent<Tilemap>();
-            tmap->Load("demoTexture", 8, 8, tilemap_width, tilemap_height);
+            tmap->Load("demoTexture", tilesize_x, tilesize_y, tilemap_width, tilemap_height);
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilesize_x * tilemap_width, y * tilesize_y * tilemap_height);
             
             SculptingPass(x, y, tmap);
@@ -38,7 +38,7 @@ void World::Start() {
         }
     }
 
-    TunnelingPass();
+   // TunnelingPass();
 
     CalculateMinimap();
 }
@@ -89,17 +89,17 @@ void World::SculptingPass(int x, int y, Tilemap* tilemap){
 
             final_height = round(Calc::Clamp(final_height, 0, tilemap_height));
 
-            tilemap->SetArea(10, tile_x, tile_x + 1, final_height, tilemap_height);
+            tilemap->SetArea(BlockCode::c_Dirt, tile_x, tile_x + 1, final_height, tilemap_height);
         }
     }
     // dirt pass ( shallow underground )
     else if(y <= settings.LEVEL_DIRT){
-        tilemap->SetAll(10);
+        tilemap->SetAll(BlockCode::c_Dirt);
     }
     // dirt -> stone 
     else if(y <= settings.LEVEL_DIRT_TO_STONE){
 
-        tilemap->SetAll(10);
+        tilemap->SetAll(BlockCode::c_Dirt);
         
         for(int tile_x = 0; tile_x < tilemap_width; tile_x++){
             
@@ -112,12 +112,12 @@ void World::SculptingPass(int x, int y, Tilemap* tilemap){
 
             final_height = round(Calc::Clamp(final_height, 0, tilemap_height));
 
-            tilemap->SetArea(0, tile_x, tile_x + 1, final_height, tilemap_height);
+            tilemap->SetArea(BlockCode::c_Stone, tile_x, tile_x + 1, final_height, tilemap_height);
         }
     }
     // stone pass (deep underground, introducing caverns )
     else{
-        tilemap->SetAll(0);
+        tilemap->SetAll(BlockCode::c_Stone);
         
         for(int tile_y = 0; tile_y < tilemap_height; tile_y++){
             for(int tile_x = 0; tile_x < tilemap_width; tile_x++){
@@ -189,7 +189,7 @@ void World::TunnelingPass(){
 
         float noise_val = perlin.octave1D_01((x * 0.25), 2, 5);
         
-        if(noise_val > 0.8 && spacing > settings.MIN_TUNNEL_SPACING){
+        if(noise_val > 0.7 && spacing > settings.MIN_TUNNEL_SPACING){
 
             int angle = 220 + rand() % 100;
             int angle_step = -4 + rand() % 8;
@@ -210,7 +210,9 @@ void World::Tunnel(int x, int y, int radius_min, int radius_max, float angle, fl
     float radian_step = Calc::Radians(angle_step);
     float radians = Calc::Radians(angle);
 
-    for(int i = 0; i < 45; i++){
+    int length = 40 + rand() % 100;
+
+    for(int i = 0; i < length; i++){
         
         int rand_radius = rand() % (radius_max - radius_min + 1) + radius_min;
 
@@ -229,6 +231,16 @@ bool World::ChunkInBounds(int chunk_x, int chunk_y){
     }
     return true;
 }
+
+sf::Vector2i World::RoundWorld(int world_x, int world_y){
+    sf::Vector2i world;
+
+    world.x = round((float)(world_x - 4) / tilesize_x) * tilesize_x;
+    world.y = round((float)(world_y - 4) / tilesize_y) * tilesize_y;
+
+    return world;
+}
+
 sf::Vector2i World::ChunkFromCoord(int x, int y){
     sf::Vector2i chunk;
 

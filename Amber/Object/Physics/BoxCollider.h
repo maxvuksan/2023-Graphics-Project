@@ -1,7 +1,7 @@
 #pragma once
 #include "Collider.h"
 #include <iostream>
-#include "Object.h"
+#include "../Object.h"
 
 
 

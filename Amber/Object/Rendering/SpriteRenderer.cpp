@@ -1,6 +1,6 @@
 #include "SpriteRenderer.h"
-#include "Object.h"
-#include "../Core/Core.h"
+#include "../Object.h"
+#include "../../Core/Core.h"
 #include <iostream>
 
 
@@ -9,7 +9,7 @@ void SpriteRenderer::Start(){}
 void SpriteRenderer::Draw(sf::RenderTarget& surface){
 
     // convert position to camera relative position "screen position"
-    sprite.setPosition(object->GetScene()->GetActiveCamera()->WorldToScreenPosition(
+    sprite.setPosition(Camera::WorldToScreenPosition(
         object->GetTransform()->position
     ));
     sprite.setScale(object->GetTransform()->scale);

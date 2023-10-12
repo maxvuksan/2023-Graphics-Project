@@ -1,7 +1,7 @@
 #include "PointLight.h"
-#include "Object.h"
-#include "../Core/Scene.h"
-#include "../Core/Core.h"
+#include "../Object.h"
+#include "../../Core/Scene.h"
+#include "../../Core/Core.h"
 
 PointLight::PointLight():
     colour(1,1,1),
@@ -15,7 +15,7 @@ void PointLight::Start()
     
     object->GetScene()->AddPointLight(this);
 
-    auto display_size = object->GetCore()->GetDisplaySize();
+    auto display_size = Core::GetDisplaySize();
     texture.create(display_size.x, display_size.y);
 
     DrawLightRenderTexture();
@@ -48,8 +48,8 @@ void PointLight::DrawLightRenderTexture(){
         object->GetTransform()->position
     );
 
-    light_position.x /= (float)object->GetCore()->GetDisplaySize().x;
-    light_position.y /= -(float)object->GetCore()->GetDisplaySize().y;
+    light_position.x /= Core::GetDisplaySize().x;
+    light_position.y /= -Core::GetDisplaySize().y;
     light_position.y += 1.0f; // flipping y axis, then shifting it back to location (+1.0f)
 
     point_shader->setUniform("u_light_position", light_position);

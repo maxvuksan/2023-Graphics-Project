@@ -5,8 +5,6 @@
 #include "Scene.h"
 
 /*
-    AssetManager: 
-
     responsible for storing resusable assets, preventing duplication 
 
     this could include
@@ -21,7 +19,7 @@ class Core;
 class AssetManager {
 
     public:
-        static void Construct(Core*);
+        static void Construct();
         static void Destruct();
 
         // assuming all shaders are fragment
@@ -38,7 +36,6 @@ class AssetManager {
         static Scene* CreateScene(const char* label) {
 
             Scene* new_scene = new T;
-            new_scene->LinkCore(core);
             scenes.insert(std::make_pair(label, new_scene));
 
             return new_scene;

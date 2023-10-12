@@ -15,18 +15,22 @@ class TestScene : public Scene {
 
 
             Player* player = AddObject<Player>();
-            player->GetTransform()->position = sf::Vector2f(50, -500);
+            player->GetTransform()->position = sf::Vector2f(50, -1000);
             player->LinkWorld(world);
 
-    /*
-            Object* o = AddObject<Object>();
-            o->AddComponent<Camera>();
-            SetActiveCamera(o->GetComponent<Camera>());
-            cam = o->GetTransform();
-    */
+
             world->SetFocus(player->GetTransform());
 
         };
+
+        void CatchEvent(sf::Event event) override{
+            if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.scancode == sf::Keyboard::Scan::Q){
+                    Core::DEBUG_MODE = !Core::DEBUG_MODE;
+                }
+            }
+        }
 
         void Update() override{
 

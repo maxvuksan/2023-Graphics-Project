@@ -2,8 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include "../Utility/Mouse.h"
 
-class Core;
 class Scene;
+class Object;
 
 class RenderManager{
 
@@ -17,13 +17,17 @@ class RenderManager{
     };
 
     public:
-        static void Construct(Core* core);
+        static void Construct();
         static void Destruct();
         
-        static void Render(sf::RenderTarget& surface, Scene*);
+        static void Render(sf::RenderTarget&, Scene*);
 
     private:
-        static Core* core;
+        static void ClearRenderTextures();
+        static void RenderLayer(sf::RenderTarget&, std::vector<Object*>& objects_at_layer);
+        static void RenderDebug(sf::RenderTarget&, Scene*);
+        static void RenderUI(sf::RenderTarget&, Scene*);
+
         static std::vector<sf::RenderTexture*> render_textures;
   
 };

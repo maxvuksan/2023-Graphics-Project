@@ -36,10 +36,9 @@ class Object{
         bool IsActive(){ return active; }
         void SetActive(bool state){ active = state; }
 
-        // provides a reference to the Core object, allowing communication to said parent
-        void LinkCore(Core* core);
-        Core* GetCore() { return core; }
-        void LinkScene(Scene* scene);
+        // An objects render layer is determined when it is initally added to the scene, Scene::AddObject<>( render_Layer )
+        int GetRenderLayer(){return render_layer;}
+        void LinkScene(Scene* scene, int render_layer);
         Scene* GetScene(){ return scene; }
 
         Transform* GetTransform() { return transform; }
@@ -125,10 +124,10 @@ class Object{
 
     private:
 
+        int render_layer;
         bool active;
 
         Scene* scene;
-        Core* core; 
         Transform* transform;
     
         std::vector<Component*> components; 

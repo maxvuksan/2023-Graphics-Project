@@ -19,5 +19,5 @@ class Camera : public Component {
         sf::Color background_colour;
 
         // Converts a position to its position relative to this camera
-        sf::Vector2f WorldToScreenPosition(sf::Vector2f world);
+        static sf::Vector2f WorldToScreenPosition(sf::Vector2f world);
 };

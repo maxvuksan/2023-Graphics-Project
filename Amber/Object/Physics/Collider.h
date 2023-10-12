@@ -1,5 +1,5 @@
 #pragma once
-#include "Component.h"
+#include "../Component.h"
 
 class PhysicsBody;
 class Collider : public Component{

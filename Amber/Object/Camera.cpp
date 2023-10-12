@@ -7,7 +7,8 @@ Camera::Camera() :background_colour(Globals::DEFAULT_BACKGROUND_COLOUR)
 
 sf::Vector2f Camera::WorldToScreenPosition(sf::Vector2f world){
     
-    sf::Vector2i display_size = object->GetCore()->GetDisplaySize();
+    Camera* active_cam = Scene::GetActiveCamera();
+    sf::Vector2i display_size = Core::GetDisplaySize();
     
-    return world + offset - object->GetTransform()->position + sf::Vector2f(display_size.x / 2.0f, display_size.y / 2.0f);
+    return world + active_cam->offset - active_cam->GetObject()->GetTransform()->position + sf::Vector2f(display_size.x / 2.0f, display_size.y / 2.0f);
 }

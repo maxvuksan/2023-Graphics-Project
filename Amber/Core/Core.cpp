@@ -1,18 +1,40 @@
 #include "Core.h"
 
-Core::Core(int window_width, int window_height, std::string window_title):
-    Core::Core(window_width, window_height, window_width, window_height, window_title){}
+// Static Members ///////////////////////////////////////////////////
+
+bool Core::DEBUG_MODE = false;
+
+sf::Clock Core::delta_clock;
+
+sf::RenderWindow Core::window;
+
+Scene* Core::current_scene;
+
+sf::Vector2f Core::display_to_window_multiplier;
+
+int Core::display_width; 
+int Core::display_height;         
+int Core::window_width; 
+int Core::window_height;
+
+/////////////////////////////////////////////////////////////////////
+
+Core::Core(int _window_width, int _window_height, std::string window_title):
+    Core::Core(_window_width, _window_height, _window_width, _window_height, window_title){}
 
 
-Core::Core(int window_width, int window_height, int display_width, int display_height, std::string window_title):
-    window_height(window_width),
-    window_width(window_height),
-    display_width(display_width),
-    display_height(display_height),
-    window(sf::VideoMode(window_width, window_height), window_title),
-    current_scene(nullptr)
+Core::Core(int _window_width, int _window_height, int _display_width, int _display_height, std::string window_title)
 {
+    window.create(sf::VideoMode(_window_width, _window_height), window_title);
 
+    current_scene = nullptr;
+    display_width = _display_width;
+    display_height = _display_height,
+    window_width = _window_width;
+    window_height = _window_height;
+
+    display_to_window_multiplier.x = window_width / (float)display_width;
+    display_to_window_multiplier.y = window_height / (float)display_height;
 
     if(!sf::Shader::isAvailable()){
         std::cout << "ERROR : Shaders are not supported, !sf::Shader::isAvailable\n";
@@ -21,13 +43,22 @@ Core::Core(int window_width, int window_height, int display_width, int display_h
 
 void Core::Run(){
 
-    AssetManager::Construct(this);
-    RenderManager::Construct(this);
+    AssetManager::Construct();
+    RenderManager::Construct();
 
     this->Start();
 
     while (window.isOpen())
     {
+
+        if(current_scene == nullptr){
+            std::cout << "ERROR : No Scene is selected, please load with Core::LoadScene()";
+            return;
+        }
+        
+        window.clear();
+
+        // catch events
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -38,31 +69,22 @@ void Core::Run(){
             current_scene->InternalCatchEvent(event);
         }
 
-        window.clear();
-
+        // calculating delta time...
         sf::Time dt = delta_clock.restart();
         Time::SetDeltaTime(dt.asSeconds());
 
+
+        // performing updates
         this->Update();
+        current_scene->InternalUpdate();
 
-        if(current_scene != nullptr){
-            current_scene->InternalUpdate();
+        // calculate mouse positions
+        Mouse::SetWindowPosition(sf::Mouse::getPosition(window));
+        Mouse::UpdateDisplayPosition();
 
-            Mouse::SetWindowPosition(sf::Mouse::getPosition(window));
-            RenderManager::Render(window, current_scene);
-        }
-        else{
-            std::cout << "ERROR: No scene is selected, please load using Core::LoadScene()\n";
-            return;
-        }
-        if(Globals::DEBUG_MODE){
-            sf::Text fps_text;
-            fps_text.setString("FPS " + std::to_string(Time::FPS())); 
-            fps_text.setPosition(sf::Vector2f(10,10));
-            window.draw(fps_text);
-        }
+        RenderManager::Render(window, current_scene);
+
         window.display();
-
         Time::Increment();
     }
 
@@ -76,8 +98,10 @@ void Core::LoadScene(const char* label){
     
     // empty previous scene
     if(current_scene != nullptr){
-        current_scene->ClearObjects();
+        current_scene->ClearAll();
     }
+    
+    Scene::SetActiveCamera(nullptr);
 
     if(scene != nullptr){
         current_scene = scene;
@@ -85,6 +109,11 @@ void Core::LoadScene(const char* label){
     }
 }
 
+sf::RenderWindow* Core::GetWindow(){
+    return &window;
+}
+
+// Static Methods /////////////////////////////////////////////////////////
 
 void Core::SetWindowSize(sf::Vector2i window_size){
     window_width = window_size.x;
@@ -114,6 +143,8 @@ sf::Vector2i Core::GetDisplaySize(){
     return sf::Vector2i(display_width, display_height);
 }
 
-sf::RenderWindow* Core::GetWindow(){
-    return &window;
+sf::Vector2i Core::DisplayToWindowPosition(sf::Vector2i _display_position){
+    return sf::Vector2i(_display_position.x * display_to_window_multiplier.x, _display_position.y * display_to_window_multiplier.y);
 }
+
+/////////////////////////////////////////////////////////////////////

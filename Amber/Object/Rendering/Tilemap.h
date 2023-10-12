@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Component.h"
+#include "../Component.h"
 #include "TilemapPrimitive.h"
 
 class Tilemap : public Component

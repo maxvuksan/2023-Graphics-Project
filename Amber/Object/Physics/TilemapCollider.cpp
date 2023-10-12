@@ -1,6 +1,6 @@
 #include "TilemapCollider.h"
-#include "Tilemap.h"
-#include "Object.h"
+#include "../Rendering/Tilemap.h"
+#include "../Object.h"
 #include <iostream>
 
 TilemapCollider::TilemapCollider(): tilemap(nullptr){}

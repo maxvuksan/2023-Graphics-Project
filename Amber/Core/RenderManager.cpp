@@ -1,17 +1,14 @@
 #include "RenderManager.h"
 #include "Core.h"
-#include "../Object/PointLight.h"
-#include "../Object/Tilemap.h"
+#include "../Object/Rendering/PointLight.h"
+#include "../Object/Rendering/Tilemap.h"
 
 
-Core* RenderManager::core = nullptr;
 std::vector<sf::RenderTexture*> RenderManager::render_textures;
 
 
-void RenderManager::Construct(Core* core) {
+void RenderManager::Construct() {
     
-    RenderManager::core = core;
-
     render_textures.resize(NUMBER_OF_RENDER_PASSES);
 
     for(int i = 0; i < render_textures.size(); i++){
@@ -19,9 +16,106 @@ void RenderManager::Construct(Core* core) {
     }
 }
 
+void RenderManager::ClearRenderTextures(){
+    // reset all render textures
+    for(int i = 0; i < render_textures.size(); i++){
+        render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
+        render_textures[i]->clear();
+    }
+}
+
 void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
-    sf::Vector2i display_size = core->GetDisplaySize();
-    sf::Vector2i window_size = core->GetWindowSize();
+
+    ClearRenderTextures();
+
+    auto objects = scene->GetObjects();
+    
+    // clear scene texture
+    render_textures[SCENE]->clear(Scene::GetActiveCamera()->background_colour);
+
+    for (auto layer = objects->begin(); layer != objects->end(); layer++) {
+        RenderLayer(*render_textures[SCENE], layer->second);
+    }
+    render_textures[SCENE]->display();
+
+
+    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+
+
+
+    // render debug graphics
+    if(Core::DEBUG_MODE){
+        RenderDebug(*render_textures[COMPOSITE], scene);
+    }
+
+
+    // render UI
+    
+    auto ui = scene->GetUI();
+    for (auto layer = ui->begin(); layer != ui->end(); layer++) {
+        RenderLayer(*render_textures[COMPOSITE], layer->second);
+    }
+    
+    render_textures[COMPOSITE]->display();
+
+
+
+
+    // rescaling our final image to fit window
+    sf::Sprite final_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
+    final_image.setScale(Core::GetDisplayToWindowMultiplier());
+
+    surface.draw(final_image);
+
+
+}
+
+void RenderManager::RenderDebug(sf::RenderTarget& surface, Scene* scene){
+    auto objects = scene->GetObjects();
+
+    // marker for each objects position...
+    sf::CircleShape debug_circle;
+    debug_circle.setRadius(1);
+    debug_circle.setFillColor(Globals::DEBUG_COLOUR);
+
+    for (auto layer = objects->begin(); layer != objects->end(); layer++) {
+
+        for(auto obj : layer->second){
+
+            debug_circle.setPosition(Camera::WorldToScreenPosition(obj->GetTransform()->position));
+            
+            surface.draw(debug_circle);
+
+            for(auto comp : *obj->GetComponents()){
+                comp->Draw_Debug(surface);       
+            }
+            obj->Draw_Debug(surface);
+        }
+    }
+
+}
+
+
+void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>& objects_at_layer){
+
+    for(auto obj : objects_at_layer){
+
+        if(!obj->IsActive()){
+            continue;
+        }
+
+        for(auto comp : *obj->GetComponents()){
+            comp->Draw(surface);       
+        }
+        obj->Draw(surface);       
+    }
+}
+
+/*
+
+void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
+    sf::Vector2i display_size = Core::GetDisplaySize();
+    sf::Vector2i window_size = Core::GetWindowSize();
     sf::Shader* blur_shader = AssetManager::GetShader("Amber_Blur");
 
     // reset all render textures
@@ -54,7 +148,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     
     render_textures[LIGHTING]->display();
     // prepare for blurring lighting
-    blur_shader->setUniform("u_strength", 3.0f);
+    blur_shader->setUniform("u_strength", 2.0f);
     blur_shader->setUniform("u_texture", render_textures[LIGHTING]->getTexture());
     blur_shader->setUniform("u_texture_pixel_step", 
         sf::Vector2f(1 / (float)render_textures[LIGHTING]->getTexture().getSize().x,
@@ -87,7 +181,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         tmap->Draw_EdgeLighting(*render_textures[LIGHTING]);
     }
 
-    blur_shader->setUniform("u_strength", 5.0f);
+    blur_shader->setUniform("u_strength", 3.0f);
 
     render_textures[LIGHTING_FINAL]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_shader);
     render_textures[LIGHTING_FINAL]->draw(sf::Sprite(render_textures[LIGHTING_BLURRED]->getTexture()), sf::BlendMultiply);
@@ -114,7 +208,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()), sf::BlendMultiply);
 
     // draw debug _______________________________________________
-    if(Globals::DEBUG_MODE){
+    if(Core::DEBUG_MODE){
 
         sf::CircleShape debug_circle;
         debug_circle.setRadius(1);
@@ -152,7 +246,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         obj->Draw_Window(surface);
     }
 }
-
+*/
 void RenderManager::Destruct(){
     for(int i = 0; i < render_textures.size(); i++){
         delete render_textures[i];

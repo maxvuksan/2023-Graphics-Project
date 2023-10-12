@@ -1,5 +1,5 @@
 #include "PhysicsBody.h"
-#include "Object.h"
+#include "../Object.h"
 #include "Collider.h"
 
 void PhysicsBody::Update(){

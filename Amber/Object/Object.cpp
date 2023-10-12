@@ -5,18 +5,11 @@ Object::Object() : active(true){
     this->transform = AddComponent<Transform>();
 }
 
-
-
-void Object::LinkCore(Core* core){
-    if(core == nullptr){
-        std::cout << "ERROR : Attempting to set objects core property to nullptr in Object::LinkCore()\n";
-    }
-    this->core = core;
-}
-void Object::LinkScene(Scene* scene){
+void Object::LinkScene(Scene* scene, int render_layer){
     if(scene == nullptr){
         std::cout << "ERROR : Attempting to link objects scene property to a nullptr Object::LinkScene()\n";
     }
+    this->render_layer = render_layer;
     this->scene = scene;
 }
 

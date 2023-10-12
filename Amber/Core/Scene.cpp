@@ -1,9 +1,10 @@
 #include "Scene.h"
 #include "../Utility/Time.h"
-#include "../Object/PointLight.h"
-#include "../Object/BoxCollider.h"
+#include "../Object/Rendering/PointLight.h"
+#include "../Object/Physics/BoxCollider.h"
 #include <iostream>
 
+Camera* Scene::active_camera = nullptr;
 
 Core* Scene::GetCore(){
     return this->core;
@@ -14,7 +15,7 @@ void Scene::LinkCore(Core* core){
 
 
 void Scene::Restart(){
-    this->ClearObjects();
+    this->ClearAll();
     this->Start();
 }
 
@@ -26,33 +27,54 @@ Camera* Scene::GetActiveCamera(){
 }
 
 void Scene::SetActiveCamera(Camera* camera){
-    if(camera == nullptr){
-        std::cout << "ERROR : Attempting to set active camera to nullptr in Scene::SetActiveCamera()\n";
-    }
-    this->active_camera = camera;
+    active_camera = camera;
 }
 
 void Scene::InternalUpdate(){
     
     if(active_camera == nullptr){
-        std::cout << "ERROR : No camera is selected, set using Scene::SetActiveCamera()\n";
+        std::cout << "ERROR : No camera is selected, set using Scene::SetActiveCamera(), Scene::InternalUpdate()\n";
         return;
     }
 
     this->Update();
 
-    for(auto obj : objects){
+    // iterate over each render layer
+    for (auto layer = objects.begin(); layer != objects.end(); layer++) {
 
-        // skip disabled objects
-        if(!obj->IsActive()){
-            continue;
-        }
+        // iterate over each object in said layer
+        for(auto obj : layer->second){
 
-        for(auto comp : *obj->GetComponents()){
-            comp->Update();
-            comp->UpdateSecondary();
+            // skip disabled objects
+            if(!obj->IsActive()){
+                continue;
+            }
+
+            for(auto comp : *obj->GetComponents()){
+                comp->Update();
+                comp->UpdateSecondary();
+            }
+            obj->Update();
         }
-        obj->Update();
+    }
+
+    // do the same for each ui element
+    for (auto layer = ui.begin(); layer != ui.end(); layer++) {
+
+        // iterate over each object in said layer
+        for(auto obj : layer->second){
+
+            // skip disabled objects
+            if(!obj->IsActive()){
+                continue;
+            }
+
+            for(auto comp : *obj->GetComponents()){
+                comp->Update();
+                comp->UpdateSecondary();
+            }
+            obj->Update();
+        }
     }
 }
 
@@ -60,19 +82,37 @@ void Scene::InternalCatchEvent(sf::Event event){
 
     this->CatchEvent(event);
     
-    for(auto obj : objects){
-        // skip disabled objects
-        if(!obj->IsActive()){
-            continue;
-        }
+    // iterate over each render layer
+    for (auto layer = objects.begin(); layer != objects.end(); layer++) {
 
-        obj->CatchEvent(event);
+        // iterate over each object
+
+        for(auto obj : layer->second){
+            // skip disabled objects
+            if(!obj->IsActive()){
+                continue;
+            }
+
+            obj->CatchEvent(event);
+        }
+    }
+
+    // do the same for each ui element
+    for (auto layer = ui.begin(); layer != ui.end(); layer++) {
+
+        // iterate over each object
+
+        for(auto obj : layer->second){
+            // skip disabled objects
+            if(!obj->IsActive()){
+                continue;
+            }
+
+            obj->CatchEvent(event);
+        }
     }
 }
 
-std::vector<Object*>* Scene::GetObjects(){
-    return &objects;
-}
 
 void Scene::AddBoxCollider(BoxCollider* collider){
     this->box_colliders.push_back(collider);
@@ -86,9 +126,6 @@ void Scene::RemoveBoxCollider(BoxCollider* collider){
             break;
         }
     }
-}
-std::vector<BoxCollider*>* Scene::GetBoxColliders(){
-    return &box_colliders;
 }
 
 void Scene::AddPointLight(PointLight* point_light){
@@ -104,9 +141,6 @@ void Scene::RemovePointLight(PointLight* point_light){
         }
     }
 }
-std::vector<PointLight*>* Scene::GetPointLights(){
-    return &point_lights;
-}
 
 void Scene::AddTilemap(Tilemap* tilemap){
     this->tilemaps.push_back(tilemap);
@@ -121,21 +155,31 @@ void Scene::RemoveTilemap(Tilemap* tilemap){
         }
     }
 }
-std::vector<Tilemap*>* Scene::GetTilemaps(){
-    return &tilemaps;
-}
 
-void Scene::ClearObjects(){
+void Scene::ClearAll(){
     
     active_camera = nullptr;
 
-    for(auto obj : objects){
-        delete obj;
+    for (auto layer = objects.begin(); layer != objects.end(); layer++) {
+
+        for(auto obj : layer->second){
+
+            delete obj;
+        }
     }
     objects.clear();
+
+    for (auto layer = ui.begin(); layer != ui.end(); layer++) {
+
+        for(auto obj : layer->second){
+
+            delete obj;
+        }
+    }
+    ui.clear();
 }
 
 
 Scene::~Scene(){
-    this->ClearObjects();
+    this->ClearAll();
 }

@@ -1,6 +1,7 @@
 #include "../Amber/Framework.h"
 #include "WorldSettings.h"
 #include "Minimap.h"
+#include "BlockTypes.h"
 
 class World : public Object{
     
@@ -30,6 +31,8 @@ class World : public Object{
 
         // converting world space coordinates to chunk relative and tilemap offsets
         bool ChunkInBounds(int chunk_x, int chunk_y);
+        // @returns a world position rounded by increments of the tilesize
+        sf::Vector2i RoundWorld(int world_x, int world_y);
         // @returns the coordinate position of a world position
         sf::Vector2i WorldToCoord(int world_x, int world_y);
         // @returns the world position of a coordinate
@@ -69,7 +72,7 @@ class World : public Object{
         int tilesize_x = 8;
         int tilesize_y = 8;
 
-        int tilemap_width = 35;
+        int tilemap_width = 15;
         int tilemap_height = 15;
 
         int half_tilemap_width;
@@ -78,7 +81,7 @@ class World : public Object{
         float one_divide_tilemap_height;
 
         // in chunks...
-        int width = 6;
-        int height = 20;
+        int width = 8;
+        int height = 15;
 
 };

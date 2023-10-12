@@ -1,16 +1,16 @@
 #include "Tilemap.h"
-#include "Object.h"
-#include "../Core/Core.h"
-#include "../Core/Scene.h"
+#include "../Object.h"
+#include "../../Core/Core.h"
+#include "../../Core/Scene.h"
 #include "PointLight.h"
-#include "Camera.h"
+#include "../Camera.h"
 #include <math.h>
 
 void Tilemap::Start(){
     
     object->GetScene()->AddTilemap(this);
-    shadow_render_texture.create(object->GetCore()->GetDisplaySize().x, object->GetCore()->GetDisplaySize().y);
-    single_light_render_texture.create(object->GetCore()->GetDisplaySize().x, object->GetCore()->GetDisplaySize().y);
+    shadow_render_texture.create(Core::GetDisplaySize().x, Core::GetDisplaySize().y);
+    single_light_render_texture.create(Core::GetDisplaySize().x, Core::GetDisplaySize().y);
 }
 void Tilemap::OnDestroy(){
     object->GetScene()->RemoveTilemap(this);
@@ -18,7 +18,8 @@ void Tilemap::OnDestroy(){
 
 void Tilemap::UpdateSecondary(){
     
-    tilemap_primitive.setPosition(object->GetScene()->GetActiveCamera()->WorldToScreenPosition(
+    
+    tilemap_primitive.setPosition(Camera::WorldToScreenPosition(
         object->GetTransform()->position
     ));
 
@@ -74,6 +75,7 @@ void Tilemap::ClearEdges(){
 
 void Tilemap::CalculateEdges(){
    
+   return;
     Transform* transform = object->GetTransform();
 
     struct CellEdges{
@@ -239,10 +241,14 @@ void Tilemap::CalculateEdges(){
 
 void Tilemap::Draw(sf::RenderTarget& surface){
 
+    tilemap_primitive.setPosition(Camera::WorldToScreenPosition(
+        object->GetTransform()->position
+    ));
+
     if(!this->loaded){
         return;
     }
-
+    tilemap_primitive.RevertTexture();
     surface.draw(tilemap_primitive);
 }
 
@@ -353,6 +359,11 @@ bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned 
     shadow_texture = AssetManager::GetTexture("Amber_Shadow");
     white_texture = AssetManager::GetTexture("Amber_White");
     black_texture = AssetManager::GetTexture("Amber_Black");
+    
+    if(shadow_texture == nullptr || white_texture == nullptr || black_texture == nullptr || texture == nullptr){
+        std::cout << "ERROR : A Texture on Tilemap::Load() is null\n";
+        return false;
+    }
         
     bool state = tilemap_primitive.Load(texture, sf::Vector2u(tile_width, tile_height), width, height, default_tile);
     if(state == false){

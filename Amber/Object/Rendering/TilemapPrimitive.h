@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
 class TilemapPrimitive : public sf::Drawable, public sf::Transformable
@@ -37,7 +38,7 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 
         sf::VertexArray m_vertices;
         
-        sf::Texture* texture_reference;
+        sf::Texture* texture_reference; // the texture provided in Load()
         sf::Texture* focus_texture;
 
 
@@ -48,6 +49,11 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         {
             // apply the transform
             states.transform *= getTransform();
+
+            if(focus_texture == nullptr){
+                std::cout << "ERROR : TilemapPrimitive::draw() focus_texture is null\n";
+            }
+
             // apply the tileset texture
             states.texture = focus_texture;
             // draw the vertex array

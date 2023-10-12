@@ -7,8 +7,7 @@ class Game : public Core{
         Game() : Core(900, 900, 300, 300, "My Game"){}
 
         void Start() override{
-            AssetManager::CreateTexture("light_shaft", "light_shaft.png");
-            AssetManager::CreateTexture("demoTexture", "demo.png");
+            AssetManager::CreateTexture("demoTexture", "tiles.png");
             
             AssetManager::CreateScene<TestScene>("TestScene");
 

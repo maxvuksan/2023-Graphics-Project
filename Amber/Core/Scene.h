@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <map>
 #include "../Object/Object.h"
 #include "../Object/Camera.h"
 #include <iostream>
@@ -13,8 +14,6 @@ class BoxCollider;
 class Scene {
 
     /*
-        Scene:
-
         A way to divide sections of content, 
         
         some scenes could include...
@@ -38,22 +37,27 @@ class Scene {
         // Responsible for updating objects and object components
         void InternalUpdate();
         void InternalCatchEvent(sf::Event);
+        
 
         // Removes all objects from the scene and recalls the Start() method
         void Restart();
 
-        Camera* GetActiveCamera();
-        void SetActiveCamera(Camera* camera);
+        static Camera* GetActiveCamera();
+        static void SetActiveCamera(Camera* camera);
 
         // Adds an object of type T to the scene (T must have a base class of Object)
         template <typename T>
-        T* AddObject(){
-            T* obj = new T;
-            objects.push_back(obj);
+        T* AddObject(int render_layer = 0){
 
-            obj->LinkCore(core);
-            obj->LinkScene(this);
-            
+            // not in map yet
+            if(objects.count(render_layer) < 1){
+                objects[render_layer] = {};
+            }
+
+            T* obj = new T;
+            objects[render_layer].push_back(obj);
+
+            obj->LinkScene(this, render_layer);
             obj->Start();
 
             return obj;
@@ -66,40 +70,77 @@ class Scene {
         template <typename T>
         void DeleteObject(Object* target){
 
-            for(int i = 0; i < objects.size(); i++){
-                if(objects[i] == target){
+            for(int i = 0; i < objects[target->GetRenderLayer()].size(); i++){
+                if(objects[target->GetRenderLayer()][i] == target){
 
+                    objects[target->GetRenderLayer()].erase(objects[target->GetRenderLayer()].begin() + i);
                     delete target;
-                    objects.erase(objects.begin() + i);
+
                 }
             }
         }
-        std::vector<Object*>* GetObjects();
+
+        template <typename T>
+        T* AddUI(int render_layer = 0){
+
+            // not in map yet
+            if(ui.count(render_layer) < 1){
+                ui[render_layer] = {};
+            }
+
+            T* obj = new T;
+            ui[render_layer].push_back(obj);
+
+            obj->LinkScene(this, render_layer);
+            obj->Start();
+
+            return obj;
+        }
+
+        template <typename T>
+        void DeleteUI(Object* target){
+
+            for(int i = 0; i < ui[target->GetRenderLayer()].size(); i++){
+                if(ui[target->GetRenderLayer()][i] == target){
+
+                    ui[target->GetRenderLayer()].erase(ui[target->GetRenderLayer()].begin() + i);
+                    delete target;
+
+                }
+            }
+        }
+
+        std::map<int, std::vector<Object*>>* GetObjects(){ return &objects;}
+        std::map<int, std::vector<Object*>>* GetUI(){ return &ui;}
 
         void AddBoxCollider(BoxCollider* collider);
         void RemoveBoxCollider(BoxCollider* collider);
-        std::vector<BoxCollider*>* GetBoxColliders();
+        std::vector<BoxCollider*>* GetBoxColliders(){return &box_colliders;}
 
         void AddPointLight(PointLight* point_light);
         void RemovePointLight(PointLight* point_light);
-        std::vector<PointLight*>* GetPointLights();
+        std::vector<PointLight*>* GetPointLights(){return &point_lights;}
 
         void AddTilemap(Tilemap* point_light);
         void RemoveTilemap(Tilemap* point_light);
-        std::vector<Tilemap*>* GetTilemaps();
+        std::vector<Tilemap*>* GetTilemaps(){return &tilemaps;}
 
         ~Scene();
         // deletes all objects from the scene
-        void ClearObjects();
+        void ClearAll();
 
     private:
 
         std::vector<BoxCollider*> box_colliders;
-        std::vector<Object*> objects;
+
+        // render layer, vector<Object*>
+        std::map<int, std::vector<Object*>> objects;
+        std::map<int, std::vector<Object*>> ui;
+
         std::vector<PointLight*> point_lights;
         std::vector<Tilemap*> tilemaps;
 
         Core* core;
-        Camera* active_camera;
+        static Camera* active_camera;
 
 };

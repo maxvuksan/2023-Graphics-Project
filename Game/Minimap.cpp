@@ -21,6 +21,7 @@ void Minimap::Draw_Window(sf::RenderTarget& surface){
 };
 
 void Minimap::CatchEvent(sf::Event event){
+
     if (event.type == sf::Event::KeyPressed)
     {
         if (event.key.scancode == sf::Keyboard::Scan::M){

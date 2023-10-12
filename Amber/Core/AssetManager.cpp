@@ -5,16 +5,12 @@
 #include <string.h>
 #include <SFML/OpenGL.hpp>
 
-Core* AssetManager::core = nullptr;
-
 std::unordered_map<const char*, sf::Texture> AssetManager::textures; 
 std::unordered_map<const char*, Scene*> AssetManager::scenes; /*scenes are stored as pointers to allow for inherited scenes*/
 std::unordered_map<const char*, sf::Shader*> AssetManager::shaders;
 
-void AssetManager::Construct(Core* core)
+void AssetManager::Construct()
 {
-    AssetManager::core = core;
-
     CreateShader("Amber_Blur", "Amber/Shaders/Blur.frag");
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
 
@@ -72,7 +68,7 @@ sf::Shader* AssetManager::GetShader(const char* label){
         }
     }
 
-    std::cout << "ERROR : A shader with the label '" << label << "' could not be found";
+    std::cout << "ERROR : A shader with the label '" << label << "' could not be found\n";
     return nullptr;
 
 }
@@ -107,7 +103,7 @@ sf::Texture* AssetManager::GetTexture(const char* label){
         }
     }
 
-    std::cout << "ERROR : A texture with the label '" << label << "' could not be found";
+    std::cout << "ERROR : A texture with the label '" << label << "' could not be found\n";
     return nullptr;
 }
 
@@ -121,7 +117,7 @@ Scene* AssetManager::GetScene(const char* label){
         }
     }
     
-    std::cout << "ERROR : A scene with the label '" << label << "' could not be found";
+    std::cout << "ERROR : A scene with the label '" << label << "' could not be found\n";
     return nullptr;
 }
 
