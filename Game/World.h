@@ -1,7 +1,7 @@
 #include "../Amber/Framework.h"
 #include "WorldSettings.h"
-#include "Minimap.h"
 #include "BlockTypes.h"
+#include "Minimap.h"
 
 class World : public Object{
     
@@ -48,6 +48,8 @@ class World : public Object{
         std::vector<sf::Vector2i> GetOffsetsInRadius(int radius);
         void SetCircle(int tile_index, int x, int y, int radius);
 
+
+
         //the focus is what the world orients around (only load chunks around the focus transform, etc...)
         void SetFocus(Transform* focus);
 
@@ -81,7 +83,7 @@ class World : public Object{
         float one_divide_tilemap_height;
 
         // in chunks...
-        int width = 8;
-        int height = 15;
+        int width = 20;
+        int height = 20;
 
 };

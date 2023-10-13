@@ -3,18 +3,15 @@
 class Minimap : public Object{
 
     public:
-        Minimap();
-        void Draw_Window(sf::RenderTarget&) override;
+        
+        void Start();
         void CatchEvent(sf::Event) override;
 
-        void SetPixel(int x, int y);
-        void RemovePixel(int x, int y);
-        void Create(int width, int height);
+        UIPixelGrid* GetPixelGrid(){return pixel_grid;}
+
+        bool GetActive(){ return pixel_grid->IsActive(); } 
 
     private:
-        sf::Texture texture;
-        sf::Image image;
-        bool created;
-        bool changed;
-        bool active;
+        UIPixelGrid* pixel_grid;
+
 };

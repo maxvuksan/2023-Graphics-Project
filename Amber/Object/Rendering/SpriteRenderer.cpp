@@ -12,15 +12,20 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
     sprite.setPosition(Camera::WorldToScreenPosition(
         object->GetTransform()->position
     ));
-    sprite.setScale(object->GetTransform()->scale);
-    sprite.setRotation(object->GetTransform()->rotation);
     
     surface.draw(sprite);
 }
 
-void SpriteRenderer::SetTexture(const char* label){
+void SpriteRenderer::SetTexture(const char* label, bool center){
      
     sprite.setTexture(*AssetManager::GetTexture(label));
     // making the origin in the center of the sprite
-    sprite.setOrigin(sprite.getTexture()->getSize().x / 2.0f, sprite.getTexture()->getSize().y / 2.0f);
+
+    if(center){
+        sprite.setOrigin(sprite.getTexture()->getSize().x / 2.0f, sprite.getTexture()->getSize().y / 2.0f);
+    }
+}
+
+void SpriteRenderer::SetTextureRect(int left, int top, int width, int height){
+    sprite.setTextureRect(sf::IntRect(left, top, width, height));
 }

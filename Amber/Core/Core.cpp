@@ -1,4 +1,5 @@
 #include "Core.h"
+#include "../Utility/Sound.h"
 
 // Static Members ///////////////////////////////////////////////////
 
@@ -26,7 +27,8 @@ Core::Core(int _window_width, int _window_height, std::string window_title):
 Core::Core(int _window_width, int _window_height, int _display_width, int _display_height, std::string window_title)
 {
     window.create(sf::VideoMode(_window_width, _window_height), window_title);
-
+    window.setFramerateLimit(Globals::FRAMERATE_LIMIT);
+    
     current_scene = nullptr;
     display_width = _display_width;
     display_height = _display_height,
@@ -45,6 +47,7 @@ void Core::Run(){
 
     AssetManager::Construct();
     RenderManager::Construct();
+    Sound::Construct();
 
     this->Start();
 

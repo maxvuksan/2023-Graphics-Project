@@ -20,7 +20,8 @@ void World::Start() {
     }
 
     minimap = GetScene()->AddObject<Minimap>();
-    minimap->Create(width * tilemap_width, height * tilemap_height);
+    minimap->GetPixelGrid()->Create(width * tilemap_width, height * tilemap_height, sf::Color::Transparent);
+
 
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
@@ -43,6 +44,7 @@ void World::Start() {
     CalculateMinimap();
 }
 
+
 void World::CalculateMinimap(){
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
@@ -55,11 +57,14 @@ void World::CalculateMinimap(){
                     int final_x = x * tilemap_width + t_x;
                     int final_y = y * tilemap_height + t_y;
 
-                    if(tilemap->GetTile(t_x, t_y) == -1){
-                        continue;
-                    }
+                    int tile = tilemap->GetTile(t_x, t_y);
 
-                    minimap->SetPixel(final_x, final_y);
+                    if(tile == -1){
+                        minimap->GetPixelGrid()->SetPixel(final_x, final_y, sf::Color::Transparent);
+                    }
+                    else{
+                        minimap->GetPixelGrid()->SetPixel(final_x, final_y, Blocks[tile].base_colour);
+                    }
                 }
             }
 
@@ -156,10 +161,10 @@ bool World::SetTile(int tile_index, int x, int y){
     // updating minimap... 
     
     if(tile_index == -1){
-        minimap->RemovePixel(x, y);
+        minimap->GetPixelGrid()->SetPixel(x, y,  sf::Color::Transparent);
     }
     else{
-        minimap->SetPixel(x, y);
+        minimap->GetPixelGrid()->SetPixel(x, y, Blocks[tile_index].base_colour);
     }
 
     return true;

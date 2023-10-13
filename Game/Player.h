@@ -1,6 +1,7 @@
 #pragma once
 #include "../Amber/Framework.h"
 #include "BlockTypes.h"
+#include "CursorGraphic.h"
 
 class World;
 class Player : public Object{
@@ -10,7 +11,7 @@ class Player : public Object{
         void Start() override;
         void Update() override;
         void CatchEvent(sf::Event) override;
-        void Draw_Debug(sf::RenderTarget&) override;
+        void Draw(sf::RenderTarget&) override;
 
         void CalculateMouse();
 
@@ -19,7 +20,11 @@ class Player : public Object{
 
     private:
 
-
+        CursorGraphic* cursor_graphic;
+        sf::Vector2i focused_block_position;
+        float breaking_completeness;
+        float sound_increment;
+        int focused_block;
 
         World* world;
         // where in world space is the mouse hovering over

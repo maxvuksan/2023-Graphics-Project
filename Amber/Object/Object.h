@@ -24,7 +24,7 @@ class Object{
 
     public:
 
-        Object();
+        Object() : deleted_from_ui_map(false);
 
         virtual void Start(){}
         virtual void Update(){}
@@ -35,6 +35,8 @@ class Object{
 
         bool IsActive(){ return active; }
         void SetActive(bool state){ active = state; }
+        // should only be set by Scene::AddUI()
+        void SetUI(bool state){ deleted_from_ui_map = state;}
 
         // An objects render layer is determined when it is initally added to the scene, Scene::AddObject<>( render_Layer )
         int GetRenderLayer(){return render_layer;}
@@ -117,7 +119,17 @@ class Object{
             
         }
         
+        void Destroy();
+
+        template <typename T>
+        T* AddChild(){
+            
+            Object* child = new T;
+            children.push_back(child);
+        }
+        
         ~Object(); 
+
 
         // Allows children classes to expand upon ~Object(), due to inheritied nature, children should not have destructors 
         virtual void OnDestroy(){}
@@ -126,9 +138,11 @@ class Object{
 
         int render_layer;
         bool active;
+        bool deleted_from_ui_map; 
 
         Scene* scene;
         Transform* transform;
-    
+        
+        std::vector<Object*> children;
         std::vector<Component*> components; 
 };

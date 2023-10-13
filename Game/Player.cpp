@@ -25,10 +25,15 @@ void Player::Start(){
     right->SetIsTrigger(true);
     right->SetSize(sf::Vector2f(2, 8));
     right->SetOffset(sf::Vector2f(6,-4));
+    
+    GetTransform()->position = sf::Vector2f(50, -500);
+    
 
 
     pb = AddComponent<PhysicsBody>();
     AddComponent<PointLight>();
+
+    cursor_graphic = GetScene()->AddObject<CursorGraphic>(1);
 
     cursor_shape.setOutlineColor(sf::Color::White);
     cursor_shape.setSize(sf::Vector2f(8,8));
@@ -39,7 +44,6 @@ void Player::Start(){
 
 
 void Player::Update(){
-
 
     // Movement...
 
@@ -72,20 +76,53 @@ void Player::CalculateMouse(){
                              round(GetTransform()->position.y) + _mouse_pos.y );
 
 
+
+    sf::Vector2i cursor = world->RoundWorld(mouse_pos.x, mouse_pos.y);
+    cursor_graphic->GetTransform()->position = sf::Vector2f(cursor.x, cursor.y);
+    cursor_shape.setPosition(GetScene()->GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(cursor.x, cursor.y)));
+
+
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
         
-        world->SetTile_FromWorld(-1, mouse_pos.x, mouse_pos.y);
+        if(cursor != focused_block_position){
+            focused_block = world->GetTile_World(cursor.x, cursor.y);
+            focused_block_position = cursor;
+
+            breaking_completeness = 0;
+            sound_increment = 0;
+        }
+
+        if(focused_block != -1){
+            float increment = 0.02f * Time::Dt() / (float)Blocks[focused_block].durability;
+            breaking_completeness += increment;
+            sound_increment += increment;
+
+            if(sound_increment > 0.3){
+                sound_increment = 0;
+                Sound::Play("hit", 30);
+            }
+        }
+
+        cursor_graphic->SetComplete(breaking_completeness);
+
+        if(breaking_completeness >= 1){
+            // block breaks...
+            Sound::Play("break", 10);
+            world->SetTile_FromWorld(-1, cursor.x, cursor.y);
+            focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
+        }
     }
+    else{
+        cursor_graphic->SetComplete(0);
+    }
+
     if(sf::Mouse::isButtonPressed(sf::Mouse::Right)){
         
         world->SetTile_FromWorld(selected_block, mouse_pos.x, mouse_pos.y);
     }
 }
 
-void Player::Draw_Debug(sf::RenderTarget& surface){
-
-    sf::Vector2i cursor = world->RoundWorld(mouse_pos.x, mouse_pos.y);
-    cursor_shape.setPosition(GetScene()->GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(cursor.x, cursor.y)));
+void Player::Draw(sf::RenderTarget& surface){
 
     surface.draw(cursor_shape);
 }
@@ -96,6 +133,11 @@ void Player::CatchEvent(sf::Event event){
     if (event.type == sf::Event::KeyPressed)
     {
         switch(event.key.scancode){
+
+            case sf::Keyboard::Scan::R:{
+                GetTransform()->position = sf::Vector2f(50, -500);
+                break;
+            }
 
             case sf::Keyboard::Scan::W: {
         
@@ -130,16 +172,5 @@ void Player::CatchEvent(sf::Event event){
         }
         
     }       
-    if(event.type == sf::Event::MouseButtonPressed){
-        return;
-        if(event.mouseButton.button == 0){
-            
-            world->SetTile_FromWorld(-1, mouse_pos.x, mouse_pos.y);
-        }
-        if(event.mouseButton.button == 1){
-            
-            world->SetTile_FromWorld(BlockCode::c_Stone_Bricks, mouse_pos.x, mouse_pos.y);
-        }
-    }
 }
 

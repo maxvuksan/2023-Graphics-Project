@@ -11,7 +11,8 @@ class SpriteRenderer : public Component{
         /*
             @param label Name of the texture
         */
-        void SetTexture(const char* label);
+        void SetTexture(const char* label, bool center = false);
+        void SetTextureRect(int left, int top, int width, int height);
 
     private:
         sf::Sprite sprite;

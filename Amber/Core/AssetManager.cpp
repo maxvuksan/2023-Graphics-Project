@@ -8,6 +8,8 @@
 std::unordered_map<const char*, sf::Texture> AssetManager::textures; 
 std::unordered_map<const char*, Scene*> AssetManager::scenes; /*scenes are stored as pointers to allow for inherited scenes*/
 std::unordered_map<const char*, sf::Shader*> AssetManager::shaders;
+std::unordered_map<const char*, AnimationSet*> AssetManager::animation_sets;
+std::unordered_map<const char*, sf::SoundBuffer> AssetManager::sounds;
 
 void AssetManager::Construct()
 {
@@ -73,6 +75,23 @@ sf::Shader* AssetManager::GetShader(const char* label){
 
 }
 
+AnimationSet* AssetManager::CreateAnimationSet(const char* label, std::vector<Animation> animations, std::vector<const char*> state_labels){
+    animation_sets.insert(std::make_pair(label, new AnimationSet(animations, state_labels))); 
+    return animation_sets[label];
+}
+AnimationSet* AssetManager::GetAnimationSet(const char* label){
+
+    for(auto& result : animation_sets){
+
+        if(strcmp(result.first, label) == 0){
+            return result.second;
+        }
+    }
+
+    std::cout << "ERROR : An AnimationSet with the label '" << label << "' could not be found\n";
+    return nullptr;
+}
+
 sf::Texture* AssetManager::CreateTexture(const char* label, const char* file_location, bool repeat){
     sf::Texture texture;
     if (!texture.loadFromFile(file_location))
@@ -85,7 +104,6 @@ sf::Texture* AssetManager::CreateTexture(const char* label, const char* file_loc
 
     return &textures.find(label)->second;
 }
-
 sf::Texture* AssetManager::CreateTexture(const char* label, const sf::RenderTexture& render_texture, bool repeat){
     sf::Texture texture = render_texture.getTexture();
     texture.setRepeated(repeat);
@@ -93,8 +111,6 @@ sf::Texture* AssetManager::CreateTexture(const char* label, const sf::RenderText
 
     return &textures.find(label)->second;
 }
-
-
 sf::Texture* AssetManager::GetTexture(const char* label){
     for(auto& result : textures){
 
@@ -107,6 +123,28 @@ sf::Texture* AssetManager::GetTexture(const char* label){
     return nullptr;
 }
 
+sf::SoundBuffer* AssetManager::CreateSound(const char* label, const char* file_location){
+    sf::SoundBuffer sound_buf;
+    if (!sound_buf.loadFromFile(file_location))
+    {
+        std::cout << "ERROR : Could not create sound buffer " << label << " from location " << file_location << "\n";
+        return nullptr;
+    }
+    sounds.insert(std::make_pair(label, sound_buf));
+    return &sounds.find(label)->second;
+}
+sf::SoundBuffer* AssetManager::GetSound(const char* label){
+    
+    for(auto& result : sounds){
+
+        if(strcmp(result.first, label) == 0){
+            return &result.second;
+        }
+    }
+
+    std::cout << "ERROR : A sound buffer with the label '" << label << "' could not be found\n";
+    return nullptr;
+}
 
 Scene* AssetManager::GetScene(const char* label){
    
@@ -121,10 +159,16 @@ Scene* AssetManager::GetScene(const char* label){
     return nullptr;
 }
 
+
+
 void AssetManager::Destruct(){
     
     for (auto& scene : scenes) {
         delete scene.second;
+    }
+
+    for (auto& animation_s : animation_sets) {
+        delete animation_s.second;
     }
 
     for (auto& shader : shaders) {

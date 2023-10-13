@@ -39,7 +39,41 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[SCENE]->display();
 
 
-    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+    // tilemap edge lighting
+
+    render_textures[LIGHTING]->clear(sf::Color::White);
+    for(auto tmap : *scene->GetTilemaps()){
+        if(!tmap->GetObject()->IsActive()){
+            continue;
+        }
+
+        tmap->Draw_EdgeLighting(*render_textures[LIGHTING]);
+    }
+    render_textures[LIGHTING]->display();
+
+
+    /* LIGHTING CONCEPT!
+
+    auto blur_shader = AssetManager::GetShader("Amber_Blur");
+    blur_shader->setUniform("u_strength", 3.0f);
+
+    render_textures[LIGHTING_BLURRED]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_shader);
+    render_textures[LIGHTING_BLURRED]->display();
+    blur_shader->setUniform("u_texture", render_textures[LIGHTING]->getTexture());
+    blur_shader->setUniform("u_texture_pixel_step", 
+        sf::Vector2f(1 / (float)render_textures[LIGHTING]->getTexture().getSize().x,
+                    1 / (float)render_textures[LIGHTING]->getTexture().getSize().y));
+
+    render_textures[LIGHTING_BLURRED]->display();
+
+    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[LIGHTING_BLURRED]->getTexture()));
+    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()), sf::BlendMultiply);
+
+    */
+
+   render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+
+
 
 
 
@@ -49,12 +83,14 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     }
 
 
-    // render UI
-    
+
+
+
     auto ui = scene->GetUI();
     for (auto layer = ui->begin(); layer != ui->end(); layer++) {
         RenderLayer(*render_textures[COMPOSITE], layer->second);
     }
+
     
     render_textures[COMPOSITE]->display();
 
@@ -64,10 +100,11 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     // rescaling our final image to fit window
     sf::Sprite final_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
     final_image.setScale(Core::GetDisplayToWindowMultiplier());
-
+    
     surface.draw(final_image);
 
-
+    // render UI
+    
 }
 
 void RenderManager::RenderDebug(sf::RenderTarget& surface, Scene* scene){

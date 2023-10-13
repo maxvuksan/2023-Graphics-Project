@@ -1,4 +1,5 @@
 #include "Object.h"
+#include "Scene.h"
 #include <iostream>
 
 Object::Object() : active(true){
@@ -14,9 +15,22 @@ void Object::LinkScene(Scene* scene, int render_layer){
 }
 
 
-Object::~Object(){
+void Object::Destroy(){
+    OnDestroy();
 
-    this->OnDestroy();
+    for(auto& child : children){
+        child->Destroy();
+    }
+
+    if(deleted_from_ui_map){
+        GetScene()->DeleteUI(this);
+    }
+    else{
+        GetScene()->DeleteObject(this);
+    }
+}
+
+Object::~Object(){
 
     for(auto& comp : components){
         delete comp;

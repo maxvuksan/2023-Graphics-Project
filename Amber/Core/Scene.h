@@ -67,7 +67,6 @@ class Scene {
             Removes an object from the scene
             @param target The object to remove
         */
-        template <typename T>
         void DeleteObject(Object* target){
 
             for(int i = 0; i < objects[target->GetRenderLayer()].size(); i++){
@@ -91,13 +90,13 @@ class Scene {
             T* obj = new T;
             ui[render_layer].push_back(obj);
 
+            obj->SetUI(true);
             obj->LinkScene(this, render_layer);
             obj->Start();
 
             return obj;
         }
 
-        template <typename T>
         void DeleteUI(Object* target){
 
             for(int i = 0; i < ui[target->GetRenderLayer()].size(); i++){

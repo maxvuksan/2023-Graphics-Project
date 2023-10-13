@@ -1,7 +1,9 @@
 #pragma once
+#include <SFML/Audio.hpp>
 #include <unordered_map>
 #include <iostream>
 
+#include "../Object/Rendering/AnimationSet.h"
 #include "Scene.h"
 
 /*
@@ -25,10 +27,17 @@ class AssetManager {
         // assuming all shaders are fragment
         static sf::Shader* CreateShader(const char* label, const std::string fragment_file_location);
         static sf::Shader* GetShader(const char* label);
-        
+
+        static AnimationSet* CreateAnimationSet(const char* label, std::vector<Animation> animations, std::vector<const char*> state_labels);
+        static AnimationSet* GetAnimationSet(const char* label);
+
         static sf::Texture* CreateTexture(const char* label, const sf::RenderTexture& render_texture, bool repeat = false);
         static sf::Texture* CreateTexture(const char* label, const char* file_location, bool repeat = false);
         static sf::Texture* GetTexture(const char* label);
+        
+        static sf::SoundBuffer* CreateSound(const char* label, const char* file_location);
+        static sf::SoundBuffer* GetSound(const char* label);
+        
         /*
             Creates a scene of the specified type T (allowing only classes which inherit Scene)
         */
@@ -53,4 +62,6 @@ class AssetManager {
         static std::unordered_map<const char*, sf::Texture> textures; 
         static std::unordered_map<const char*, Scene*> scenes; /*scenes are stored as pointers to allow for inherited scenes*/
         static std::unordered_map<const char*, sf::Shader*> shaders;
+        static std::unordered_map<const char*, AnimationSet*> animation_sets;
+        static std::unordered_map<const char*, sf::SoundBuffer> sounds;
 };

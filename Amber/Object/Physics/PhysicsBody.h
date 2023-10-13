@@ -20,6 +20,6 @@ class PhysicsBody : public Component{
 
     private:
         float gravity_factor = 0.0005;
-        float gravity_max = 2;
+        float gravity_max = 1;
 
 };

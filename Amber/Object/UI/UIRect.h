@@ -25,7 +25,7 @@ class UIRect : public Object {
 
 
     public:
-        UIRect(): screen_location(FREE){}
+        UIRect(): width(0), height(0), screen_location(FREE){}
 
         // snap the rect into different screen locations
         void SetAlign(ScreenLocation);

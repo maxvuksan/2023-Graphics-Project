@@ -15,7 +15,6 @@ class TestScene : public Scene {
 
 
             Player* player = AddObject<Player>();
-            player->GetTransform()->position = sf::Vector2f(50, -1000);
             player->LinkWorld(world);
 
 
