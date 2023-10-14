@@ -24,7 +24,7 @@ class Object{
 
     public:
 
-        Object() : deleted_from_ui_map(false);
+        Object();
 
         virtual void Start(){}
         virtual void Update(){}

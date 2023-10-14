@@ -1,8 +1,8 @@
 #include "Object.h"
-#include "Scene.h"
+#include "../Core/Scene.h"
 #include <iostream>
 
-Object::Object() : active(true){
+Object::Object() : active(true), deleted_from_ui_map(false){
     this->transform = AddComponent<Transform>();
 }
 

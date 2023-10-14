@@ -7,5 +7,5 @@ struct WorldSettings{
     int LEVEL_DIRT = 8;
     int LEVEL_DIRT_TO_STONE = 9;
 
-    int MIN_TUNNEL_SPACING = 25; // the minimum distance surface tunnels can spawn be next to each other
+    int MIN_TUNNEL_SPACING = 15; // the minimum distance surface tunnels can spawn be next to each other
 };

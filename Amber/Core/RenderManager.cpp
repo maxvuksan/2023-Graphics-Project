@@ -52,10 +52,10 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[LIGHTING]->display();
 
 
-    /* LIGHTING CONCEPT!
+    // LIGHTING CONCEPT!
 
     auto blur_shader = AssetManager::GetShader("Amber_Blur");
-    blur_shader->setUniform("u_strength", 3.0f);
+    blur_shader->setUniform("u_strength", 2.0f);
 
     render_textures[LIGHTING_BLURRED]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_shader);
     render_textures[LIGHTING_BLURRED]->display();
@@ -69,9 +69,9 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[LIGHTING_BLURRED]->getTexture()));
     render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()), sf::BlendMultiply);
 
-    */
+    
 
-   render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+  // render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
 
 
 

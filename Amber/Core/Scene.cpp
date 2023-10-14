@@ -30,6 +30,7 @@ void Scene::SetActiveCamera(Camera* camera){
     active_camera = camera;
 }
 
+
 void Scene::InternalUpdate(){
     
     if(active_camera == nullptr){

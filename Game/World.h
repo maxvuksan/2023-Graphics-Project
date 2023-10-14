@@ -83,7 +83,7 @@ class World : public Object{
         float one_divide_tilemap_height;
 
         // in chunks...
-        int width = 20;
-        int height = 20;
+        int width = 40;
+        int height = 40;
 
 };

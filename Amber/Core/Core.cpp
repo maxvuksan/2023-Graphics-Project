@@ -1,5 +1,6 @@
 #include "Core.h"
 #include "../Utility/Sound.h"
+#include <cmath>
 
 // Static Members ///////////////////////////////////////////////////
 
@@ -12,6 +13,7 @@ sf::RenderWindow Core::window;
 Scene* Core::current_scene;
 
 sf::Vector2f Core::display_to_window_multiplier;
+sf::Vector2f Core::window_to_display_multiplier;
 
 int Core::display_width; 
 int Core::display_height;         
@@ -37,6 +39,9 @@ Core::Core(int _window_width, int _window_height, int _display_width, int _displ
 
     display_to_window_multiplier.x = window_width / (float)display_width;
     display_to_window_multiplier.y = window_height / (float)display_height;
+
+    window_to_display_multiplier.x = display_width / (float)window_width;
+    window_to_display_multiplier.y = display_height / (float)window_height;
 
     if(!sf::Shader::isAvailable()){
         std::cout << "ERROR : Shaders are not supported, !sf::Shader::isAvailable\n";
@@ -65,8 +70,19 @@ void Core::Run(){
         sf::Event event;
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed){
                 window.close();
+            }
+
+            // updating window and display dimensions
+            if (event.type == sf::Event::Resized)
+            {
+                window_width = event.size.width;
+                window_height = event.size.height;
+
+                display_width = round((float)window_width * window_to_display_multiplier.x);
+                display_height = round((float)window_height * window_to_display_multiplier.y);
+            }
 
             this->CatchEvent(event);
             current_scene->InternalCatchEvent(event);

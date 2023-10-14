@@ -39,7 +39,7 @@ void World::Start() {
         }
     }
 
-   // TunnelingPass();
+    TunnelingPass();
 
     CalculateMinimap();
 }
@@ -192,7 +192,7 @@ void World::TunnelingPass(){
     int spacing = 0;
     for(int x = 0; x < width * tilemap_width; x++){
 
-        float noise_val = perlin.octave1D_01((x * 0.25), 2, 5);
+        float noise_val = perlin.octave1D_01((x * 0.5), 2, 5);
         
         if(noise_val > 0.7 && spacing > settings.MIN_TUNNEL_SPACING){
 
@@ -202,7 +202,7 @@ void World::TunnelingPass(){
             int radius_min = 3 + rand() % 5;
             int radius_max = 5 + rand() % 8;
 
-            Tunnel(50, settings.LEVEL_AIR * tilemap_height, std::min(radius_min, radius_max), std::max(radius_min, radius_max), angle, angle_step);   
+            Tunnel(30 + rand() % 60, settings.LEVEL_AIR * tilemap_height, std::min(radius_min, radius_max), std::max(radius_min, radius_max), angle, angle_step);   
             spacing = 0;
         }
 
@@ -215,7 +215,7 @@ void World::Tunnel(int x, int y, int radius_min, int radius_max, float angle, fl
     float radian_step = Calc::Radians(angle_step);
     float radians = Calc::Radians(angle);
 
-    int length = 40 + rand() % 100;
+    int length = 40 + rand() % 30;
 
     for(int i = 0; i < length; i++){
         

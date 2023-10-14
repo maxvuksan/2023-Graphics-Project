@@ -12,12 +12,12 @@ void Tilemap::Start(){
     shadow_render_texture.create(Core::GetDisplaySize().x, Core::GetDisplaySize().y);
     single_light_render_texture.create(Core::GetDisplaySize().x, Core::GetDisplaySize().y);
 }
+
 void Tilemap::OnDestroy(){
     object->GetScene()->RemoveTilemap(this);
 }
 
 void Tilemap::UpdateSecondary(){
-    
     
     tilemap_primitive.setPosition(Camera::WorldToScreenPosition(
         object->GetTransform()->position

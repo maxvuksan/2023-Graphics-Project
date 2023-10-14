@@ -4,7 +4,7 @@
 class Game : public Core{
 
     public:
-        Game() : Core(900, 900, 300, 300, "My Game"){}
+        Game() : Core(1200, 800, 600, 400, "My Game"){}
 
         void Start() override{
 

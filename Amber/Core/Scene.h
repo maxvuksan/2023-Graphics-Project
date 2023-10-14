@@ -37,7 +37,7 @@ class Scene {
         // Responsible for updating objects and object components
         void InternalUpdate();
         void InternalCatchEvent(sf::Event);
-        
+        void InternalOnResize();
 
         // Removes all objects from the scene and recalls the Start() method
         void Restart();

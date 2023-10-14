@@ -50,6 +50,7 @@ class Core{
         static sf::Vector2i DisplayToWindowPosition(sf::Vector2i _display_position);   
         // the scaling factor to get from a display position to window position
         static sf::Vector2f GetDisplayToWindowMultiplier() { return display_to_window_multiplier; }
+        static sf::Vector2f GetWindowToDisplayMultiplier() { return window_to_display_multiplier; }
 
         static bool DEBUG_MODE;
 
@@ -64,7 +65,7 @@ class Core{
         static int display_height; 
         
         static sf::Vector2f display_to_window_multiplier; 
-
+        static sf::Vector2f window_to_display_multiplier;
         static int window_width; // actual size of our window
         static int window_height;
 
