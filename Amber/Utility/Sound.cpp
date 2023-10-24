@@ -13,7 +13,6 @@ void Sound::Construct(){
 }
 
 void Sound::Play(const char* label, float volume, float pitch){
-    
     sf::SoundBuffer* sound_buf = AssetManager::GetSound(label);
     
     sound_cycle[sound_index].setVolume(volume);

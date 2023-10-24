@@ -399,14 +399,16 @@ void Tilemap::SetTile(int tile_index, unsigned int x, unsigned int y){
     tilemap_primitive.SetTile(tile_index, x, y);
     has_changed = true;
 }
-void Tilemap::SetTileSafe(int tile_index, int x, int y){
+bool Tilemap::SetTileSafe(int tile_index, int x, int y){
 
     if(x >= 0 && x < size.x){
         if(y >= 0 && y < size.y){
             tilemap_primitive.SetTile(tile_index, x, y);
             has_changed = true;
+            return true;
         }
     }
+    return false;
 }
 
 void Tilemap::SetRow(int tile_index, unsigned int row){    

@@ -6,8 +6,6 @@ class Tilemap;
 class TilemapCollider : public BoxCollider {
 
     /*
-        TilemapCollider
-
         An extension of BoxCollider, providing extra functionality for use
         in unison with a Tilemap
     */
@@ -15,6 +13,9 @@ class TilemapCollider : public BoxCollider {
     public:
         TilemapCollider();
         void Update() override;
+
+        // assigns which tilemap should be used to generate collider rects
+        void SetTilemap(Tilemap* tilemap);
 
         /*
             is a position within the bounds of the tilemap
@@ -37,6 +38,7 @@ class TilemapCollider : public BoxCollider {
         void CreateCollidersOptimized_JoinRows(std::vector<std::vector<Rect>>& blocks, sf::Vector2i tile_size);
         void CreateCollidersOptimized_FilterAndAddReferences(std::vector<std::vector<Rect*>>& block_refs, sf::Vector2i tile_size);
     
+        bool reset;
         Tilemap* tilemap;
         
         

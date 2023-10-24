@@ -5,6 +5,8 @@
 
 void Player::Start(){
 
+    std::cout << "add player\n";
+
     GetScene()->SetActiveCamera(AddComponent<Camera>());
 
     auto col = AddComponent<BoxCollider>();
@@ -33,13 +35,8 @@ void Player::Start(){
     pb = AddComponent<PhysicsBody>();
     AddComponent<PointLight>();
 
-    cursor_graphic = GetScene()->AddObject<CursorGraphic>(1);
-
-    cursor_shape.setOutlineColor(sf::Color::White);
-    cursor_shape.setSize(sf::Vector2f(8,8));
-    cursor_shape.setOutlineThickness(1);
-    cursor_shape.setFillColor(sf::Color::Transparent);
-
+    selected_block = 0;
+    cursor_graphic = GetScene()->AddUI<CursorGraphic>();
 }
 
 
@@ -72,14 +69,13 @@ void Player::CalculateMouse(){
     _mouse_pos.x -= round(player_center.x);
     _mouse_pos.y -= round(player_center.y);
 
-    mouse_pos = sf::Vector2i(round(GetTransform()->position.x) + _mouse_pos.x, 
+    mouse_world_pos = sf::Vector2i(round(GetTransform()->position.x) + _mouse_pos.x, 
                              round(GetTransform()->position.y) + _mouse_pos.y );
 
 
 
-    sf::Vector2i cursor = world->RoundWorld(mouse_pos.x, mouse_pos.y);
+    sf::Vector2i cursor = world->RoundWorld(mouse_world_pos.x, mouse_world_pos.y);
     cursor_graphic->GetTransform()->position = sf::Vector2f(cursor.x, cursor.y);
-    cursor_shape.setPosition(GetScene()->GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(cursor.x, cursor.y)));
 
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
@@ -118,13 +114,8 @@ void Player::CalculateMouse(){
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Right)){
         
-        world->SetTile_FromWorld(selected_block, mouse_pos.x, mouse_pos.y);
+        world->SetTile_FromWorld(selected_block, mouse_world_pos.x, mouse_world_pos.y);
     }
-}
-
-void Player::Draw(sf::RenderTarget& surface){
-
-    surface.draw(cursor_shape);
 }
 
 

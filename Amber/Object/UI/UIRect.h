@@ -21,7 +21,7 @@ enum ScreenLocation{
 /*
     base class for all UI elements
 */
-class UIRect : public Object { 
+class UIRect : public Component { 
 
 
     public:

@@ -1,3 +1,4 @@
+#pragma once
 #include "../Amber/Framework.h"
 
 // overlay to indicate the cursors interactions with the world, (e.g. breaking a block)
@@ -6,12 +7,17 @@ class CursorGraphic : public Object {
     public:
         void Start() override{
             
-            sr = AddComponent<SpriteRenderer>();
-            sr->SetTexture("cursor_breaking", false);
-            sf::Texture* texture = AssetManager::GetTexture("cursor_breaking");
+            image = AddComponent<UIImage>();
 
-            cellsize = texture->getSize().y;
-            width = texture->getSize().x;
+            image->SetTexture("cursor_breaking");
+
+            cellsize = image->height;
+            
+            rect.setSize(sf::Vector2f(cellsize, cellsize));
+            rect.setOutlineColor(sf::Color::White);
+            rect.setFillColor(sf::Color::Transparent);
+            rect.setOutlineThickness(1);
+
             completeness = -1;
             SetComplete(0);
         }
@@ -23,15 +29,19 @@ class CursorGraphic : public Object {
             
             this->completeness = Calc::Clamp(portion, 0, 1);
 
-            int frame_index = floor((completeness * width) / (float)cellsize);  
-            sr->SetTextureRect(frame_index * cellsize, 0, cellsize, cellsize);    
+            int frame_index = floor((completeness * image->width) / (float)cellsize);  
+            image->SetTextureRect(frame_index * cellsize, 0, cellsize, cellsize);    
+        }
+
+        void Draw(sf::RenderTarget& surface) override{
+            rect.setPosition(Camera::WorldToScreenPosition(GetTransform()->position));
+            surface.draw(rect);
         }
 
     private:
         float completeness;
 
-        int width;
+        UIImage* image;
+        sf::RectangleShape rect;
         int cellsize;
-        
-        SpriteRenderer* sr;
 };

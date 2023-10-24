@@ -2,12 +2,18 @@
 #include "WorldSettings.h"
 #include "BlockTypes.h"
 #include "Minimap.h"
+#include "WorldGenerator.h"
+#include "Chunk.h"
 
+class WorldGenerator;
 class World : public Object{
     
+    friend class WorldGenerator;
+
     public:
         void Start() override;
         void Update() override;
+        void CatchEvent(sf::Event event);
 
         // iterates over every chunk recalculating the minimap
         void CalculateMinimap();
@@ -17,17 +23,11 @@ class World : public Object{
             @returns true if the tile could be set, false otherwise
         */
         bool SetTile_FromWorld(int tile_index, int world_x, int world_y);
-        bool SetTile(int tile_index, int x, int y);
+        bool SetTile(int tile_index, int x, int y, SetMode set_mode = SetMode::OVERRIDE);
         // @returns the tile_index at a specific world position
         int GetTile_World(int world_x, int world_y);
         // @returns the tile_index at a specific coordinate
         int GetTile(int x, int y);
-
-        // shaping the terrain (hills, caves etc...)
-        void SculptingPass(int chunk_x, int chunk_y, Tilemap* tilemap);
-        // creating caves with direction
-        void TunnelingPass();
-        void Tunnel(int x, int y, int radius_min, int radius_max, float angle, float angle_step = 0);
 
         // converting world space coordinates to chunk relative and tilemap offsets
         bool ChunkInBounds(int chunk_x, int chunk_y);
@@ -46,9 +46,7 @@ class World : public Object{
         // can later be stored and reusued for circular drawing
         std::vector<sf::Vector2i> CalculateOffsetsInRadius(int radius);
         std::vector<sf::Vector2i> GetOffsetsInRadius(int radius);
-        void SetCircle(int tile_index, int x, int y, int radius);
-
-
+        void SetCircle(int tile_index, int x, int y, int radius, SetMode set_mode = SetMode::OVERRIDE);
 
         //the focus is what the world orients around (only load chunks around the focus transform, etc...)
         void SetFocus(Transform* focus);
@@ -59,16 +57,12 @@ class World : public Object{
         // storing tiles within specified radii, calculating via CalculateOFfsetsInRadius()
         std::unordered_map<int, std::vector<sf::Vector2i>> radius_offsets;
 
-        std::vector<std::vector<Object*>> chunks;
+        std::vector<std::vector<Chunk*>> chunks;
         
-
-        WorldSettings settings;
         Minimap* minimap;
+        WorldGenerator* generator;
 
-        PerlinNoise::seed_type seed; 
-        PerlinNoise perlin;
-
-        int loading_threshold = 300;
+        int loading_threshold = 400;
         int collider_threshold = 150;
 
         int tilesize_x = 8;

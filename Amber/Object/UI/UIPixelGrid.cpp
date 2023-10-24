@@ -14,7 +14,8 @@ void UIPixelGrid::Draw(sf::RenderTarget& surface){
 
     sf::Sprite sprite;
 
-    sprite.setPosition(GetTransform()->position);
+    sprite.setScale(object->GetTransform()->scale);
+    sprite.setPosition(object->GetTransform()->position);
     sprite.setTexture(texture, true);
 
     surface.draw(sprite);

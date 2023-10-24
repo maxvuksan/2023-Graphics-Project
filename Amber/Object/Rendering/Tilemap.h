@@ -60,8 +60,9 @@ class Tilemap : public Component
         int GetTile(int x, int y);
         
         void SetTile(int tile_index, unsigned int x, unsigned int y);
-        // performs a bounds check to ensure tile can be set... ignores out of bounds operations
-        void SetTileSafe(int tile_index, int x, int y);
+        // performs a bounds check to ensure tile can be set... ignores out of bounds operations, 
+        // @returns true if the tile was successfully set
+        bool SetTileSafe(int tile_index, int x, int y);
 
         void SetRow(int tile_index, unsigned int row);
         void SetColumn(int tile_index, unsigned int column);

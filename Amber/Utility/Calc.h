@@ -25,4 +25,8 @@ class Calc{
             return radians * 57.296;
         }
 
+        static float Lerp(float a, float b, float t){
+            return a * (1.0 - t) + b * t;
+        }
+
 };

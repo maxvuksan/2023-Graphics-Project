@@ -3,29 +3,30 @@
 #include "../Object.h"
 #include <iostream>
 
-TilemapCollider::TilemapCollider(): tilemap(nullptr){}
+TilemapCollider::TilemapCollider(): tilemap(nullptr), reset(true){}
 
 void TilemapCollider::Update(){
 
     // ensuring we have a Tilemap to work with
     if(tilemap == nullptr){
-        tilemap = object->GetComponent<Tilemap>();
         
-        // tilemap does not exist
-        if(tilemap == nullptr){
-            std::cout << "ERROR : A TilemapCollider is attached to an Object without a Tilemap, please add Tilemaps first, TilemapCollider::Update()\n";
-            return;
-        }
+        std::cout << "ERROR : A TilemapCollider is attached to an Object without a Tilemap, please set a tilemap with TilemapCollider::SetTilemap(), TilemapCollider::Update()\n";
+        return;
+    }
+    else if(reset){
+        reset = false;
 
         ClearRects();
         CreateCollidersOptimized();
-
     }
+}
 
+void TilemapCollider::SetTilemap(Tilemap* tilemap){
+    this->tilemap = tilemap;
 }
 
 void TilemapCollider::Reset(){
-    this->tilemap = nullptr;
+    reset = true;
 }
 
 bool TilemapCollider::WithinBoundsX(float x){

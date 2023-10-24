@@ -32,9 +32,10 @@ class Object{
         virtual void Draw_Window(sf::RenderTarget&){}
         virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
+        virtual void OnSetActive(){} // is called when SetActive(true) occurs
 
         bool IsActive(){ return active; }
-        void SetActive(bool state){ active = state; }
+        void SetActive(bool state){ if(active){ this->OnSetActive(); } active = state; }
         // should only be set by Scene::AddUI()
         void SetUI(bool state){ deleted_from_ui_map = state;}
 

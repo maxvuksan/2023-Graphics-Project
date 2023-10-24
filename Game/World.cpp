@@ -3,8 +3,7 @@
 
 void World::Start() {
 
-    seed = rand() % 999999;
-    perlin.reseed(seed);
+    std::cout << "created world\n";
 
     // creating each tilemap...
 
@@ -19,29 +18,32 @@ void World::Start() {
         chunks[x].resize(height, nullptr);
     }
 
-    minimap = GetScene()->AddObject<Minimap>();
+    minimap = GetScene()->AddUI<Minimap>();
     minimap->GetPixelGrid()->Create(width * tilemap_width, height * tilemap_height, sf::Color::Transparent);
-
 
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
 
-            chunks[x][y] = GetScene()->AddObject<Object>();
 
-            Tilemap* tmap = chunks[x][y]->AddComponent<Tilemap>();
-            tmap->Load("demoTexture", tilesize_x, tilesize_y, tilemap_width, tilemap_height);
+            // create chunk and place it in the correct position
+            chunks[x][y] = GetScene()->AddObject<Chunk>();
+            chunks[x][y]->Init(tilemap_width, tilemap_height, tilesize_x, tilesize_y);
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilesize_x * tilemap_width, y * tilesize_y * tilemap_height);
-            
-            SculptingPass(x, y, tmap);
-
-            chunks[x][y]->AddComponent<TilemapCollider>();
-
         }
     }
-
-    TunnelingPass();
+    WorldGenerator::Bind(this);
+    WorldGenerator::Generate();
 
     CalculateMinimap();
+}
+
+void World::CatchEvent(sf::Event event){
+    if (event.type == sf::Event::KeyPressed)
+    {
+        if(event.key.scancode == sf::Keyboard::Scan::M){
+            minimap->SetActive(!minimap->IsActive());
+        }
+    }
 }
 
 
@@ -49,7 +51,7 @@ void World::CalculateMinimap(){
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
             
-            Tilemap* tilemap = chunks.at(x).at(y)->GetComponent<Tilemap>();
+            Tilemap* tilemap = chunks.at(x).at(y)->main_tilemap;
 
             for(int t_x = 0; t_x < tilemap_width; t_x++){
                 for(int t_y = 0; t_y < tilemap_height; t_y++){
@@ -63,7 +65,7 @@ void World::CalculateMinimap(){
                         minimap->GetPixelGrid()->SetPixel(final_x, final_y, sf::Color::Transparent);
                     }
                     else{
-                        minimap->GetPixelGrid()->SetPixel(final_x, final_y, Blocks[tile].base_colour);
+                       minimap->GetPixelGrid()->SetPixel(final_x, final_y, Blocks[tile].base_colour);
                     }
                 }
             }
@@ -73,74 +75,6 @@ void World::CalculateMinimap(){
 
 }
 
-void World::SculptingPass(int x, int y, Tilemap* tilemap){
-
-    // air
-    if(y <= settings.LEVEL_AIR){
-        tilemap->SetAll(-1);
-    }
-    // surface
-    else if(y <= settings.LEVEL_DIRT){
-
-        for(int tile_x = 0; tile_x < tilemap_width; tile_x++){
-            
-            int _x = tile_x + (x * tilemap_width);
-
-            float noise_val = perlin.octave1D_01((_x * 0.04), 1, 2);
-            float noise_val2 = perlin.octave1D_01((_x * 0.015), 1, 3);
-            float noise_val3 = perlin.octave1D_01((_x * 0.008), 3, 1);
-                                    
-            float final_height = (noise_val + noise_val2 + noise_val3) * tilemap_height - ((y - settings.LEVEL_AIR) * tilemap_height);
-
-            final_height = round(Calc::Clamp(final_height, 0, tilemap_height));
-
-            tilemap->SetArea(BlockCode::c_Dirt, tile_x, tile_x + 1, final_height, tilemap_height);
-        }
-    }
-    // dirt pass ( shallow underground )
-    else if(y <= settings.LEVEL_DIRT){
-        tilemap->SetAll(BlockCode::c_Dirt);
-    }
-    // dirt -> stone 
-    else if(y <= settings.LEVEL_DIRT_TO_STONE){
-
-        tilemap->SetAll(BlockCode::c_Dirt);
-        
-        for(int tile_x = 0; tile_x < tilemap_width; tile_x++){
-            
-            int _x = tile_x + (x * tilemap_width);
-
-            float noise_val = perlin.octave1D_01((_x * 0.03), 1, 2);
-            float noise_val2 = perlin.octave1D_01((_x * 0.005), 1, 3);
-                                    
-            float final_height = (noise_val + noise_val2) * tilemap_height - ((y - settings.LEVEL_DIRT) * tilemap_height);
-
-            final_height = round(Calc::Clamp(final_height, 0, tilemap_height));
-
-            tilemap->SetArea(BlockCode::c_Stone, tile_x, tile_x + 1, final_height, tilemap_height);
-        }
-    }
-    // stone pass (deep underground, introducing caverns )
-    else{
-        tilemap->SetAll(BlockCode::c_Stone);
-        
-        for(int tile_y = 0; tile_y < tilemap_height; tile_y++){
-            for(int tile_x = 0; tile_x < tilemap_width; tile_x++){
-                
-                int _y = tile_y + (y * tilemap_height);
-                int _x = tile_x + (x * tilemap_width);
-
-                float noise_val = perlin.octave2D_01((_x * 0.04), (_y * 0.04), 2);
-                noise_val += perlin.octave2D_01((_x * 0.1), (_y * 0.1), 1);
-                noise_val += perlin.octave2D_01((_x * 0.013), (_y * 0.013), 1);
-
-                if(noise_val > 1.8){
-                    tilemap->SetTile(-1, tile_x, tile_y);
-                }
-            }
-        }
-    }
-}
 
 bool World::SetTile_FromWorld(int tile_index, int world_x, int world_y){
 
@@ -148,16 +82,29 @@ bool World::SetTile_FromWorld(int tile_index, int world_x, int world_y){
     return SetTile(tile_index, coord.x, coord.y);
 }
 
-bool World::SetTile(int tile_index, int x, int y){
+bool World::SetTile(int tile_index, int x, int y, SetMode set_mode){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
         return false;
     }
 
-    sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
-    chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->SetTile(tile_index, pos.x, pos.y);
 
+    if(set_mode != SetMode::OVERRIDE){
+
+        int tile = GetTile(x, y);
+
+        if(tile == -1 && set_mode == SetMode::ONLY_BLOCK){
+            return false;
+        }
+        if(tile != -1 && set_mode == SetMode::ONLY_AIR){
+            return false;
+        }     
+    }
+
+    sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
+
+    chunks.at(chunk.x).at(chunk.y)->main_tilemap->SetTileSafe(tile_index, pos.x, pos.y);
     // updating minimap... 
     
     if(tile_index == -1){
@@ -187,48 +134,6 @@ int World::GetTile(int x, int y){
     return chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->GetTile(pos.x, pos.y);
 }
 
-void World::TunnelingPass(){
-
-    int spacing = 0;
-    for(int x = 0; x < width * tilemap_width; x++){
-
-        float noise_val = perlin.octave1D_01((x * 0.5), 2, 5);
-        
-        if(noise_val > 0.7 && spacing > settings.MIN_TUNNEL_SPACING){
-
-            int angle = 220 + rand() % 100;
-            int angle_step = -4 + rand() % 8;
-
-            int radius_min = 3 + rand() % 5;
-            int radius_max = 5 + rand() % 8;
-
-            Tunnel(30 + rand() % 60, settings.LEVEL_AIR * tilemap_height, std::min(radius_min, radius_max), std::max(radius_min, radius_max), angle, angle_step);   
-            spacing = 0;
-        }
-
-        spacing++;
-        
-    } 
-}
-void World::Tunnel(int x, int y, int radius_min, int radius_max, float angle, float angle_step){
-    
-    float radian_step = Calc::Radians(angle_step);
-    float radians = Calc::Radians(angle);
-
-    int length = 40 + rand() % 30;
-
-    for(int i = 0; i < length; i++){
-        
-        int rand_radius = rand() % (radius_max - radius_min + 1) + radius_min;
-
-        SetCircle(-1, x, y, rand_radius);
-
-        x += cos(radians) * rand_radius;
-        y += sin(radians) * rand_radius;
-
-        radians += radian_step;
-    }
-}
 
 bool World::ChunkInBounds(int chunk_x, int chunk_y){
     if(chunk_x < 0 || chunk_y < 0 || chunk_x >= width || chunk_y >= height){
@@ -310,7 +215,7 @@ std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
     return in_radius;
 }
 
-void World::SetCircle(int tile_index, int x, int y, int radius){
+void World::SetCircle(int tile_index, int x, int y, int radius, SetMode set_mode){
 
     // set all tiles
     for(auto& offset : GetOffsetsInRadius(radius)){
@@ -319,22 +224,7 @@ void World::SetCircle(int tile_index, int x, int y, int radius){
         int _x = offset.x + x;
         int _y = offset.y + y;
 
-        SetTile(-1, _x, _y);
-
-        /*
-        // what chunk is the position in
-        sf::Vector2i chunk = ChunkFromCoord(_x, _y);
-
-        // edge case for world borders
-        if(!ChunkInBounds(chunk.x, chunk.y)){
-            continue;
-        }
-
-        // making position relative to selected chunk
-        sf::Vector2i pos = OffsetFromCoord(_x, _y, chunk.x, chunk.y);
-
-        chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->SetTileSafe(tile_index, pos.x, pos.y);
-        */
+        SetTile(tile_index, _x, _y, set_mode);
     }
 }
 

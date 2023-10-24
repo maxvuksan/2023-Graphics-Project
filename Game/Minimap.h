@@ -6,10 +6,10 @@ class Minimap : public Object{
         
         void Start();
         void CatchEvent(sf::Event) override;
+        void OnSetActive() override;
 
         UIPixelGrid* GetPixelGrid(){return pixel_grid;}
 
-        bool GetActive(){ return pixel_grid->IsActive(); } 
 
     private:
         UIPixelGrid* pixel_grid;
