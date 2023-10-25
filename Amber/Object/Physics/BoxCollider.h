@@ -27,16 +27,16 @@ class BoxCollider : public Collider {
             }
 
             float Left(){
-                return x + transform->position.x;
+                return x + transform->GetGlobalPosition().x;
             }
             float Right(){
-                return x + (int)width + transform->position.x;
+                return x + (int)width + transform->GetGlobalPosition().x;
             }
             float Top(){
-                return y + transform->position.y;
+                return y + transform->GetGlobalPosition().y;
             }
             float Bottom(){
-                return y + (int)height + transform->position.y;
+                return y + (int)height + transform->GetGlobalPosition().y;
             }
 
         };

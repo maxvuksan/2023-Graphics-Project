@@ -147,10 +147,10 @@ void BoxCollider::Draw_Debug(sf::RenderTarget& surface){
     for(auto& rect : rects){
         
         // corners of rectangle
-        sf::Vector2f tl = transform->position + sf::Vector2f(rect.x, rect.y);
-        sf::Vector2f tr = transform->position + sf::Vector2f(rect.x, rect.y) + sf::Vector2f(rect.width * transform->scale.x, 0);
-        sf::Vector2f bl = transform->position + sf::Vector2f(rect.x, rect.y) + sf::Vector2f(0, rect.height * transform->scale.y);
-        sf::Vector2f br = transform->position + sf::Vector2f(rect.x, rect.y) + sf::Vector2f(rect.width * transform->scale.x, rect.height * transform->scale.y);
+        sf::Vector2f tl = transform->GetGlobalPosition() + sf::Vector2f(rect.x, rect.y);
+        sf::Vector2f tr = transform->GetGlobalPosition() + sf::Vector2f(rect.x, rect.y) + sf::Vector2f(rect.width * transform->scale.x, 0);
+        sf::Vector2f bl = transform->GetGlobalPosition() + sf::Vector2f(rect.x, rect.y) + sf::Vector2f(0, rect.height * transform->scale.y);
+        sf::Vector2f br = transform->GetGlobalPosition() + sf::Vector2f(rect.x, rect.y) + sf::Vector2f(rect.width * transform->scale.x, rect.height * transform->scale.y);
 
         sf::VertexArray vertex_array;
         vertex_array.setPrimitiveType(sf::LineStrip);

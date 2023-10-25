@@ -16,15 +16,6 @@ class Game : public Core{
 
             AssetManager::CreateScene<TestScene>("TestScene");
 
-
-            AssetManager::CreateAnimationSet(
-                "cursor_breaking", 
-                {Animation("cursor_breaking", 8, 0, 4, 100)}, 
-                
-                {"breaking"}
-            );
-
-
             LoadScene("TestScene");
         }
-}; 
+};  

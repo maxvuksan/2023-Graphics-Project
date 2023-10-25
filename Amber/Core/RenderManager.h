@@ -12,6 +12,7 @@ class RenderManager{
         LIGHTING_BLURRED,
         LIGHTING_FINAL,
         SCENE,
+        SCENE_OFFSCREEN,
         COMPOSITE, // mixing lighting and scene
         NUMBER_OF_RENDER_PASSES // signifies the end
     };

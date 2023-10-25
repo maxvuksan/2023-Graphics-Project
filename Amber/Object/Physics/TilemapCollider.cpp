@@ -35,7 +35,7 @@ bool TilemapCollider::WithinBoundsX(float x){
         return false;
     }
 
-    sf::Vector2f t_pos = object->GetTransform()->position;
+    sf::Vector2f t_pos = object->GetTransform()->GetGlobalPosition();
 
     if(x > t_pos.x && x < t_pos.x + (tilemap->GetWidth() * tilemap->GetTileSize().x)){
         return true;
@@ -48,7 +48,7 @@ bool TilemapCollider::WithinBoundsY(float y){
         return false;
     }
 
-    sf::Vector2f t_pos = object->GetTransform()->position;
+    sf::Vector2f t_pos = object->GetTransform()->GetGlobalPosition();
 
     if(y > t_pos.y && y < t_pos.y + (tilemap->GetHeight() * tilemap->GetTileSize().y)){
         return true;

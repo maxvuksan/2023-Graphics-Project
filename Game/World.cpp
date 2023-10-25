@@ -3,8 +3,6 @@
 
 void World::Start() {
 
-    std::cout << "created world\n";
-
     // creating each tilemap...
 
     half_tilemap_width = floor(tilemap_width * 0.5f);
@@ -33,7 +31,6 @@ void World::Start() {
     }
     WorldGenerator::Bind(this);
     WorldGenerator::Generate();
-
     CalculateMinimap();
 }
 
@@ -50,8 +47,6 @@ void World::CatchEvent(sf::Event event){
 void World::CalculateMinimap(){
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
-            
-            Tilemap* tilemap = chunks.at(x).at(y)->main_tilemap;
 
             for(int t_x = 0; t_x < tilemap_width; t_x++){
                 for(int t_y = 0; t_y < tilemap_height; t_y++){
@@ -59,7 +54,7 @@ void World::CalculateMinimap(){
                     int final_x = x * tilemap_width + t_x;
                     int final_y = y * tilemap_height + t_y;
 
-                    int tile = tilemap->GetTile(t_x, t_y);
+                    int tile = chunks.at(x).at(y)->GetTile(t_x, t_y, SetLocation::FOREGROUND);
 
                     if(tile == -1){
                         minimap->GetPixelGrid()->SetPixel(final_x, final_y, sf::Color::Transparent);
@@ -75,24 +70,22 @@ void World::CalculateMinimap(){
 
 }
 
-
-bool World::SetTile_FromWorld(int tile_index, int world_x, int world_y){
+bool World::SetTileWorld(int tile_index, int world_x, int world_y, SetLocation set_location){
 
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
     return SetTile(tile_index, coord.x, coord.y);
 }
 
-bool World::SetTile(int tile_index, int x, int y, SetMode set_mode){
+bool World::SetTile(int tile_index, int x, int y, SetLocation set_location, SetMode set_mode){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
         return false;
     }
 
-
     if(set_mode != SetMode::OVERRIDE){
 
-        int tile = GetTile(x, y);
+        int tile = GetTile(x, y, set_location);
 
         if(tile == -1 && set_mode == SetMode::ONLY_BLOCK){
             return false;
@@ -104,7 +97,8 @@ bool World::SetTile(int tile_index, int x, int y, SetMode set_mode){
 
     sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
 
-    chunks.at(chunk.x).at(chunk.y)->main_tilemap->SetTileSafe(tile_index, pos.x, pos.y);
+    chunks.at(chunk.x).at(chunk.y)->SetTile(tile_index, pos.x, pos.y, set_location);
+
     // updating minimap... 
     
     if(tile_index == -1){
@@ -117,13 +111,12 @@ bool World::SetTile(int tile_index, int x, int y, SetMode set_mode){
     return true;
 }
 
-
-int World::GetTile_World(int world_x, int world_y){
+int World::GetTileWorld(int world_x, int world_y, SetLocation get_location){
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
-    return GetTile(coord.x, coord.y);
+    return GetTile(coord.x, coord.y, get_location);
 }
 
-int World::GetTile(int x, int y){
+int World::GetTile(int x, int y, SetLocation get_location){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
@@ -131,9 +124,8 @@ int World::GetTile(int x, int y){
     }
 
     sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
-    return chunks.at(chunk.x).at(chunk.y)->GetComponent<Tilemap>()->GetTile(pos.x, pos.y);
+    return chunks.at(chunk.x).at(chunk.y)->GetTile(pos.x, pos.y, get_location); 
 }
-
 
 bool World::ChunkInBounds(int chunk_x, int chunk_y){
     if(chunk_x < 0 || chunk_y < 0 || chunk_x >= width || chunk_y >= height){
@@ -215,7 +207,7 @@ std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
     return in_radius;
 }
 
-void World::SetCircle(int tile_index, int x, int y, int radius, SetMode set_mode){
+void World::SetCircle(int tile_index, int x, int y, int radius, SetLocation set_location, SetMode set_mode){
 
     // set all tiles
     for(auto& offset : GetOffsetsInRadius(radius)){
@@ -224,7 +216,7 @@ void World::SetCircle(int tile_index, int x, int y, int radius, SetMode set_mode
         int _x = offset.x + x;
         int _y = offset.y + y;
 
-        SetTile(tile_index, _x, _y, set_mode);
+        SetTile(tile_index, _x, _y, set_location, set_mode);
     }
 }
 
@@ -251,10 +243,10 @@ void World::Update(){
             if(dis_x < collider_threshold &&
                dis_y < collider_threshold){
                 
-                chunks[x][y]->GetComponent<TilemapCollider>()->Reset();
+                chunks[x][y]->EnableColliders();
             }
             else{
-                chunks[x][y]->GetComponent<TilemapCollider>()->ClearRects();
+                chunks[x][y]->ClearColliders();
             }
 
 
@@ -263,12 +255,9 @@ void World::Update(){
 
                 chunks[x][y]->SetActive(true);
 
-                // ISSUE : CAUSING POSSIBLE MEMORY LEAK? 
-                // chunks[x][y]->GetComponent<Tilemap>()->CalculateEdges();
             }
             else{
                 chunks[x][y]->SetActive(false);
-                chunks[x][y]->GetComponent<Tilemap>()->ClearEdges();
             }
         }
     }

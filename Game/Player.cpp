@@ -5,8 +5,6 @@
 
 void Player::Start(){
 
-    std::cout << "add player\n";
-
     GetScene()->SetActiveCamera(AddComponent<Camera>());
 
     auto col = AddComponent<BoxCollider>();
@@ -81,7 +79,7 @@ void Player::CalculateMouse(){
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
         
         if(cursor != focused_block_position){
-            focused_block = world->GetTile_World(cursor.x, cursor.y);
+            focused_block = world->GetTileWorld(cursor.x, cursor.y);
             focused_block_position = cursor;
 
             breaking_completeness = 0;
@@ -104,7 +102,7 @@ void Player::CalculateMouse(){
         if(breaking_completeness >= 1){
             // block breaks...
             Sound::Play("break", 10);
-            world->SetTile_FromWorld(-1, cursor.x, cursor.y);
+            world->SetTileWorld(-1, cursor.x, cursor.y);
             focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
         }
     }
@@ -114,7 +112,7 @@ void Player::CalculateMouse(){
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Right)){
         
-        world->SetTile_FromWorld(selected_block, mouse_world_pos.x, mouse_world_pos.y);
+        world->SetTileWorld(selected_block, mouse_world_pos.x, mouse_world_pos.y);
     }
 }
 

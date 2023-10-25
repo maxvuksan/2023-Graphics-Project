@@ -63,6 +63,22 @@ class Scene {
             return obj;
         }
 
+        // Adds an object to the scene which has already had its memory allocated
+        Object* AddExisitingObject(Object* obj, int render_layer){
+            
+            // not in map yet
+            if(objects.count(render_layer) < 1){
+                objects[render_layer] = {};
+            }
+
+            objects[render_layer].push_back(obj);
+
+            obj->LinkScene(this, render_layer);
+            obj->Start();
+
+            return obj;
+        }
+
         /*
             Removes an object from the scene
             @param target The object to remove

@@ -24,7 +24,7 @@ enum BlockCode{
 struct BlockData{
 
     int durability = 100;
-    sf::Color base_colour = sf::Color(0,0,0); // used to minimap
+    sf::Color base_colour = sf::Color(0,0,0); // used for minimap
 };
 
 

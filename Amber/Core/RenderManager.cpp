@@ -31,59 +31,60 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     auto objects = scene->GetObjects();
     
     // clear scene texture
-    render_textures[SCENE]->clear(Scene::GetActiveCamera()->background_colour);
+    render_textures[SCENE_OFFSCREEN]->clear(Scene::GetActiveCamera()->background_colour);
 
-    for (auto layer = objects->begin(); layer != objects->end(); layer++) {
-        RenderLayer(*render_textures[SCENE], layer->second);
-    }
-    render_textures[SCENE]->display();
-
-
-    // tilemap edge lighting
-
-    render_textures[LIGHTING]->clear(sf::Color::White);
-    for(auto tmap : *scene->GetTilemaps()){
-        if(!tmap->GetObject()->IsActive()){
-            continue;
-        }
-
-        tmap->Draw_EdgeLighting(*render_textures[LIGHTING]);
-    }
-    render_textures[LIGHTING]->display();
-
-
-    // LIGHTING CONCEPT!
-
+    // setup blur shader
     auto blur_shader = AssetManager::GetShader("Amber_Blur");
-    blur_shader->setUniform("u_strength", 2.0f);
-
-    render_textures[LIGHTING_BLURRED]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_shader);
-    render_textures[LIGHTING_BLURRED]->display();
     blur_shader->setUniform("u_texture", render_textures[LIGHTING]->getTexture());
     blur_shader->setUniform("u_texture_pixel_step", 
         sf::Vector2f(1 / (float)render_textures[LIGHTING]->getTexture().getSize().x,
                     1 / (float)render_textures[LIGHTING]->getTexture().getSize().y));
 
-    render_textures[LIGHTING_BLURRED]->display();
+    for (auto layer = objects->begin(); layer != objects->end(); layer++) {
+        
+        // clear lighting texture for this layer
+        render_textures[LIGHTING]->clear(sf::Color::White);
+        
+        for(auto obj : layer->second){
 
-    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[LIGHTING_BLURRED]->getTexture()));
-    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()), sf::BlendMultiply);
+            if(!obj->IsActive()){
+                continue;
+            }
 
-    
+            // if it has a tilemap, we must consider lighting conditions
+            Tilemap* tilemap = obj->GetComponent<Tilemap>();
+            if(tilemap != nullptr){
+                tilemap->Draw_EdgeLighting(*render_textures[LIGHTING]);
+            }
 
-  // render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+            // draw objects and components
+            for(auto comp : *obj->GetComponents()){
+                comp->Draw(*render_textures[SCENE_OFFSCREEN]);       
+            }
+            obj->Draw(*render_textures[SCENE_OFFSCREEN]);       
+        }
+        render_textures[LIGHTING]->display();
+        render_textures[SCENE_OFFSCREEN]->display();
 
+        // blur our lighting
+        blur_shader->setUniform("u_strength", 2.0f);
+        render_textures[LIGHTING_BLURRED]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_shader);
+        render_textures[LIGHTING_BLURRED]->display();
 
+        // compose our layer with lighting from that render layer
+        render_textures[SCENE]->draw(sf::Sprite(render_textures[LIGHTING_BLURRED]->getTexture()));
+        render_textures[SCENE]->draw(sf::Sprite(render_textures[SCENE_OFFSCREEN]->getTexture()), sf::BlendMultiply);
+    }
+    // we have drawn our scene
+    render_textures[SCENE]->display();
 
+    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
 
 
     // render debug graphics
     if(Core::DEBUG_MODE){
         RenderDebug(*render_textures[COMPOSITE], scene);
     }
-
-
-
 
 
     auto ui = scene->GetUI();
@@ -93,8 +94,6 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     
     render_textures[COMPOSITE]->display();
-
-
 
 
     // rescaling our final image to fit window
@@ -146,6 +145,7 @@ void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>&
         }
         obj->Draw(surface);       
     }
+
 }
 
 /*

@@ -34,7 +34,7 @@ class Object{
         virtual void CatchEvent(sf::Event){}
         virtual void OnSetActive(){} // is called when SetActive(true) occurs
 
-        bool IsActive(){ return active; }
+        bool IsActive();
         void SetActive(bool state){ if(active){ this->OnSetActive(); } active = state; }
         // should only be set by Scene::AddUI()
         void SetUI(bool state){ deleted_from_ui_map = state;}
@@ -120,14 +120,30 @@ class Object{
             
         }
         
+        /*
+            removes the object from the scene, also calls OnDestroy() which can be overrided
+        */
         void Destroy();
 
+        /*
+            creates a new object, attaching to this object as a child. 
+            When the parent is set active or destroyed, the child does the same
+
+            @returns A pointer to the newly created object
+        */
         template <typename T>
-        T* AddChild(){
+        T* AddChild(int render_Layer = 0){
             
-            Object* child = new T;
-            children.push_back(child);
+            T* t = new T;
+            Object* obj = AddObjectToScene(t, render_Layer);
+            obj->parent = this;
+            children.push_back(obj);
+
+            return t;
         }
+
+        Object* GetParent();
+
         
         ~Object(); 
 
@@ -137,8 +153,16 @@ class Object{
 
     private:
 
+        // any children are funneled to this function to be added to the scene object vector
+        Object* AddObjectToScene(Object* object, int render_layer);
+
         int render_layer;
+
+        // if either is false, treat as disabled
+        Object* parent; 
         bool active;
+
+        // should this object be deleted from the ui map or object map
         bool deleted_from_ui_map; 
 
         Scene* scene;

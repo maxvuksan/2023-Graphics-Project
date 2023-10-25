@@ -21,9 +21,21 @@ void WorldGenerator::SculptingPass(){
     for(int x = 0; x < world->width; x++){
         for(int y = 0; y < world->height; y++){
 
-            Sculpt(x, y, world->chunks[x][y]->main_tilemap);
+            Sculpt(x, y, world->chunks[x][y]->GetTilemap(SetLocation::FOREGROUND));
         }
     }
+
+    for(int x = 0; x < world->width; x++){
+        for(int y = 3; y < world->height; y++){
+
+            for(int t_x = 0; t_x < world->tilemap_width; t_x++){
+                for(int t_y = 0; t_y < world->tilemap_width; t_y++){
+                    world->chunks[x][y]->SetTile(1, t_x, t_y, SetLocation::BACKGROUND);
+                }
+            }
+        }
+    }
+
 
 }
 void WorldGenerator::Sculpt(int x, int y, Tilemap* tilemap){
@@ -200,5 +212,5 @@ void WorldGenerator::SpreadOre(int tile_index, int x, int y, int radius_min, int
     
     int rand_radius = rand() % (radius_max - radius_min + 1) + radius_min;
 
-    world->SetCircle(tile_index, x, y, rand_radius, set_mode);
+    world->SetCircle(tile_index, x, y, rand_radius, SetLocation::FOREGROUND, set_mode);
 }

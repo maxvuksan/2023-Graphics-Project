@@ -10,6 +10,10 @@ enum SetMode{
     ONLY_BLOCK, // only allows setting on other blocks ( != -1 tiles)
 };
 
+enum SetLocation{
+    FOREGROUND, // collidable ground
+    BACKGROUND, // decoratie background
+};
 
 struct WorldSettings{
 

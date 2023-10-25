@@ -22,12 +22,12 @@ class World : public Object{
             converts a world position to the appropriate chunks SetTile call
             @returns true if the tile could be set, false otherwise
         */
-        bool SetTile_FromWorld(int tile_index, int world_x, int world_y);
-        bool SetTile(int tile_index, int x, int y, SetMode set_mode = SetMode::OVERRIDE);
+        bool SetTileWorld(int tile_index, int world_x, int world_y, SetLocation set_location = SetLocation::FOREGROUND);
+        bool SetTile(int tile_index, int x, int y, SetLocation set_location = SetLocation::FOREGROUND, SetMode set_mode = SetMode::OVERRIDE);
         // @returns the tile_index at a specific world position
-        int GetTile_World(int world_x, int world_y);
+        int GetTileWorld(int world_x, int world_y, SetLocation set_location = SetLocation::FOREGROUND);
         // @returns the tile_index at a specific coordinate
-        int GetTile(int x, int y);
+        int GetTile(int x, int y, SetLocation set_location = SetLocation::FOREGROUND);
 
         // converting world space coordinates to chunk relative and tilemap offsets
         bool ChunkInBounds(int chunk_x, int chunk_y);
@@ -46,7 +46,7 @@ class World : public Object{
         // can later be stored and reusued for circular drawing
         std::vector<sf::Vector2i> CalculateOffsetsInRadius(int radius);
         std::vector<sf::Vector2i> GetOffsetsInRadius(int radius);
-        void SetCircle(int tile_index, int x, int y, int radius, SetMode set_mode = SetMode::OVERRIDE);
+        void SetCircle(int tile_index, int x, int y, int radius, SetLocation set_location = SetLocation::FOREGROUND, SetMode set_mode = SetMode::OVERRIDE);
 
         //the focus is what the world orients around (only load chunks around the focus transform, etc...)
         void SetFocus(Transform* focus);
@@ -77,7 +77,7 @@ class World : public Object{
         float one_divide_tilemap_height;
 
         // in chunks...
-        int width = 40;
-        int height = 40;
+        int width = 50;
+        int height = 60;
 
 };

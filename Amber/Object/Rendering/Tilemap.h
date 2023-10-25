@@ -68,7 +68,21 @@ class Tilemap : public Component
         void SetColumn(int tile_index, unsigned int column);
         void SetArea(int tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
         void SetAll(int tile_index);
+
+        // do the tiles have an effect on lighting
+        void SetInteractsLight(bool interacts);
+
+        void SetShowOverlayColour(bool show_overlay_colour);
+        void SetOverlayColour(sf::Color overlay_colour);
+
     private:
+
+        sf::Shader* overlay_shader;
+
+        bool show_overlay_colour;
+        sf::Color overlay_colour;
+        
+        bool interacts_with_light;
 
         sf::Vector2i size;
         sf::Vector2i tile_size;

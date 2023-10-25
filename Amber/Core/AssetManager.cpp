@@ -15,6 +15,7 @@ void AssetManager::Construct()
 {
     CreateShader("Amber_Blur", "Amber/Shaders/Blur.frag");
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
+    CreateShader("Amber_ColourOverlay", "Amber/Shaders/ColourOverlay.frag");
 
     // creating a shadow texture, to swap to when rendering shadows off a textured vertex buffer 
     sf::RenderTexture shadow_texture;

@@ -8,6 +8,9 @@
 
 void Tilemap::Start(){
     
+    show_overlay_colour = false;
+    overlay_colour = sf::Color(0,0,0,0.5);
+
     object->GetScene()->AddTilemap(this);
     shadow_render_texture.create(Core::GetDisplaySize().x, Core::GetDisplaySize().y);
     single_light_render_texture.create(Core::GetDisplaySize().x, Core::GetDisplaySize().y);
@@ -20,7 +23,7 @@ void Tilemap::OnDestroy(){
 void Tilemap::UpdateSecondary(){
     
     tilemap_primitive.setPosition(Camera::WorldToScreenPosition(
-        object->GetTransform()->position
+        object->GetTransform()->GetGlobalPosition()
     ));
 
     tilemap_primitive.setScale(object->GetTransform()->scale);
@@ -242,7 +245,7 @@ void Tilemap::CalculateEdges(){
 void Tilemap::Draw(sf::RenderTarget& surface){
 
     tilemap_primitive.setPosition(Camera::WorldToScreenPosition(
-        object->GetTransform()->position
+        object->GetTransform()->GetGlobalPosition()
     ));
 
     if(!this->loaded){
@@ -250,6 +253,15 @@ void Tilemap::Draw(sf::RenderTarget& surface){
     }
     tilemap_primitive.RevertTexture();
     surface.draw(tilemap_primitive);
+
+    if(show_overlay_colour){
+
+        //std::cout << overlay_colour.r << " " << overlay_colour.g << " " << overlay_colour.b << " " << overlay_colour.a << "\n";
+
+        overlay_shader->setParameter("u_colour", sf::Color(overlay_colour.r, overlay_colour.g, overlay_colour.b));
+        overlay_shader->setParameter("u_blend", overlay_colour.a / 255.0f);
+        surface.draw(tilemap_primitive, overlay_shader);
+    }
 }
 
 void Tilemap::Draw_Debug(sf::RenderTarget& surface){
@@ -281,6 +293,10 @@ void Tilemap::Draw_Debug(sf::RenderTarget& surface){
 
 void Tilemap::Draw_ShadowPass(sf::RenderTarget& surface){
     
+    if(!interacts_with_light){
+        return;
+    }
+
     if(!this->loaded){
         return;
     }
@@ -304,7 +320,7 @@ void Tilemap::Draw_ShadowPass(sf::RenderTarget& surface){
         for(auto& edge : edges){
 
 
-            sf::Vector2f light_pos = camera->WorldToScreenPosition(light->GetObject()->GetTransform()->position);
+            sf::Vector2f light_pos = camera->WorldToScreenPosition(light->GetObject()->GetTransform()->GetGlobalPosition());
             sf::Vector2f start = camera->WorldToScreenPosition(edge.start);
             sf::Vector2f end = camera->WorldToScreenPosition(edge.end);
 
@@ -337,6 +353,11 @@ void Tilemap::Draw_ShadowPass(sf::RenderTarget& surface){
 }
 
 void Tilemap::Draw_ShadowPass_PostBlur(sf::RenderTarget& surface){
+
+    if(!interacts_with_light){
+        return;
+    }
+
     if(!this->loaded){
         return;
     }
@@ -370,6 +391,8 @@ bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned 
         std::cout << "ERROR : Failed to call TilemapPrimitive::Load()\n";
         return false;
     }
+
+    overlay_shader = AssetManager::GetShader("Amber_ColourOverlay");
 
     size = sf::Vector2i(width, height);
     tile_size = sf::Vector2i(tile_width, tile_height);
@@ -434,4 +457,15 @@ void Tilemap::SetAll(int tile_index){
             tilemap_primitive.SetTile(tile_index, x, y);
         }
     }
+}
+
+void Tilemap::SetInteractsLight(bool interacts_with_light){
+    this->interacts_with_light = interacts_with_light;
+}
+
+void Tilemap::SetShowOverlayColour(bool show_overlay_colour){
+    this->show_overlay_colour = show_overlay_colour;
+}
+void Tilemap::SetOverlayColour(sf::Color _overlay_colour){
+    this->overlay_colour = _overlay_colour;
 }

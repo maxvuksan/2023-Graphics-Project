@@ -13,13 +13,10 @@ class TestScene : public Scene {
 
             World* world = AddObject<World>();
 
-
             Player* player = AddObject<Player>();
             player->LinkWorld(world);
 
-
             world->SetFocus(player->GetTransform());
-
         };
 
         void CatchEvent(sf::Event event) override{
