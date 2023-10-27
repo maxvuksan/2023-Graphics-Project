@@ -3,6 +3,7 @@
 
 void World::Start() {
 
+
     // creating each tilemap...
 
     half_tilemap_width = floor(tilemap_width * 0.5f);
@@ -19,19 +20,24 @@ void World::Start() {
     minimap = GetScene()->AddUI<Minimap>();
     minimap->GetPixelGrid()->Create(width * tilemap_width, height * tilemap_height, sf::Color::Transparent);
 
+    sf::Color wall_colour(Globals::BASE_SHADOW_COLOUR.r / 6, Globals::BASE_SHADOW_COLOUR.g / 6, Globals::BASE_SHADOW_COLOUR.b / 6, 210);
+
+    // STALLING HERE FOR SOME REASON...? 
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
 
-
             // create chunk and place it in the correct position
             chunks[x][y] = GetScene()->AddObject<Chunk>();
-            chunks[x][y]->Init(tilemap_width, tilemap_height, tilesize_x, tilesize_y);
+            chunks[x][y]->Init(tilemap_width, tilemap_height, tilesize_x, tilesize_y, wall_colour);
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilesize_x * tilemap_width, y * tilesize_y * tilemap_height);
         }
     }
+
     WorldGenerator::Bind(this);
     WorldGenerator::Generate();
+
     CalculateMinimap();
+
 }
 
 void World::CatchEvent(sf::Event event){

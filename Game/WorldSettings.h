@@ -27,8 +27,7 @@ struct WorldSettings{
 
     // percentages
 
-    float ORE_PERCENT_MIN = 1;
-    float ORE_PERCENT_MAX = 30;
+    float ORE_PERCENT = 20;
 
     std::vector<BlockCode> SURFACE_ORE_POOL = { BlockCode::c_Stone };
     std::vector<BlockCode> CAVERN_ORE_POOL = { BlockCode::c_Dirt, BlockCode::c_Copper, BlockCode::c_Iron, BlockCode::c_Gold };

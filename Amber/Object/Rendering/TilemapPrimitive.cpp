@@ -2,7 +2,7 @@
 #include "../../Core/Globals.h"
 #include <iostream>
 
-std::vector<std::vector<int>>& TilemapPrimitive::GetGrid(){
+std::vector<std::vector<short>>& TilemapPrimitive::GetGrid(){
     return grid;
 }
 
@@ -27,7 +27,6 @@ bool TilemapPrimitive::Load(sf::Texture* texture, sf::Vector2u tile_size, unsign
         
         for (unsigned int j = 0; j < height; ++j)
         {
-
             SetTile(default_tile, i, j);
         }
     }
@@ -44,7 +43,7 @@ void TilemapPrimitive::SetTexture(sf::Texture* texture){
 
 void TilemapPrimitive::SetTile(int tile_index, unsigned int x, unsigned int y){
 
-    grid[x][y] = tile_index;
+    grid[x][y] = (short)tile_index;
 
     // find its position in the tileset texture
     int tu, tv;

@@ -37,7 +37,7 @@ void Tilemap::UpdateSecondary(){
 
 
 int Tilemap::GetTile(int x, int y){
-    std::vector<std::vector<int>>& grid = tilemap_primitive.GetGrid();
+    std::vector<std::vector<short>>& grid = tilemap_primitive.GetGrid();
 
     if(x < size.x && x >= 0){
         if(y < size.y && y >= 0){
@@ -49,7 +49,7 @@ int Tilemap::GetTile(int x, int y){
 
 bool Tilemap::TileConfigurationNeedsCorner(unsigned int x, unsigned int y){
     
-    std::vector<std::vector<int>>& grid = tilemap_primitive.GetGrid();
+    std::vector<std::vector<short>>& grid = tilemap_primitive.GetGrid();
 
     int C = GetTile(x, y);
     int T = GetTile(x, y - 1);
@@ -244,10 +244,6 @@ void Tilemap::CalculateEdges(){
 
 void Tilemap::Draw(sf::RenderTarget& surface){
 
-    tilemap_primitive.setPosition(Camera::WorldToScreenPosition(
-        object->GetTransform()->GetGlobalPosition()
-    ));
-
     if(!this->loaded){
         return;
     }
@@ -368,7 +364,7 @@ void Tilemap::Draw_ShadowPass_PostBlur(sf::RenderTarget& surface){
 }
 
 void Tilemap::Draw_EdgeLighting(sf::RenderTarget& surface){
-    tilemap_primitive.SetTexture(shadow_texture);
+    tilemap_primitive.SetTexture(black_texture);
     surface.draw(tilemap_primitive);
     tilemap_primitive.RevertTexture();
 }
@@ -377,7 +373,7 @@ bool Tilemap::Load(const char* texture_label, unsigned int tile_width, unsigned 
     
     sf::Texture* texture = AssetManager::GetTexture(texture_label);
     
-    shadow_texture = AssetManager::GetTexture("Amber_Shadow");
+    shadow_texture = AssetManager::GetTexture("Amber_ShadowDark");
     white_texture = AssetManager::GetTexture("Amber_White");
     black_texture = AssetManager::GetTexture("Amber_Black");
     

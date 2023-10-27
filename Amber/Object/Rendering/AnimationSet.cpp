@@ -1,7 +1,7 @@
 #include "AnimationSet.h"
 #include <iostream>
 
-AnimationSet::AnimationSet(std::vector<Animation> animations, std::vector<const char*> labels){
+void AnimationSet::Init(std::vector<Animation> animations, std::vector<const char*> labels){
 
     if(animations.size() != labels.size()){
         std::cout << "ERROR : animation vector and labels vector have different sizes, they must be 1:1, AnimationSet::AnimationSet()\n";

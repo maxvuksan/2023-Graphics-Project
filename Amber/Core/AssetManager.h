@@ -2,6 +2,7 @@
 #include <SFML/Audio.hpp>
 #include <unordered_map>
 #include <iostream>
+#include "../Utility/Memory.h"
 
 #include "../Object/Rendering/AnimationSet.h"
 #include "Scene.h"
@@ -41,10 +42,12 @@ class AssetManager {
         /*
             Creates a scene of the specified type T (allowing only classes which inherit Scene)
         */
+
         template <typename T>
         static Scene* CreateScene(const char* label) {
 
-            Scene* new_scene = new T;
+            Scene* new_scene = Memory::New<T>(__FUNCTION__);
+
             scenes.insert(std::make_pair(label, new_scene));
 
             return new_scene;

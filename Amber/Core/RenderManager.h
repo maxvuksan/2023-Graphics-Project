@@ -9,8 +9,9 @@ class RenderManager{
 
     enum RenderPasses{
         LIGHTING,
+        LIGHTING_OFFSCREEN,
         LIGHTING_BLURRED,
-        LIGHTING_FINAL,
+        LIGHTING_POINTS,
         SCENE,
         SCENE_OFFSCREEN,
         COMPOSITE, // mixing lighting and scene
@@ -30,5 +31,5 @@ class RenderManager{
         static void RenderUI(sf::RenderTarget&, Scene*);
 
         static std::vector<sf::RenderTexture*> render_textures;
-  
+
 };

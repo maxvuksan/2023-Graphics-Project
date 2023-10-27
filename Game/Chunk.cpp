@@ -1,6 +1,6 @@
 #include "Chunk.h"
 
-void Chunk::Init(int tilemap_width, int tilemap_height, int tilesize_x, int tilesize_y){
+void Chunk::Init(int tilemap_width, int tilemap_height, int tilesize_x, int tilesize_y, const sf::Color& background_colour){
     this->tilemap_width = tilemap_width;
     this->tilemap_height = tilemap_height;
     this->tilesize_x = tilesize_x;
@@ -20,14 +20,14 @@ void Chunk::Init(int tilemap_width, int tilemap_height, int tilesize_x, int tile
     
     */
 
-    foreground_tilemap_object = AddChild<Object>(1);
-    background_tilemap_object = AddChild<Object>(0);
+    foreground_tilemap_object = AddChild<Object>(0);
+    background_tilemap_object = AddChild<Object>(-1);
     
     foreground_tilemap = foreground_tilemap_object->AddComponent<Tilemap>();
     background_tilemap = background_tilemap_object->AddComponent<Tilemap>();
     background_tilemap->SetInteractsLight(false);
     background_tilemap->SetShowOverlayColour(true);
-    background_tilemap->SetOverlayColour(sf::Color(10, 10, 10, 170));
+    background_tilemap->SetOverlayColour(background_colour);
 
     foreground_tilemap->Load("demoTexture", tilesize_x, tilesize_y, tilemap_width, tilemap_height);
     background_tilemap->Load("demoTexture", tilesize_x, tilesize_y, tilemap_width, tilemap_height);

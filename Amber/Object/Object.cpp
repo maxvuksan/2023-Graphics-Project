@@ -51,7 +51,7 @@ void Object::Destroy(){
 
 Object::~Object(){
 
-    for(auto& comp : components){
-        delete comp;
+    for(auto comp : components){
+        Memory::Delete<Component>(comp, __FUNCTION__);
     }
 }

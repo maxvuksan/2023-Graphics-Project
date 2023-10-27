@@ -5,6 +5,7 @@
 #include "Component.h"
 #include "Transform.h"
 #include "../Core/Globals.h"
+#include "../Utility/Memory.h"
 
 class Scene;
 class Core;
@@ -51,7 +52,7 @@ class Object{
         template <typename T>
         T* AddComponent(){
             
-            T* comp = new T;
+            T* comp = Memory::New<T>(__FUNCTION__);
             Component* casted_comp = static_cast<Component*>(comp);
 
             components.push_back(casted_comp);
@@ -103,6 +104,7 @@ class Object{
                     T* casted_comp = dynamic_cast<T*>(components[i]);
 
                     if(casted_comp != NULL){
+                        Memory::Delete<Component>(casted_comp, __FUNCTION__);
                         components.erase(components.begin() + i);
                         return;
                     }
@@ -113,6 +115,7 @@ class Object{
             // remove through parameter
             for(int i = 0; i < components.size(); i++){
                 if(components[i] == comp_reference){
+                    Memory::Delete<Component>(comp_reference, __FUNCTION__);
                     components.erase(components.begin() + i);
                     return;
                 }
@@ -134,7 +137,8 @@ class Object{
         template <typename T>
         T* AddChild(int render_Layer = 0){
             
-            T* t = new T;
+            T* t = Memory::New<T>(__FUNCTION__);
+
             Object* obj = AddObjectToScene(t, render_Layer);
             obj->parent = this;
             children.push_back(obj);

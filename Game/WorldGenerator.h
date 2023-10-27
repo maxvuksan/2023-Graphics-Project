@@ -19,7 +19,7 @@ class WorldGenerator{
 
         // shaping the terrain (hills, caves etc...)
         static void SculptingPass();
-        static void Sculpt(int chunk_x, int chunk_y, Tilemap* tilemap);
+        static void Sculpt(int chunk_x, int chunk_y);
 
         // creating caves with direction
         static void TunnelingPass();

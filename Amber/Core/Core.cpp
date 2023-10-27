@@ -166,4 +166,3 @@ sf::Vector2i Core::DisplayToWindowPosition(sf::Vector2i _display_position){
     return sf::Vector2i(_display_position.x * display_to_window_multiplier.x, _display_position.y * display_to_window_multiplier.y);
 }
 
-/////////////////////////////////////////////////////////////////////

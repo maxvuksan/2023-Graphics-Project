@@ -8,8 +8,8 @@
 class AnimationSet {
 
     public:
-        AnimationSet(std::vector<Animation> animations, std::vector<const char*> labels);
-        
+        void Init(std::vector<Animation> animations, std::vector<const char*> labels);
+
         // @returns a reference to animation at label, nullptr if no animation exists
         Animation* GetState(const char* label);
         Animation* GetDefaultState();

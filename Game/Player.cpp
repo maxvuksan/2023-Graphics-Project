@@ -8,30 +8,30 @@ void Player::Start(){
     GetScene()->SetActiveCamera(AddComponent<Camera>());
 
     auto col = AddComponent<BoxCollider>();
-    col->SetSize(sf::Vector2f(8, 10));
-    col->SetOffset(sf::Vector2f(-4,-5));
+    col->SetSize(sf::Vector2f(6, 14));
+    col->SetOffset(sf::Vector2f(-3,-7));
 
     ground = AddComponent<BoxCollider>();
     ground->SetIsTrigger(true);
-    ground->SetSize(sf::Vector2f(8, 3));
-    ground->SetOffset(sf::Vector2f(-4,6));
+    ground->SetSize(sf::Vector2f(6, 3));
+    ground->SetOffset(sf::Vector2f(-3,6));
 
     left = AddComponent<BoxCollider>();
     left->SetIsTrigger(true);
-    left->SetSize(sf::Vector2f(2, 8));
+    left->SetSize(sf::Vector2f(2, 6));
     left->SetOffset(sf::Vector2f(-8,-4));
 
     right = AddComponent<BoxCollider>();
     right->SetIsTrigger(true);
-    right->SetSize(sf::Vector2f(2, 8));
-    right->SetOffset(sf::Vector2f(6,-4));
+    right->SetSize(sf::Vector2f(2, 6));
+    right->SetOffset(sf::Vector2f(6,-3));
     
     GetTransform()->position = sf::Vector2f(50, -500);
     
-
-
     pb = AddComponent<PhysicsBody>();
-    AddComponent<PointLight>();
+    //AddComponent<PointLight>();
+
+    AddComponent<SpriteRenderer>()->SetTexture("player", true);
 
     selected_block = 0;
     cursor_graphic = GetScene()->AddUI<CursorGraphic>();

@@ -5,8 +5,8 @@
 
 PointLight::PointLight():
     colour(1,1,1),
-    radius(1),
-    strength(0) 
+    radius(3),
+    strength(0.3) 
 {}
 
 void PointLight::Start()
@@ -45,7 +45,7 @@ void PointLight::DrawLightRenderTexture(){
     sf::Sprite sprite(texture.getTexture());
 
     sf::Vector2f light_position = object->GetScene()->GetActiveCamera()->WorldToScreenPosition(
-        object->GetTransform()->position
+        object->GetTransform()->GetGlobalPosition()
     );
 
     light_position.x /= Core::GetDisplaySize().x;

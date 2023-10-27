@@ -30,8 +30,8 @@ struct BlockData{
 
 const BlockData Blocks[c_NUMBER_OF_BLOCKS]{
 
-    {12, sf::Color(87,81,107)},
-    {8, sf::Color(109,62,62)},
+    {1, sf::Color(87,81,107)},
+    {1, sf::Color(109,62,62)},
 
     {12, sf::Color(135,135,161)},
     {12, sf::Color(135,135,161)},

@@ -13,15 +13,19 @@ std::unordered_map<const char*, sf::SoundBuffer> AssetManager::sounds;
 
 void AssetManager::Construct()
 {
-    CreateShader("Amber_Blur", "Amber/Shaders/Blur.frag");
+    CreateShader("Amber_BlurHorizontal", "Amber/Shaders/BlurHorizontal.frag");
+    CreateShader("Amber_BlurVertical", "Amber/Shaders/BlurVertical.frag");
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
     CreateShader("Amber_ColourOverlay", "Amber/Shaders/ColourOverlay.frag");
 
     // creating a shadow texture, to swap to when rendering shadows off a textured vertex buffer 
     sf::RenderTexture shadow_texture;
-    shadow_texture.create(20,20);
+    shadow_texture.create(5,5);
     shadow_texture.clear(Globals::BASE_SHADOW_COLOUR);
     CreateTexture("Amber_Shadow", shadow_texture, true);
+
+    shadow_texture.clear(Globals::BASE_SHADOW_COLOUR_DARK);
+    CreateTexture("Amber_ShadowDark", shadow_texture, true);
 
     // + white texture to override shadows when needed
     shadow_texture.clear(sf::Color(255,255,255));
@@ -77,7 +81,10 @@ sf::Shader* AssetManager::GetShader(const char* label){
 }
 
 AnimationSet* AssetManager::CreateAnimationSet(const char* label, std::vector<Animation> animations, std::vector<const char*> state_labels){
-    animation_sets.insert(std::make_pair(label, new AnimationSet(animations, state_labels))); 
+    auto new_set  = Memory::New<AnimationSet>(__FUNCTION__);
+    new_set->Init(animations, state_labels);
+
+    animation_sets.insert(std::make_pair(label, new_set)); 
     return animation_sets[label];
 }
 AnimationSet* AssetManager::GetAnimationSet(const char* label){
@@ -164,15 +171,15 @@ Scene* AssetManager::GetScene(const char* label){
 
 void AssetManager::Destruct(){
     
-    for (auto& scene : scenes) {
-        delete scene.second;
+    for (auto scene : scenes) {
+        Memory::Delete<Scene>(scene.second, __FUNCTION__);
     }
 
-    for (auto& animation_s : animation_sets) {
-        delete animation_s.second;
+    for (auto animation_s : animation_sets) {
+        Memory::Delete<AnimationSet>(animation_s.second, __FUNCTION__);
     }
 
-    for (auto& shader : shaders) {
-        delete shader.second;
+    for (auto shader : shaders) {
+        Memory::Delete<sf::Shader>(shader.second, __FUNCTION__);
     }
 }

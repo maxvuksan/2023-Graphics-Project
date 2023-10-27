@@ -2,6 +2,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
+typedef char byte;
+
 class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 {
     /*
@@ -17,7 +19,7 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         /*
             @returns A 2D vector of integer values representing the tilemap
         */
-        std::vector<std::vector<int>>& GetGrid();
+        std::vector<std::vector<short>>& GetGrid();
         void SetTile(int tile_index, unsigned int x, unsigned int y);
         /*
             swaps back to the tilemap texture
@@ -34,7 +36,7 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         
     private:
 
-        std::vector<std::vector<int>> grid;
+        std::vector<std::vector<short>> grid;
 
         sf::VertexArray m_vertices;
         

@@ -5,6 +5,7 @@
 #include "../Object/Object.h"
 #include "../Object/Camera.h"
 #include <iostream>
+#include "../Utility/Memory.h"
 
 class PointLight;
 class Tilemap;
@@ -54,7 +55,7 @@ class Scene {
                 objects[render_layer] = {};
             }
 
-            T* obj = new T;
+            T* obj = Memory::New<T>(__FUNCTION__);
             objects[render_layer].push_back(obj);
 
             obj->LinkScene(this, render_layer);
@@ -89,8 +90,8 @@ class Scene {
                 if(objects[target->GetRenderLayer()][i] == target){
 
                     objects[target->GetRenderLayer()].erase(objects[target->GetRenderLayer()].begin() + i);
-                    delete target;
-
+                    
+                    Memory::Delete(target, __FUNCTION__);
                 }
             }
         }
@@ -103,7 +104,8 @@ class Scene {
                 ui[render_layer] = {};
             }
 
-            T* obj = new T;
+            T* obj = Memory::New<T>(__FUNCTION__);
+
             ui[render_layer].push_back(obj);
 
             obj->SetUI(true);
@@ -119,8 +121,8 @@ class Scene {
                 if(ui[target->GetRenderLayer()][i] == target){
 
                     ui[target->GetRenderLayer()].erase(ui[target->GetRenderLayer()].begin() + i);
-                    delete target;
 
+                    Memory::Delete(target, __FUNCTION__);
                 }
             }
         }
