@@ -1,4 +1,5 @@
 #include "Object.h"
+#include "./Rendering/Tilemap.h"
 #include "../Core/Scene.h"
 #include <iostream>
 
@@ -35,11 +36,7 @@ Object* Object::GetParent(){
 
 void Object::Destroy(){
 
-    for(auto& child : children){
-        child->Destroy();
-    }
-
-    OnDestroy();
+    DestroyCascadeToChildren();
 
     if(deleted_from_ui_map){
         GetScene()->DeleteUI(this);
@@ -49,9 +46,18 @@ void Object::Destroy(){
     }
 }
 
-Object::~Object(){
+void Object::DestroyCascadeToChildren(){
+    
+    for(auto& child : children){
+        child->Destroy();
+    }
+}
+
+void Object::ClearComponents(){
 
     for(auto comp : components){
         Memory::Delete<Component>(comp, __FUNCTION__);
     }
+    
+    components.clear();
 }

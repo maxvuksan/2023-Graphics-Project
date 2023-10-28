@@ -54,11 +54,13 @@ sf::Shader* AssetManager::CreateShader(const char* label, const std::string frag
         return nullptr;
     }
 
-    sf::Shader* new_shader = new sf::Shader;
+    sf::Shader* new_shader = Memory::New<sf::Shader>(__FUNCTION__);
     
     if(!new_shader->loadFromMemory(shader_code, sf::Shader::Fragment)){
+
         std::cout << "ERROR : Could not load shader '" << label << "' from '" << fragment_file_location <<"'\n";
-        delete new_shader;
+        Memory::Delete<sf::Shader>(new_shader, __FUNCTION__);
+        
         return nullptr; 
     }
     

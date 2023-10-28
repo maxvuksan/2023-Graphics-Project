@@ -8,7 +8,7 @@ class PointLight : public Component{
         PointLight();
 
         void Start() override;
-        void OnDestroy() override;
+        ~PointLight() override;
 
         void DrawLight(sf::RenderTarget& surface);
 

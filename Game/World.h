@@ -65,11 +65,7 @@ class World : public Object{
         int loading_threshold = 500;
         int collider_threshold = 300;
 
-        int tilesize_x = 8;
-        int tilesize_y = 8;
-
-        int tilemap_width = 35;
-        int tilemap_height = 35;
+        TilemapProfile tilemap_profile;    
 
         int half_tilemap_width;
         int half_tilemap_height;
@@ -77,7 +73,7 @@ class World : public Object{
         float one_divide_tilemap_height;
 
         // in chunks...
-        int width = 1;
-        int height = 1;
+        int width = 80;
+        int height = 100;
 
 };

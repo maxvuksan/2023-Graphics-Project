@@ -1,6 +1,7 @@
 #include "Core.h"
 #include "../Utility/Sound.h"
 #include <cmath>
+#include <SFML/OpenGL.hpp>
 
 // Static Members ///////////////////////////////////////////////////
 
@@ -82,6 +83,8 @@ void Core::Run(){
 
                 display_width = round((float)window_width * window_to_display_multiplier.x);
                 display_height = round((float)window_height * window_to_display_multiplier.y);
+
+                glViewport(0, 0, window_width, window_height);
             }
 
             this->CatchEvent(event);
@@ -106,26 +109,30 @@ void Core::Run(){
         window.display();
         Time::Increment();
     }
-
+    
+    current_scene->ClearAll();
     AssetManager::Destruct();
     RenderManager::Destruct();
 }
 
 void Core::LoadScene(const char* label){
     
-    Scene* scene = AssetManager::GetScene(label);
     
     // empty previous scene
     if(current_scene != nullptr){
         current_scene->ClearAll();
     }
     
+    Scene* scene = AssetManager::GetScene(label);
+
     Scene::SetActiveCamera(nullptr);
+
 
     if(scene != nullptr){
         current_scene = scene;
         current_scene->Start();
     }
+
 }
 
 sf::RenderWindow* Core::GetWindow(){

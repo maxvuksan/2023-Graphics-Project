@@ -19,4 +19,14 @@ class Game : public Core{
 
             LoadScene("TestScene");
         }
-};  
+
+        void CatchEvent(sf::Event event) override{
+            
+            // restart scene with 'E'
+            if(event.type == sf::Event::KeyPressed){
+                if(event.key.code == sf::Keyboard::E){
+                    LoadScene("TestScene");
+                }
+            }
+        }
+};   

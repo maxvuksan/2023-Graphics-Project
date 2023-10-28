@@ -6,10 +6,10 @@ void World::Start() {
 
     // creating each tilemap...
 
-    half_tilemap_width = floor(tilemap_width * 0.5f);
-    half_tilemap_height = floor(tilemap_height * 0.5f);
-    one_divide_tilemap_width = 1 / (float)tilemap_width;
-    one_divide_tilemap_height = 1 / (float)tilemap_height;
+    half_tilemap_width = floor(tilemap_profile.width * 0.5f);
+    half_tilemap_height = floor(tilemap_profile.height * 0.5f);
+    one_divide_tilemap_width = 1 / (float)tilemap_profile.width;
+    one_divide_tilemap_height = 1 / (float)tilemap_profile.height;
 
     // creating chunk vector...
     chunks.resize(width);
@@ -18,7 +18,7 @@ void World::Start() {
     }
 
     minimap = GetScene()->AddUI<Minimap>();
-    minimap->GetPixelGrid()->Create(width * tilemap_width, height * tilemap_height, sf::Color::Transparent);
+    minimap->GetPixelGrid()->Create(width * tilemap_profile.width, height * tilemap_profile.width, sf::Color::Transparent);
 
     sf::Color wall_colour(Globals::BASE_SHADOW_COLOUR.r / 6, Globals::BASE_SHADOW_COLOUR.g / 6, Globals::BASE_SHADOW_COLOUR.b / 6, 210);
 
@@ -28,8 +28,8 @@ void World::Start() {
 
             // create chunk and place it in the correct position
             chunks[x][y] = GetScene()->AddObject<Chunk>();
-            chunks[x][y]->Init(tilemap_width, tilemap_height, tilesize_x, tilesize_y, wall_colour);
-            chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilesize_x * tilemap_width, y * tilesize_y * tilemap_height);
+            chunks[x][y]->Init(&tilemap_profile, wall_colour);
+            chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilemap_profile.tile_width * tilemap_profile.width, y * tilemap_profile.tile_height * tilemap_profile.height);
         }
     }
 
@@ -54,11 +54,11 @@ void World::CalculateMinimap(){
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
 
-            for(int t_x = 0; t_x < tilemap_width; t_x++){
-                for(int t_y = 0; t_y < tilemap_height; t_y++){
+            for(int t_x = 0; t_x < tilemap_profile.width; t_x++){
+                for(int t_y = 0; t_y < tilemap_profile.height; t_y++){
                     
-                    int final_x = x * tilemap_width + t_x;
-                    int final_y = y * tilemap_height + t_y;
+                    int final_x = x * tilemap_profile.width + t_x;
+                    int final_y = y * tilemap_profile.height + t_y;
 
                     int tile = chunks.at(x).at(y)->GetTile(t_x, t_y, SetLocation::FOREGROUND);
 
@@ -143,8 +143,8 @@ bool World::ChunkInBounds(int chunk_x, int chunk_y){
 sf::Vector2i World::RoundWorld(int world_x, int world_y){
     sf::Vector2i world;
 
-    world.x = round((float)(world_x - 4) / tilesize_x) * tilesize_x;
-    world.y = round((float)(world_y - 4) / tilesize_y) * tilesize_y;
+    world.x = round((float)(world_x - 4) / tilemap_profile.tile_width) * tilemap_profile.tile_width;
+    world.y = round((float)(world_y - 4) / tilemap_profile.tile_height) * tilemap_profile.tile_height;
 
     return world;
 }
@@ -162,8 +162,8 @@ sf::Vector2i World::OffsetFromCoord(int x, int y, int chunk_x, int chunk_y){
     
     sf::Vector2i pos;
 
-    pos.x = x - (chunk_x * tilemap_width);
-    pos.y = y - (chunk_y * tilemap_height);
+    pos.x = x - (chunk_x * tilemap_profile.width);
+    pos.y = y - (chunk_y * tilemap_profile.height);
     
     return pos;
 }
@@ -172,8 +172,8 @@ sf::Vector2i World::WorldToCoord(int world_x, int world_y){
     
     sf::Vector2i coord;
     
-    coord.x = round((world_x - tilesize_x / 2.0f) / (float)tilesize_x);
-    coord.y = round((world_y - tilesize_y / 2.0f) / (float)tilesize_y);
+    coord.x = round((world_x - tilemap_profile.tile_width / 2.0f) / (float)tilemap_profile.tile_width);
+    coord.y = round((world_y - tilemap_profile.tile_height / 2.0f) / (float)tilemap_profile.tile_height);
 
     return coord;
 }
@@ -182,8 +182,8 @@ sf::Vector2i World::CoordToWorld(int x, int y){
     
     sf::Vector2i world;
     
-    world.x = round(x * tilesize_x);
-    world.y = round(y * tilesize_y);
+    world.x = round(x * tilemap_profile.tile_width);
+    world.y = round(y * tilemap_profile.tile_height);
 
     return world;
 }
@@ -240,8 +240,8 @@ void World::Update(){
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
 
-            int real_x = x * tilemap_width * tilesize_x + half_tilemap_width * tilesize_x;
-            int real_y = y * tilemap_height * tilesize_y + half_tilemap_height * tilesize_y;
+            int real_x = x * tilemap_profile.width * tilemap_profile.tile_width;
+            int real_y = y * tilemap_profile.height * tilemap_profile.tile_height;
             
             int dis_x = abs(focus->position.x - real_x);
             int dis_y = abs(focus->position.y - real_y);
@@ -267,21 +267,5 @@ void World::Update(){
             }
         }
     }
-    /*
-    return;
-    if(delay_tracked > delay){
 
-        chunks[t_index]->GetComponent<TilemapCollider>()->ClearRects();
-
-        t_index++;
-        t_index %= chunks.size();
-
-        chunks[t_index]->GetComponent<TilemapCollider>()->Reset();
-
-        delay_tracked = 0;
-    }
-    delay_tracked += Time::Dt();
-    */
-    
-    
 }

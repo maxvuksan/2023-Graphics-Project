@@ -8,8 +8,7 @@
 */
 namespace Globals {
 
-    // profiling memory
-    const bool PROFILE = true;
+    const bool PROFILE_MEMORY = false;
 
     const int FRAMERATE_LIMIT = 120;
 

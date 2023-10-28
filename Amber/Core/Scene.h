@@ -91,7 +91,9 @@ class Scene {
 
                     objects[target->GetRenderLayer()].erase(objects[target->GetRenderLayer()].begin() + i);
                     
-                    Memory::Delete(target, __FUNCTION__);
+                    target->ClearComponents();
+                    target->DestroyCascadeToChildren();
+                    Memory::Delete<Object>(target, __FUNCTION__);
                 }
             }
         }
@@ -122,7 +124,9 @@ class Scene {
 
                     ui[target->GetRenderLayer()].erase(ui[target->GetRenderLayer()].begin() + i);
 
-                    Memory::Delete(target, __FUNCTION__);
+                    target->ClearComponents();
+                    target->DestroyCascadeToChildren();
+                    Memory::Delete<Object>(target, __FUNCTION__);
                 }
             }
         }
@@ -142,13 +146,13 @@ class Scene {
         void RemoveTilemap(Tilemap* point_light);
         std::vector<Tilemap*>* GetTilemaps(){return &tilemaps;}
 
-        ~Scene();
+        virtual ~Scene(){}
+        
         // deletes all objects from the scene
         void ClearAll();
 
     private:
 
-        std::vector<BoxCollider*> box_colliders;
 
         // render layer, vector<Object*>
         std::map<int, std::vector<Object*>> objects;
@@ -156,6 +160,8 @@ class Scene {
 
         std::vector<PointLight*> point_lights;
         std::vector<Tilemap*> tilemaps;
+        std::vector<BoxCollider*> box_colliders;
+
 
         Core* core;
         static Camera* active_camera;

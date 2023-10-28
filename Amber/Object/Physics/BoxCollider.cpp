@@ -208,6 +208,6 @@ void BoxCollider::SetSize(sf::Vector2f size, int index){
     rects.at(index).height = size.y;
 }
 
-void BoxCollider::OnDestroy(){
+BoxCollider::~BoxCollider(){
     object->GetScene()->RemoveBoxCollider(this);
 }

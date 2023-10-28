@@ -11,7 +11,3 @@ void Component::LinkObject(Object* object){
 Object* Component::GetObject(){
     return object;
 }
-
-Component::~Component(){
-    this->OnDestroy();
-}

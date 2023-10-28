@@ -1,24 +1,6 @@
 #include "Chunk.h"
 
-void Chunk::Init(int tilemap_width, int tilemap_height, int tilesize_x, int tilesize_y, const sf::Color& background_colour){
-    this->tilemap_width = tilemap_width;
-    this->tilemap_height = tilemap_height;
-    this->tilesize_x = tilesize_x;
-    this->tilesize_y = tilesize_y;
-
-
-    /*
-        splitting the foreground tilemap and background tilemap to seperate objects, 
-        this will allow me to set different render layers,
-
-        should be added with AddChild<>
-
-        should implement a parent -> child active state,
-        
-        when a parent is not active, disable the child.
-       
-    
-    */
+void Chunk::Init(TilemapProfile* tilemap_profile, const sf::Color& background_colour){
 
     foreground_tilemap_object = AddChild<Object>(0);
     background_tilemap_object = AddChild<Object>(-1);
@@ -29,8 +11,8 @@ void Chunk::Init(int tilemap_width, int tilemap_height, int tilesize_x, int tile
     background_tilemap->SetShowOverlayColour(true);
     background_tilemap->SetOverlayColour(background_colour);
 
-    foreground_tilemap->Load("demoTexture", tilesize_x, tilesize_y, tilemap_width, tilemap_height);
-    background_tilemap->Load("demoTexture", tilesize_x, tilesize_y, tilemap_width, tilemap_height);
+    foreground_tilemap->Load("demoTexture", tilemap_profile);
+    background_tilemap->Load("demoTexture", tilemap_profile);
     
     // assigning a collider to the main tilemap
     auto collider = foreground_tilemap_object->AddComponent<TilemapCollider>();

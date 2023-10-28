@@ -6,7 +6,7 @@
 class Chunk : public Object {
 
     public:
-        void Init(int tilemap_width, int tilemap_height, int tilesize_x, int tilesize_y, const sf::Color& background_colour);
+        void Init(TilemapProfile* tilemap_profile, const sf::Color& background_colour);
 
         int GetTile(int x, int y, SetLocation get_location = SetLocation::FOREGROUND);
         void SetTile(int tile_index, int x, int y, SetLocation set_location = SetLocation::FOREGROUND);

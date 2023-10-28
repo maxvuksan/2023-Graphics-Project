@@ -2,6 +2,7 @@
 #include "../Utility/Time.h"
 #include "../Object/Rendering/PointLight.h"
 #include "../Object/Physics/BoxCollider.h"
+#include "../Object/Rendering/Tilemap.h"
 #include <iostream>
 
 Camera* Scene::active_camera = nullptr;
@@ -160,12 +161,17 @@ void Scene::RemoveTilemap(Tilemap* tilemap){
 void Scene::ClearAll(){
     
     active_camera = nullptr;
+    
+    point_lights.clear();
+    tilemaps.clear();
+    box_colliders.clear();
 
     for (auto layer = objects.begin(); layer != objects.end(); layer++) {
 
         for(auto obj : layer->second){
 
-            delete obj;
+            obj->ClearComponents();
+            Memory::Delete<Object>(obj, __FUNCTION__);
         }
     }
     objects.clear();
@@ -174,13 +180,10 @@ void Scene::ClearAll(){
 
         for(auto obj : layer->second){
 
-            delete obj;
+            obj->ClearComponents();
+            Memory::Delete<Object>(obj, __FUNCTION__);
         }
     }
     ui.clear();
 }
 
-
-Scene::~Scene(){
-    this->ClearAll();
-}

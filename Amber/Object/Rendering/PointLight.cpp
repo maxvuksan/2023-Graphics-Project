@@ -65,6 +65,6 @@ void PointLight::DrawLightRenderTexture(){
 }
 
 
-void PointLight::OnDestroy(){
+PointLight::~PointLight(){
     object->GetScene()->RemovePointLight(this);
 }

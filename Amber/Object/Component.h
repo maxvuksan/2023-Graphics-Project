@@ -25,9 +25,7 @@ class Component{
         virtual void Draw(sf::RenderTarget& surface){}
         virtual void Draw_Debug(sf::RenderTarget& surface){}
 
-        virtual void OnDestroy(){}
-
-        ~Component();
+        virtual ~Component(){}
 
         // Providing a reference to the object this is attached to
         void LinkObject(Object* object);

@@ -11,12 +11,17 @@ class TestScene : public Scene {
 
         void Start() override{
 
-            World* world = AddObject<World>();
+           World* world = AddObject<World>();
 
-            Player* player = AddObject<Player>();
-            player->LinkWorld(world);
+           Player* player = AddObject<Player>();
+           player->LinkWorld(world);
 
-            world->SetFocus(player->GetTransform());
+           world->SetFocus(player->GetTransform());
+    /*
+           Object* obj = AddObject<Object>();
+           SetActiveCamera(obj->AddComponent<Camera>());
+           std::cout << sizeof(*obj->GetComponent<Camera>()) + sizeof(*obj->GetTransform()) << "\n";
+    */
         };
 
         void CatchEvent(sf::Event event) override{

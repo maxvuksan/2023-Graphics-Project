@@ -123,10 +123,6 @@ class Object{
             
         }
         
-        /*
-            removes the object from the scene, also calls OnDestroy() which can be overrided
-        */
-        void Destroy();
 
         /*
             creates a new object, attaching to this object as a child. 
@@ -149,11 +145,21 @@ class Object{
         Object* GetParent();
 
         
-        ~Object(); 
+        virtual ~Object(){}
+        /*
+            clears all the components on the object
+        */
+        void ClearComponents();
+        /*
+            calls Destroy() on all child objects
+        */
+        void DestroyCascadeToChildren();
 
-
-        // Allows children classes to expand upon ~Object(), due to inheritied nature, children should not have destructors 
-        virtual void OnDestroy(){}
+    protected:
+        /*
+            removes the object from the scene, should be called by the object itself
+        */
+        void Destroy();
 
     private:
 

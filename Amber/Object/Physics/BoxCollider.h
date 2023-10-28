@@ -44,7 +44,7 @@ class BoxCollider : public Collider {
 
         void Start() override;
         void Update() override;
-        void OnDestroy() override;
+        ~BoxCollider() override;
 
         void Move(sf::Vector2f movement, PhysicsBody* pb) override;
         std::vector<Rect*> DetermineBoxOverlaps();

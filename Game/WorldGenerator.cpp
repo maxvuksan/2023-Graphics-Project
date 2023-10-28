@@ -12,6 +12,11 @@ void WorldGenerator::Bind(World* _world){
 }
 
 void WorldGenerator::Generate(){
+
+    srand(time(NULL));
+    seed = time(NULL);
+    perlin = PerlinNoise{ seed };
+
     SculptingPass();
     OrePass();
     TunnelingPass();
@@ -41,21 +46,21 @@ void WorldGenerator::Sculpt(int x, int y){
     // surface
     else if(y <= settings.LEVEL_DIRT){
 
-        for(int tile_x = 0; tile_x < world->tilemap_width; tile_x++){
+        for(int tile_x = 0; tile_x < world->tilemap_profile.width; tile_x++){
             
-            int _x = tile_x + (x * world->tilemap_width);
+            int _x = tile_x + (x * world->tilemap_profile.width);
 
             float noise_val = perlin.octave1D_01((_x * 0.04), 1, 2);
             float noise_val2 = perlin.octave1D_01((_x * 0.015), 1, 3);
             float noise_val3 = perlin.octave1D_01((_x * 0.008), 3, 1);
                                     
-            float final_height_float = (noise_val + noise_val2 + noise_val3) * world->tilemap_height - ((y - settings.LEVEL_AIR) * world->tilemap_height);
+            float final_height_float = (noise_val + noise_val2 + noise_val3) * world->tilemap_profile.height - ((y - settings.LEVEL_AIR) * world->tilemap_profile.height);
 
-            int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_height));
-            int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_height); // makes backgrounds 3 tiles below surface
+            int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_profile.height));
+            int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_profile.height); // makes backgrounds 3 tiles below surface
 
-            background_tilemap->SetArea(BlockCode::c_Dirt, tile_x, tile_x + 1, final_height_background, world->tilemap_height);
-            foreground_tilemap->SetArea(BlockCode::c_Dirt, tile_x, tile_x + 1, final_height, world->tilemap_height);
+            background_tilemap->SetArea(BlockCode::c_Dirt, tile_x, tile_x + 1, final_height_background, world->tilemap_profile.height);
+            foreground_tilemap->SetArea(BlockCode::c_Dirt, tile_x, tile_x + 1, final_height, world->tilemap_profile.height);
         }
     }
     // dirt pass ( shallow underground )
@@ -69,20 +74,20 @@ void WorldGenerator::Sculpt(int x, int y){
         foreground_tilemap->SetAll(BlockCode::c_Dirt);
         background_tilemap->SetAll(BlockCode::c_Dirt);
 
-        for(int tile_x = 0; tile_x < world->tilemap_width; tile_x++){
+        for(int tile_x = 0; tile_x < world->tilemap_profile.width; tile_x++){
             
-            int _x = tile_x + (x * world->tilemap_width);
+            int _x = tile_x + (x * world->tilemap_profile.width);
 
             float noise_val = perlin.octave1D_01((_x * 0.03), 1, 2);
             float noise_val2 = perlin.octave1D_01((_x * 0.005), 1, 3);
                                     
-            float final_height_float = (noise_val + noise_val2) * world->tilemap_height - ((y - settings.LEVEL_DIRT) * world->tilemap_height);
+            float final_height_float = (noise_val + noise_val2) * world->tilemap_profile.height - ((y - settings.LEVEL_DIRT) * world->tilemap_profile.height);
 
-            int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_height));
-            int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_height); // makes backgrounds 3 tiles below surface
+            int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_profile.height));
+            int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_profile.height); // makes backgrounds 3 tiles below surface
 
-            background_tilemap->SetArea(BlockCode::c_Stone, tile_x, tile_x + 1, final_height_background, world->tilemap_height);
-            foreground_tilemap->SetArea(BlockCode::c_Stone, tile_x, tile_x + 1, final_height, world->tilemap_height);
+            background_tilemap->SetArea(BlockCode::c_Stone, tile_x, tile_x + 1, final_height_background, world->tilemap_profile.height);
+            foreground_tilemap->SetArea(BlockCode::c_Stone, tile_x, tile_x + 1, final_height, world->tilemap_profile.height);
         }
     }
     // stone pass (deep underground, introducing caverns )
@@ -90,11 +95,11 @@ void WorldGenerator::Sculpt(int x, int y){
         foreground_tilemap->SetAll(BlockCode::c_Stone);
         background_tilemap->SetAll(BlockCode::c_Stone);
 
-        for(int tile_y = 0; tile_y < world->tilemap_height; tile_y++){
-            for(int tile_x = 0; tile_x < world->tilemap_width; tile_x++){
+        for(int tile_y = 0; tile_y < world->tilemap_profile.height; tile_y++){
+            for(int tile_x = 0; tile_x < world->tilemap_profile.width; tile_x++){
                 
-                int _y = tile_y + (y * world->tilemap_height);
-                int _x = tile_x + (x * world->tilemap_width);
+                int _y = tile_y + (y * world->tilemap_profile.height);
+                int _x = tile_x + (x * world->tilemap_profile.width);
 
                 float noise_val = perlin.octave2D_01((_x * 0.04), (_y * 0.04), 2);
                 noise_val += perlin.octave2D_01((_x * 0.1), (_y * 0.1), 1);
@@ -112,7 +117,7 @@ void WorldGenerator::Sculpt(int x, int y){
 void WorldGenerator::TunnelingPass(){
 
     int spacing = 0;
-    for(int x = 0; x < world->width * world->tilemap_width; x++){
+    for(int x = 0; x < world->width * world->tilemap_profile.width; x++){
 
         float noise_val = perlin.octave1D_01((x * 0.02), 2, 5);
         
@@ -124,7 +129,7 @@ void WorldGenerator::TunnelingPass(){
             int radius_min = 3 + rand() % 5;
             int radius_max = 5 + rand() % 8;
 
-            Tunnel(30 + rand() % 60, settings.LEVEL_AIR * world->tilemap_height, std::min(radius_min, radius_max), std::max(radius_min, radius_max), angle, angle_step);   
+            Tunnel(30 + rand() % 60, settings.LEVEL_AIR * world->tilemap_profile.height, std::min(radius_min, radius_max), std::max(radius_min, radius_max), angle, angle_step);   
             spacing = 0;
         }
 
@@ -182,10 +187,10 @@ void WorldGenerator::OrePass(){
                 ores_in_chunk++;
 
                 // giving the vein a offset (to make it look more natural, less chunk based)
-                int x_shift = rand() % (world->tilemap_width * 2) - world->tilemap_width;
-                int y_shift = rand() % (world->tilemap_height * 2) - world->tilemap_height;
+                int x_shift = rand() % (world->tilemap_profile.width * 2) - world->tilemap_profile.width;
+                int y_shift = rand() % (world->tilemap_profile.height * 2) - world->tilemap_profile.height;
            
-                SpreadOre(tile_index, x * world->tilemap_width + x_shift, y * world->tilemap_height + y_shift, 1, 3, 70, SetMode::ONLY_BLOCK);
+                SpreadOre(tile_index, x * world->tilemap_profile.width + x_shift, y * world->tilemap_profile.height + y_shift, 1, 3, 70, SetMode::ONLY_BLOCK);
             }
         }
     }
