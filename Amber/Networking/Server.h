@@ -1,24 +1,21 @@
-#include <enet/enet.h>
+#include "NetworkObject.h"
 
 /*
-    A server abstraction built upon the enet networking libary
+    A server abstraction upon the enet networking libary
 */
-class Server{
+class Server : public NetworkObject {
 
     public:
 
         Server();
 
-        /*
+        void Run(enet_uint16 port, size_t max_clients = 16);
+        void Close();
 
-        */
-        void Run(enet_uint16 port, enet_uint16 max_clients);
+        ~Server() override;
 
+    protected:
+     
+        void CatchPeerEvent(ENetEventType event_type) override;
 
-    private:
-        ENetHost* server;
-        ENetAddress address;
-        ENetEvent event;
-
-        
 };

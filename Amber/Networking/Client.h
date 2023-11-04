@@ -1,9 +1,9 @@
-#include <enet/enet.h>
+#include "NetworkObject.h"
 
 /*
-    A class abstraction built upon the enet networking libary
+    A client abstraction upon the enet networking libary
 */
-class Client {
+class Client : public NetworkObject{
 
     public:
 
@@ -15,14 +15,12 @@ class Client {
         bool Connect(const char* address_str, enet_uint16 port);
         void Disconnect();
 
-        void SendPacket(ENetPeer* peer, const char* data);
-        
-        ~Client();
+        ~Client() override;
+
+    protected:
+
+        void CatchPeerEvent(ENetEventType event_type) override;
 
     private:
-        ENetHost* client;
-        ENetPeer* peer; // the server in the clients case    
-
-        ENetAddress address;
-        ENetEvent event;
+        ENetPeer* server; 
 };
