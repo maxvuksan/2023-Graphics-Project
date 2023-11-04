@@ -4,15 +4,16 @@
 enum BlockCode{
     
     // code _ name
-
-    c_Stone,
+    
     c_Dirt,
+    c_Stone,
     
     c_Stone_Bricks,
     c_Stone_Plate,
-    c_Stone_Stylized,
-    c_Stone_Chizeled,
-    c_Stone_Extruded,
+    c_Stone_Plate_Cracked,
+
+    c_Sandstone,
+    c_Sandstone_Plate,
 
     c_Copper,
     c_Iron,
@@ -30,17 +31,19 @@ struct BlockData{
 
 const BlockData Blocks[c_NUMBER_OF_BLOCKS]{
 
-    {6, sf::Color(87,81,107)},
-    {8, sf::Color(109,62,62)},
+    {6, sf::Color(109,62,62)},
+    {8, sf::Color(87,81,107)},
 
     {12, sf::Color(135,135,161)},
     {12, sf::Color(135,135,161)},
     {12, sf::Color(135,135,161)},
-    {12, sf::Color(135,135,161)},
-    {12, sf::Color(135,135,161)},
+
+    {12, sf::Color(179,135,94)},
+    {12, sf::Color(179,135,94)},
 
     {12, sf::Color(171,110,83)},
     {14, sf::Color(199,144,120)},
     {16, sf::Color(197,151,90)},
+
 };
 

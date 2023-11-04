@@ -8,17 +8,17 @@ void Player::Start(){
     GetScene()->SetActiveCamera(AddComponent<Camera>());
 
     auto col = AddComponent<BoxCollider>();
-    col->SetSize(sf::Vector2f(6, 14));
-    col->SetOffset(sf::Vector2f(-3,-7));
+    col->SetSize(sf::Vector2f(8, 16));
+    col->SetOffset(sf::Vector2f(-4,-8));
 
     ground = AddComponent<BoxCollider>();
     ground->SetIsTrigger(true);
-    ground->SetSize(sf::Vector2f(6, 3));
-    ground->SetOffset(sf::Vector2f(-3,6));
+    ground->SetSize(sf::Vector2f(8, 4));
+    ground->SetOffset(sf::Vector2f(-3,8));
 
     left = AddComponent<BoxCollider>();
     left->SetIsTrigger(true);
-    left->SetSize(sf::Vector2f(2, 6));
+    left->SetSize(sf::Vector2f(2, 8));
     left->SetOffset(sf::Vector2f(-8,-4));
 
     right = AddComponent<BoxCollider>();
@@ -31,7 +31,8 @@ void Player::Start(){
     pb = AddComponent<PhysicsBody>();
     //AddComponent<PointLight>();
 
-    AddComponent<SpriteRenderer>()->SetTexture("player", true);
+    sr = AddComponent<SpriteRenderer>();
+    sr->SetTexture("player", true);
 
     selected_block = 0;
     cursor_graphic = GetScene()->AddUI<CursorGraphic>();
@@ -45,10 +46,12 @@ void Player::Update(){
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
         pb->velocity.x = -0.08;
+        sr->SetFlip(true);
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
         pb->velocity.x = 0.08;
+        sr->SetFlip(false);
     }
     else{
         pb->velocity.x = 0;       

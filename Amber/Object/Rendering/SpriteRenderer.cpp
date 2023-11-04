@@ -34,3 +34,13 @@ sf::Texture* SpriteRenderer::GetTexture(){
 void SpriteRenderer::SetTextureRect(int left, int top, int width, int height){
     sprite.setTextureRect(sf::IntRect(left, top, width, height));
 }
+
+void SpriteRenderer::SetFlip(bool flip){
+    if(flip){
+        this->flip_val = -1;
+    }
+    else{
+        this->flip_val = 1;
+    }
+    sprite.setScale(this->flip_val, 1);
+}

@@ -84,6 +84,10 @@ void Core::Run(){
                 display_width = round((float)window_width * window_to_display_multiplier.x);
                 display_height = round((float)window_height * window_to_display_multiplier.y);
 
+                std::cout << display_width << "\n";
+                std::cout << display_height << "\n";
+
+                window.setSize(sf::Vector2u(event.size.width, event.size.height));
                 glViewport(0, 0, window_width, window_height);
             }
 

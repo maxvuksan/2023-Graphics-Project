@@ -25,6 +25,7 @@ void WorldGenerator::Generate(){
 void WorldGenerator::SculptingPass(){
     
     for(int x = 0; x < world->width; x++){
+        
         for(int y = 0; y < world->height; y++){
 
             Sculpt(x, y);

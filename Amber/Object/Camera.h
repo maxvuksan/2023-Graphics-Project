@@ -13,8 +13,7 @@ class Camera : public Component {
 
     public:
         Camera();
-        ~Camera() override{ std::cout << "cam deleted\n ";}
- 
+
         sf::Vector2f offset;
         sf::Color background_colour;
 

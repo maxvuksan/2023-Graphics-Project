@@ -128,9 +128,9 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // rescaling our final image to fit window
     sf::Sprite final_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
-    final_image.setScale(Core::GetDisplayToWindowMultiplier());
+    final_image.setScale(sf::Vector2f(Core::GetWindowWidth() / (float)Core::GetDisplayWidth(), Core::GetWindowHeight() / (float)Core::GetDisplayHeight()));
     
-    surface.draw(final_image);
+    surface.draw(final_image); 
 
 }
 

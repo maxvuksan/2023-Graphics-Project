@@ -24,9 +24,4 @@ class Chunk : public Object {
         Tilemap* foreground_tilemap;
         Tilemap* background_tilemap;
 
-        int tilemap_width;
-        int tilemap_height;
-        int tilesize_x;
-        int tilesize_y;
-
 };

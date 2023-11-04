@@ -1,12 +1,12 @@
 #pragma once
 
+/*
+
+    Keeping track of everything time related
+*/
 class Time {
 
-	/*
-		Time:
 
-		Keeping track of everything time related
-	*/
 
 	public:
 

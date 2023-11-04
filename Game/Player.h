@@ -31,6 +31,7 @@ class Player : public Object{
 
         int selected_block;
 
+        SpriteRenderer* sr;
         BoxCollider* ground;
         BoxCollider* left;
         BoxCollider* right;
