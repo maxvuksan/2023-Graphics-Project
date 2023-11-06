@@ -4,17 +4,15 @@ SFML = -lsfml-graphics -lopengl32 -lsfml-network -lsfml-audio -lsfml-window -lsf
 LIBS = -pthread -Lsrc/lib $(ENET) $(SFML)
 
 # source
-AMBER = Amber/Core/*.cpp Amber/Object/*.cpp Amber/Object/Rendering/*.cpp Amber/Object/Physics/*.cpp Amber/Object/UI/*.cpp Amber/Utility/*.cpp
-
+AMBER = Amber/Core/*.cpp Amber/Networking/*.cpp Amber/Object/*.cpp Amber/Object/Rendering/*.cpp Amber/Object/Physics/*.cpp Amber/Object/UI/*.cpp Amber/Utility/*.cpp
+GAME = Game/Networking/*.cpp Game/*.cpp
 # commands
 run: compile execute
 
 compile:
-	g++ -o main.exe  -Isrc/include main.cpp  $(AMBER) Game/*.cpp  $(LIBS) 
+	g++ -o server.exe  -Isrc/include main_server.cpp  $(AMBER) $(GAME)  $(LIBS) 
+	g++ -o client.exe  -Isrc/include main.cpp  $(AMBER) $(GAME)  $(LIBS) 
 
-compile_network_test:
-	g++ -o server.exe -Isrc/include Amber/Networking/server_main.cpp Amber/Networking/Server.cpp Amber/Networking/NetworkObject.cpp $(LIBS)
-	g++ -o client.exe -Isrc/include Amber/Networking/client_main.cpp Amber/Networking/Client.cpp Amber/Networking/NetworkObject.cpp $(LIBS)
-		
+
 execute: 
 	./main.exe

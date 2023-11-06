@@ -1,3 +1,4 @@
+#pragma once
 #include "NetworkObject.h"
 
 /*
@@ -18,9 +19,9 @@ class Client : public NetworkObject{
         ~Client() override;
 
     protected:
+        ENetPeer* server; 
 
-        void CatchPeerEvent(ENetEventType event_type) override;
+        void CatchPeerEvent(ENetEvent event_type) override;
 
     private:
-        ENetPeer* server; 
 };

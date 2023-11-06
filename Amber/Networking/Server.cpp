@@ -17,7 +17,7 @@ void Server::Run(enet_uint16 port, size_t max_clients){
 
     address.host = ENET_HOST_ANY;
     address.port = port;
-
+ 
     client = enet_host_create(&address, max_clients, 1, 0, 0);
 
     if(client == NULL){
@@ -29,35 +29,13 @@ void Server::Run(enet_uint16 port, size_t max_clients){
     thread_running = true;
 }
 
-void Server::CatchPeerEvent(ENetEventType event_type){
-
-    switch(event_type)
-    {   
-        case ENET_EVENT_TYPE_CONNECT:
-            std::cout << "New connection " << event.peer->address.host << ":" << event.peer->address.port << "\n";
-            break;
-
-        case ENET_EVENT_TYPE_RECEIVE:
-            printf ("A packet of length %u containing %s was received from %x:%u on channel %u.\n",
-                            event.packet -> dataLength,
-                            event.packet -> data,
-                            event.peer -> address.host,
-                            event.peer->address.port,
-                            event.channelID);
-            break;               
-        
-        case ENET_EVENT_TYPE_DISCONNECT:
-            std::cout << event.peer->address.host << ":" << event.peer->address.port << " Disconnected\n";
-            break;
-
-    }
-}
 
 void Server::Close(){
     
     ListenerClose();
     enet_host_destroy(client);
 }
+
 
 
 Server::~Server(){

@@ -35,6 +35,7 @@ bool Client::Connect(const char* address_str, enet_uint16 port){
 
     // waiting for server response to connection...
 
+    ENetEvent event;
     if(enet_host_service(client, &event, 5000) > 0 
         && event.type == ENET_EVENT_TYPE_CONNECT){
 
@@ -48,8 +49,6 @@ bool Client::Connect(const char* address_str, enet_uint16 port){
         std::cout << "Connection failed\n";
     }
 
-    SendPacket(server, "test packet");
-
     pthread_mutex_init(&listener_thread_lock, NULL);
     pthread_create(&listener_thread, NULL, ListenerThread_Entry, this);
     thread_running = true;
@@ -58,7 +57,7 @@ bool Client::Connect(const char* address_str, enet_uint16 port){
 
 }
 
-void Client::CatchPeerEvent(ENetEventType event_type){
+void Client::CatchPeerEvent(ENetEvent event){
     
     switch(event.type)
     {   
@@ -81,8 +80,9 @@ void Client::Disconnect(){
     // signal to the server we want to disconnect
     enet_peer_disconnect(server, 0);
 
+    ENetEvent event;
     // wait for server to confirm successful disconnection
-    while (enet_host_service (client, &event, 3000) > 0)
+    while (enet_host_service (client, &event, 20) > 0)
     {
         switch (event.type)
         {

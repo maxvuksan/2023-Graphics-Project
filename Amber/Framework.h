@@ -5,6 +5,9 @@
 #include "Utility/Calc.h"
 #include "Utility/Mouse.h"
 
+#include "Networking/Client.h"
+#include "Networking/Server.h"
+
 #include "Core/Core.h"
 
 #include "Object/Object.h"

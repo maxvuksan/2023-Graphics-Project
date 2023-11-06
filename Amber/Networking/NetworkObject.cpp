@@ -1,32 +1,21 @@
 #include "NetworkObject.h"
 
 void* NetworkObject::ListenerThread_Entry(void* _this){
-            ((NetworkObject*)(_this))->ListenerThread();
-            return NULL;
+    ((NetworkObject*)(_this))->ListenerThread();
+    return NULL;
 }
 
-void NetworkObject::SendPacket(ENetPeer* peer, const char* data){
-    
-    ENetPacket* packet = enet_packet_create(data, strlen(data) + 1, ENET_PACKET_FLAG_RELIABLE);
-    
-    /*
-        arguments...
-
-        peer to send to 
-        channel index to send to 
-        packet to send
-    */
-    enet_peer_send(peer, 0, packet);
-}
 
 void NetworkObject::ListenerThread(){
 
+    ENetEvent event;
+
     while(true){
 
-        while(enet_host_service(client, &event, 1000) > 0){
+        while(enet_host_service(client, &event, 15) > 0){
             
             // funnels the event...
-            CatchPeerEvent(event.type);
+            CatchPeerEvent(event);
         }
 
         // check if we should terminate thread

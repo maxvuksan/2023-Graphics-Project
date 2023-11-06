@@ -20,6 +20,8 @@ class Core{
         Core(int _window_width = 800, int _window_height = 800, std::string window_title = "Untitled Project");
         Core(int _window_width, int _window_height, int _display_width, int _display_height, std::string window_title = "Untitled Project");
         
+        virtual ~Core(){}
+
         void Run();
 
         virtual void Start(){}

@@ -2,8 +2,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-typedef char byte;
-
 class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 {
     /*

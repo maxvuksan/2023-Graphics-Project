@@ -1,10 +1,23 @@
 #include "../Amber/Framework.h"
+#include "Networking/GameServer.h"
+#include "Networking/GameClient.h"
 #include "TestScene.h"
 
 class Game : public Core{
 
     public:
-        Game() : Core(1200, 800, 600, 400, "My Game"){}
+        Game(bool is_server = false) : Core(1200, 800, 600, 400, "My Game")
+        {
+            if(is_server){
+                server.Run(6868); //    SendPacket<BodyTest>(server, {{7}, 123, 456, 789});
+            }
+            client.Connect("127.0.0.1", 6868);
+            client.SendStuff();
+        }
+
+        ~Game() override{ 
+            server.Close();
+        }
 
         void Start() override{
 
@@ -29,4 +42,7 @@ class Game : public Core{
                 }
             }
         }
+
+        GameServer server;
+        GameClient client;
 };   

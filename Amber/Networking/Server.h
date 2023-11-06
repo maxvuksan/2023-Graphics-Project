@@ -1,3 +1,4 @@
+#pragma once
 #include "NetworkObject.h"
 
 /*
@@ -12,10 +13,7 @@ class Server : public NetworkObject {
         void Run(enet_uint16 port, size_t max_clients = 16);
         void Close();
 
-        ~Server() override;
 
-    protected:
-     
-        void CatchPeerEvent(ENetEventType event_type) override;
+        ~Server() override;
 
 };
