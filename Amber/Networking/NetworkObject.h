@@ -1,7 +1,6 @@
 #pragma once
 #include <enet/enet.h>
 #include <pthread.h>
-#include "PacketHeader.h"
 #include <iostream>
 #include "../Utility/Memory.h"
 /*
@@ -22,6 +21,8 @@ class NetworkObject{
         void ListenerThread();
 
         virtual void CatchPeerEvent(ENetEvent event){}
+        
+        virtual void Update(){}
 
         /*
             the header_type enum should be relateted to the type T we are sending
@@ -32,8 +33,9 @@ class NetworkObject{
             ENetPacket* enet_packet = enet_packet_create((void*)&packet, sizeof(packet), ENET_PACKET_FLAG_RELIABLE);
     
             enet_peer_send(peer, 0, enet_packet);
-    
         }
+
+        void ForwardPacket(ENetPeer* peer, ENetPacket* enet_packet);
 
         // terminates the listener thread loop, is called when we want to end the connection
         void ListenerClose();

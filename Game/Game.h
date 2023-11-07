@@ -6,13 +6,11 @@
 class Game : public Core{
 
     public:
-        Game(bool is_server = false) : Core(1200, 800, 600, 400, "My Game")
+        Game(bool is_server = false) : Core(800, 600, 400, 300, "My Game")
         {
             if(is_server){
-                server.Run(6868); //    SendPacket<BodyTest>(server, {{7}, 123, 456, 789});
+               server.Run(6868); //    SendPacket<BodyTest>(server, {{7}, 123, 456, 789});
             }
-            client.Connect("127.0.0.1", 6868);
-            client.SendStuff();
         }
 
         ~Game() override{ 
@@ -44,5 +42,4 @@ class Game : public Core{
         }
 
         GameServer server;
-        GameClient client;
 };   

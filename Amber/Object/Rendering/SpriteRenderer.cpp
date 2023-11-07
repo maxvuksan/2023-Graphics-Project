@@ -37,10 +37,18 @@ void SpriteRenderer::SetTextureRect(int left, int top, int width, int height){
 
 void SpriteRenderer::SetFlip(bool flip){
     if(flip){
-        this->flip_val = -1;
+        this->flip_factor = -1;
     }
     else{
-        this->flip_val = 1;
+        this->flip_factor = 1;
     }
-    sprite.setScale(this->flip_val, 1);
+    sprite.setScale(this->flip_factor, 1);
+}
+bool SpriteRenderer::GetFlip(){ 
+    if(flip_factor == 1){ 
+        return false; 
+    } 
+    else{ 
+        return true;
+    } 
 }

@@ -10,9 +10,13 @@ std::unordered_map<const char*, Scene*> AssetManager::scenes; /*scenes are store
 std::unordered_map<const char*, sf::Shader*> AssetManager::shaders;
 std::unordered_map<const char*, AnimationSet*> AssetManager::animation_sets;
 std::unordered_map<const char*, sf::SoundBuffer> AssetManager::sounds;
+std::unordered_map<const char*, sf::Font> AssetManager::fonts;
 
 void AssetManager::Construct()
 {
+
+    CreateFontObj("Amber_Default", "Amber/Fonts/dogica.ttf");
+    
     CreateShader("Amber_BlurHorizontal", "Amber/Shaders/BlurHorizontal.frag");
     CreateShader("Amber_BlurVertical", "Amber/Shaders/BlurVertical.frag");
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
@@ -33,6 +37,26 @@ void AssetManager::Construct()
 
     shadow_texture.clear(sf::Color(0,0,0));
     CreateTexture("Amber_Black", shadow_texture, true);
+}
+
+sf::Font* AssetManager::CreateFontObj(const char* label, const std::string file_location){
+
+
+    fonts.insert(std::make_pair(label, sf::Font())); 
+    fonts[label].loadFromFile(file_location);
+
+    return &fonts[label];
+}
+
+sf::Font* AssetManager::GetFont(const char* label){
+    for(auto& result : fonts){
+
+        if(strcmp(result.first, label) == 0){
+            return &result.second;
+        }
+    }
+    std::cout << "ERROR : A font with the label '" << label << "' could not be found\n";
+    return nullptr;
 }
 
 sf::Shader* AssetManager::CreateShader(const char* label, const std::string fragment_file_location){

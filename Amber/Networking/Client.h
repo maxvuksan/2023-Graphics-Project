@@ -16,12 +16,11 @@ class Client : public NetworkObject{
         bool Connect(const char* address_str, enet_uint16 port);
         void Disconnect();
 
+        virtual void OnDisconnect(){};
+
         ~Client() override;
 
     protected:
+
         ENetPeer* server; 
-
-        void CatchPeerEvent(ENetEvent event_type) override;
-
-    private:
 };

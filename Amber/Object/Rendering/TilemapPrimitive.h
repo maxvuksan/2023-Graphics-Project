@@ -18,7 +18,7 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
             @returns A 2D vector of integer values representing the tilemap
         */
         std::vector<std::vector<short>>& GetGrid();
-        void SetTile(int tile_index, unsigned int x, unsigned int y);
+        void SetTile(short tile_index, unsigned int x, unsigned int y);
         /*
             swaps back to the tilemap texture
         */

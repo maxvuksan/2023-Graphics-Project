@@ -49,6 +49,11 @@ void World::CatchEvent(sf::Event event){
     }
 }
 
+void World::LinkClient(GameClient* client){
+    this->client = client;
+}
+
+
 
 void World::CalculateMinimap(){
     for(int x = 0; x < width; x++){
@@ -76,13 +81,13 @@ void World::CalculateMinimap(){
 
 }
 
-bool World::SetTileWorld(int tile_index, int world_x, int world_y, SetLocation set_location){
+bool World::SetTileWorld(short tile_index, int world_x, int world_y, SetLocation set_location, bool send_packet){
 
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
-    return SetTile(tile_index, coord.x, coord.y);
+    return SetTile(tile_index, coord.x, coord.y, set_location, SetMode::OVERRIDE, send_packet);
 }
 
-bool World::SetTile(int tile_index, int x, int y, SetLocation set_location, SetMode set_mode){
+bool World::SetTile(short tile_index, int x, int y, SetLocation set_location, SetMode set_mode, bool send_packet){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
@@ -114,15 +119,19 @@ bool World::SetTile(int tile_index, int x, int y, SetLocation set_location, SetM
         minimap->GetPixelGrid()->SetPixel(x, y, Blocks[tile_index].base_colour);
     }
 
+    if(send_packet){
+        client->SendSetBlock(tile_index, x, y);
+    }
+
     return true;
 }
 
-int World::GetTileWorld(int world_x, int world_y, SetLocation get_location){
+short World::GetTileWorld(int world_x, int world_y, SetLocation get_location){
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
     return GetTile(coord.x, coord.y, get_location);
 }
 
-int World::GetTile(int x, int y, SetLocation get_location){
+short World::GetTile(int x, int y, SetLocation get_location){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
@@ -213,7 +222,7 @@ std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
     return in_radius;
 }
 
-void World::SetCircle(int tile_index, int x, int y, int radius, SetLocation set_location, SetMode set_mode){
+void World::SetCircle(short tile_index, int x, int y, int radius, SetLocation set_location, SetMode set_mode){
 
     // set all tiles
     for(auto& offset : GetOffsetsInRadius(radius)){

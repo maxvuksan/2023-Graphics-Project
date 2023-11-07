@@ -41,9 +41,9 @@ void TilemapPrimitive::SetTexture(sf::Texture* texture){
     focus_texture = texture;
 }
 
-void TilemapPrimitive::SetTile(int tile_index, unsigned int x, unsigned int y){
+void TilemapPrimitive::SetTile(short tile_index, unsigned int x, unsigned int y){
 
-    grid[x][y] = (short)tile_index;
+    grid[x][y] = tile_index;
 
     // find its position in the tileset texture
     int tu, tv;

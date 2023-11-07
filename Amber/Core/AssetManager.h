@@ -25,6 +25,9 @@ class AssetManager {
         static void Construct();
         static void Destruct();
 
+        static sf::Font* CreateFontObj(const char* label, const std::string file_location);
+        static sf::Font* GetFont(const char* label);
+
         // assuming all shaders are fragment
         static sf::Shader* CreateShader(const char* label, const std::string fragment_file_location);
         static sf::Shader* GetShader(const char* label);
@@ -62,6 +65,7 @@ class AssetManager {
     protected:
         static Core* core;
 
+        static std::unordered_map<const char*, sf::Font> fonts;
         static std::unordered_map<const char*, sf::Texture> textures; 
         static std::unordered_map<const char*, Scene*> scenes; /*scenes are stored as pointers to allow for inherited scenes*/
         static std::unordered_map<const char*, sf::Shader*> shaders;

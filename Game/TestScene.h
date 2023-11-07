@@ -1,28 +1,26 @@
 #include "../Amber/Framework.h"
 #include "Player.h"
+#include "PlayerController.h"
 #include "World.h"
 #include <math.h>
+#include "Networking/GameClient.h"
 
 class TestScene : public Scene {
 
     public: 
 
-        Transform* cam;
-
         void Start() override{
 
-           World* world = AddObject<World>();
+           client.LinkScene(this);
+           client.CreateObjects();
+           client.Connect("127.0.0.1", 6868);
 
-           Player* player = AddObject<Player>();
-           player->LinkWorld(world);
-
-           world->SetFocus(player->GetTransform());
-    /*
-           Object* obj = AddObject<Object>();
-           SetActiveCamera(obj->AddComponent<Camera>());
-           std::cout << sizeof(*obj->GetComponent<Camera>()) + sizeof(*obj->GetTransform()) << "\n";
-    */
         };
+
+        void Update() override{
+
+            client.SendPlayerControl();
+        }
 
         void CatchEvent(sf::Event event) override{
             if (event.type == sf::Event::KeyPressed)
@@ -33,28 +31,6 @@ class TestScene : public Scene {
             }
         }
 
-        void Update() override{
-
-            return;
-            
-            float speed = 0.1f;
-
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)){
-                speed = 0.5f;
-            }
-
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
-                cam->position.x -= Time::Dt() * speed;
-            }
-            else if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
-                cam->position.x += Time::Dt() * speed;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-                cam->position.y -= Time::Dt() * speed;
-            }
-            else if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-                cam->position.y += Time::Dt() * speed;
-            }
-        }
-
+    private:
+        GameClient client;
 };

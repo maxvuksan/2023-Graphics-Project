@@ -1,11 +1,42 @@
 #include "GameServer.h"
 
+GameServer::GameServer(): client_id_tracked(0) {}
+
+void GameServer::Update(){
+    if(heartbeat_delay_tracked > heartbeat_delay){
+        heartbeat_delay_tracked = 0;
+        SendPacketToAll<PacketHeader>({PACKET_ServerHeartbeat});
+    }
+    heartbeat_delay_tracked++;
+}
+
 void GameServer::CatchPeerEvent(ENetEvent event){
 
     switch(event.type) 
     {   
         case ENET_EVENT_TYPE_CONNECT: {
-            std::cout << "New connection " << event.peer->address.host << ":" << event.peer->address.port << "\n";
+
+            if(Core::DEBUG_MODE){
+                std::cout << "New connection " << event.peer->address.host << ":" << event.peer->address.port << "\n";
+            }
+
+            // giving the new client a new client_id
+            SendPacket<PacketHeader>(event.peer, {PACKET_SetClientId, client_id_tracked});
+            
+            // define exisiting players on new player
+            for(auto client : connected_clients){
+                SendPacket<PacketHeader>(event.peer, {PACKET_CreatePlayer, client.first});
+            }
+            
+            connected_clients[client_id_tracked] = event.peer;
+
+            // define the new player on exisiting players
+            SendPacketButExclude<PacketHeader>({PACKET_CreatePlayer, client_id_tracked}, client_id_tracked);
+
+     
+            // increment client_id counter
+            client_id_tracked++;
+            
             break;
         }
 
@@ -13,7 +44,6 @@ void GameServer::CatchPeerEvent(ENetEvent event){
 
         case ENET_EVENT_TYPE_RECEIVE: {
 
-            // copy to the header portion of the message into PacketHeader object
             PacketHeader header;
             memcpy(&header, event.packet->data, sizeof(PacketHeader));
 
@@ -28,6 +58,20 @@ void GameServer::CatchPeerEvent(ENetEvent event){
 
         case ENET_EVENT_TYPE_DISCONNECT: {
             std::cout << event.peer->address.host << ":" << event.peer->address.port << " Disconnected\n";
+
+            // get client id of disconnection
+            int disconnecting_id = 0;
+            for(auto client : connected_clients){
+                if(client.second == event.peer){
+                    disconnecting_id = client.first;
+                }
+            }
+
+            connected_clients.erase(disconnecting_id);
+
+            // define the new player on exisiting players
+            SendPacketToAll<PacketHeader>({PACKET_CreatePlayer, disconnecting_id});
+     
             break;
         }
 
@@ -35,17 +79,43 @@ void GameServer::CatchPeerEvent(ENetEvent event){
 }
 
 void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
-    
+
+    PacketHeader header;
+    memcpy(&header, event.packet->data, sizeof(PacketHeader));
+
     switch(packet_type){
 
-        case PACKET_PlayerControl: {
+        case PACKET_PlayerControl: 
+        case PACKET_SetBlock: 
             
-            PlayerControl body;
-            memcpy(&body, event.packet->data, sizeof(PlayerControl));
+            ForwardPacketButExclude(event.packet, header.client_id);  
+            break;
+        
+    }
+}
 
-            std::cout << "type: " <<body.header.type << "\n";
-            std::cout << "x: " << body.pos_x << "\n";
-            std::cout << "y: " << body.pos_y << "\n";
+
+ // broadcasts a packet to all clients
+void GameServer::ForwardPacketToAll(ENetPacket* enet_packet){
+    
+    for(auto& client : connected_clients){
+        ForwardPacket(client.second, enet_packet);
+    }
+}
+
+void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id){
+    
+    // sending new position to all clients besides the one which sent it
+    for(auto& client : connected_clients){
+        
+        // dont send position back to originally sender
+        if(client_id != client.first){
+            
+            ForwardPacket(client.second, enet_packet);
         }
     }
+}
+
+void GameServer::ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id){
+    ForwardPacket(connected_clients[client_id], enet_packet);
 }

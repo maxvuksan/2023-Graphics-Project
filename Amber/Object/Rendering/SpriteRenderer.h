@@ -16,9 +16,10 @@ class SpriteRenderer : public Component{
         sf::Texture* GetTexture();
         // should the sprite be flipped?
         void SetFlip(bool flip);
+        bool GetFlip();
 
     protected:
-        int flip_val;
+        int flip_factor;
         sf::Sprite sprite;
         sf::Texture* texture;
 };

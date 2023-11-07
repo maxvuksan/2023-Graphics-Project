@@ -32,7 +32,7 @@ void Tilemap::UpdateSecondary(){
 }
 
 
-int Tilemap::GetTile(int x, int y){
+short Tilemap::GetTile(int x, int y){
     std::vector<std::vector<short>>& grid = tilemap_primitive.GetGrid();
 
     if(x < tilemap_profile->width && x >= 0){
@@ -90,11 +90,11 @@ bool Tilemap::Load(const char* texture_label, TilemapProfile* profile, int defau
 
 
 
-void Tilemap::SetTile(int tile_index, unsigned int x, unsigned int y){
+void Tilemap::SetTile(short tile_index, unsigned int x, unsigned int y){
     tilemap_primitive.SetTile(tile_index, x, y);
     has_changed = true;
 }
-bool Tilemap::SetTileSafe(int tile_index, int x, int y){
+bool Tilemap::SetTileSafe(short tile_index, int x, int y){
 
     if(x >= 0 && x < tilemap_profile->width){
         if(y >= 0 && y < tilemap_profile->height){
@@ -106,24 +106,24 @@ bool Tilemap::SetTileSafe(int tile_index, int x, int y){
     return false;
 }
 
-void Tilemap::SetRow(int tile_index, unsigned int row){    
+void Tilemap::SetRow(short tile_index, unsigned int row){    
     for(unsigned int x = 0; x < tilemap_primitive.size.x; x++){
         tilemap_primitive.SetTile(tile_index, x, row);
     }
 }
-void Tilemap::SetColumn(int tile_index, unsigned int column){
+void Tilemap::SetColumn(short tile_index, unsigned int column){
     for(unsigned int y = 0; y < tilemap_primitive.size.y; y++){
         tilemap_primitive.SetTile(tile_index, column, y);
     }
 }
-void Tilemap::SetArea(int tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max){
+void Tilemap::SetArea(short tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max){
     for(unsigned int x = x_min; x < x_max; x++){
         for(unsigned int y = y_min; y < y_max; y++){
             tilemap_primitive.SetTile(tile_index, x, y);            
         }
     }
 }
-void Tilemap::SetAll(int tile_index){
+void Tilemap::SetAll(short tile_index){
     for(unsigned int y = 0; y < tilemap_primitive.size.y; y++){
         for(unsigned int x = 0; x < tilemap_primitive.size.x; x++){
             tilemap_primitive.SetTile(tile_index, x, y);

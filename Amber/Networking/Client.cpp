@@ -1,5 +1,6 @@
 #include "Client.h"
 #include <iostream>
+#include "../Core/Core.h"
 
 Client::Client(){
 
@@ -39,8 +40,7 @@ bool Client::Connect(const char* address_str, enet_uint16 port){
     if(enet_host_service(client, &event, 5000) > 0 
         && event.type == ENET_EVENT_TYPE_CONNECT){
 
-            std::cout << "connected successfully\n";
-
+            std::cout << "Connected Successfully\n";
         }
 
     else{
@@ -56,22 +56,6 @@ bool Client::Connect(const char* address_str, enet_uint16 port){
     return true;
 
 }
-
-void Client::CatchPeerEvent(ENetEvent event){
-    
-    switch(event.type)
-    {   
-        case ENET_EVENT_TYPE_RECEIVE:
-            printf ("A packet of length %u containing %s was received from %x:%u on channel %u.\n",
-                            event.packet -> dataLength,
-                            event.packet -> data,
-                            event.peer -> address.host,
-                            event.peer->address.port,
-                            event.channelID);
-            break;               
-    }
-}
-
 
 void Client::Disconnect(){
 
@@ -99,6 +83,7 @@ void Client::Disconnect(){
     }
 
     enet_peer_reset(server);
+    OnDisconnect();
 }
 
 Client::~Client(){

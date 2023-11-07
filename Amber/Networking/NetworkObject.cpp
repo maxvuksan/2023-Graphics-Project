@@ -5,6 +5,10 @@ void* NetworkObject::ListenerThread_Entry(void* _this){
     return NULL;
 }
 
+void NetworkObject::ForwardPacket(ENetPeer* peer, ENetPacket* enet_packet){
+    enet_peer_send(peer, 0, enet_packet);
+}
+
 
 void NetworkObject::ListenerThread(){
 
@@ -17,6 +21,8 @@ void NetworkObject::ListenerThread(){
             // funnels the event...
             CatchPeerEvent(event);
         }
+        
+        Update();
 
         // check if we should terminate thread
         pthread_mutex_lock(&listener_thread_lock);

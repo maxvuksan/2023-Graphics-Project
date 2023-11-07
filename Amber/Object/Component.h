@@ -16,6 +16,7 @@ class Component{
 
         virtual void Start(){}
         virtual void Update(){}
+        virtual void CatchEvent(sf::Event event){}
         virtual void UpdateSecondary(){} // in case of inheritance using up functions
 
         // drawing out what on screen is in shadow, black is fully in shadow, white is fully lit

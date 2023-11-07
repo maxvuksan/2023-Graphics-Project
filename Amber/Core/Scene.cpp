@@ -96,6 +96,10 @@ void Scene::InternalCatchEvent(sf::Event event){
             }
 
             obj->CatchEvent(event);
+            
+            for(auto comp : *obj->GetComponents()){
+                comp->CatchEvent(event);
+            }
         }
     }
 
@@ -111,6 +115,10 @@ void Scene::InternalCatchEvent(sf::Event event){
             }
 
             obj->CatchEvent(event);
+        
+            for(auto comp : *obj->GetComponents()){
+                comp->CatchEvent(event);
+            }
         }
     }
 }

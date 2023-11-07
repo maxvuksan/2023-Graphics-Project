@@ -1,3 +1,4 @@
+#pragma once
 #include "../Amber/Framework.h"
 
 class Minimap : public Object{
