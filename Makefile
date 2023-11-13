@@ -13,8 +13,8 @@ run: compile execute
 
 
 compile:
-	g++ -o server.exe  -Isrc/include main_server.cpp  $(AMBER) $(GAME)  $(LIBS) 
-	g++ -o client.exe  -Isrc/include main.cpp  $(AMBER) $(GAME)  $(LIBS) 
+	g++ -o server.exe -Isrc/include main_server.cpp  $(AMBER) $(GAME)  $(LIBS) 
+	g++ -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME)  $(LIBS) 
 
 
 execute: 

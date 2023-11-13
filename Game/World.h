@@ -5,8 +5,9 @@
 #include "Minimap.h"
 #include "WorldGenerator.h"
 #include "Chunk.h"
-#include "Networking/GameClient.h"
+#include "WorldProfile.h"
 
+class GameClient;
 class WorldGenerator;
 class World : public Object{
     
@@ -29,6 +30,10 @@ class World : public Object{
         */
         bool SetTileWorld(short tile_index, int world_x, int world_y, SetLocation set_location = SetLocation::FOREGROUND, bool send_packet = false);
         bool SetTile(short tile_index, int x, int y, SetLocation set_location = SetLocation::FOREGROUND, SetMode set_mode = SetMode::OVERRIDE, bool send_packet = false);
+        
+        // same as SetTileWorld to -1, but also spawns pickup if needed
+        bool BreakTileWorld(int world_x, int world_y, SetLocation set_location = SetLocation::FOREGROUND, bool send_packet = false);
+
         // @returns the tile_index at a specific world position
         short GetTileWorld(int world_x, int world_y, SetLocation set_location = SetLocation::FOREGROUND);
         // @returns the tile_index at a specific coordinate
@@ -56,6 +61,8 @@ class World : public Object{
         //the focus is what the world orients around (only load chunks around the focus transform, etc...)
         void SetFocus(Transform* focus);
 
+        WorldProfile* GetWorldProfile(){return &world_profile;}
+
     private:
         GameClient* client;
         Transform* focus;
@@ -67,19 +74,15 @@ class World : public Object{
         
         Minimap* minimap;
         WorldGenerator* generator;
+        WorldProfile world_profile;    
+        TilemapProfile* tilemap_profile;
 
         int loading_threshold = 500;
         int collider_threshold = 300;
 
-        TilemapProfile tilemap_profile;    
 
         int half_tilemap_width;
         int half_tilemap_height;
         float one_divide_tilemap_width;
         float one_divide_tilemap_height;
-
-        // in chunks...
-        int width = 20;
-        int height = 20;
-
 };

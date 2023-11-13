@@ -87,7 +87,7 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
 
         case PACKET_PlayerControl: 
         case PACKET_SetBlock: 
-            
+        case PACKET_ChatMessage:       
             ForwardPacketButExclude(event.packet, header.client_id);  
             break;
         

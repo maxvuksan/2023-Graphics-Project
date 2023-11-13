@@ -28,6 +28,8 @@ class Scene {
 
     public:
 
+        Scene();
+
         Core* GetCore();
         void LinkCore(Core* core);
 
@@ -146,6 +148,13 @@ class Scene {
         void RemoveTilemap(Tilemap* point_light);
         std::vector<Tilemap*>* GetTilemaps(){return &tilemaps;}
 
+        sf::Vector2i GetMinBounds(){return sf::Vector2i(bounds_min_x, bounds_min_y);}
+        sf::Vector2i GetMaxBounds(){return sf::Vector2i(bounds_max_x, bounds_max_y);}
+        void SetMinXBound(int x);
+        void SetMinYBound(int y);
+        void SetMaxXBound(int x);
+        void SetMaxYBound(int y);
+              
         virtual ~Scene(){}
         
         // deletes all objects from the scene
@@ -165,5 +174,10 @@ class Scene {
 
         Core* core;
         static Camera* active_camera;
+
+        int bounds_min_x;
+        int bounds_min_y;
+        int bounds_max_x;
+        int bounds_max_y;
 
 };

@@ -22,15 +22,6 @@ class TestScene : public Scene {
             client.SendPlayerControl();
         }
 
-        void CatchEvent(sf::Event event) override{
-            if (event.type == sf::Event::KeyPressed)
-            {
-                if (event.key.scancode == sf::Keyboard::Scan::Q){
-                    Core::DEBUG_MODE = !Core::DEBUG_MODE;
-                }
-            }
-        }
-
     private:
         GameClient client;
 };

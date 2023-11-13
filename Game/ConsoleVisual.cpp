@@ -1,9 +1,31 @@
-#include "Console.h"
+#include "ConsoleVisual.h"
+#include "Networking/GameClient.h"
+
+ConsoleVisual* ConsoleVisual::instance = nullptr;
 
 // shorthand for converting keypress to char
 #define KEYPRESS_CASE(_case, val) case _case : ret = val; break;
 
-void Console::Start(){ 
+ConsoleVisual::ConsoleVisual(){
+    
+    if(instance != nullptr){
+        std::cout << "ERROR : Creating multiple instances of ConsoleVisual is not allowed\n";
+    }
+
+    instance = this;
+}
+ConsoleVisual::~ConsoleVisual(){
+    instance = nullptr;
+}
+
+void ConsoleVisual::LinkClient(GameClient* client){
+    this->client = client;
+}
+
+
+void ConsoleVisual::Start(){ 
+
+    this->SetRenderAtWindowSize(true);
 
     active = false;
 
@@ -12,35 +34,37 @@ void Console::Start(){
 
     int spacing = 12;
 
-    int y_pos = Core::GetDisplayHeight() - spacing * 2;
+    int y_pos = Core::GetWindowHeight() - spacing * 4;
 
     interact_line.setOrigin(sf::Vector2f(0, 4));
     interact_line.setFont(*font);
     interact_line.setCharacterSize(8);
-    interact_line.setPosition(spacing * 2, y_pos);
-    interact_line.setString("/sumsum adadada herllo");
+    interact_line.setPosition(spacing * 4, y_pos);
+    interact_line.setString("");
     interact_line.setFillColor(sf::Color::White);  
+    interact_background_colour = sf::Color(25, 28, 34, 130);
 
-    interact_box.setFillColor(sf::Color(25, 28, 34, 100));
-    interact_box.setPosition(interact_line.getPosition() + sf::Vector2f(-2, -4));
-    interact_box.setSize(sf::Vector2f(Core::GetDisplayWidth() - interact_box.getPosition().x * 2, 8 + 2 + 2));
+    interact_box.setFillColor(interact_background_colour);
+    interact_box.setPosition(interact_line.getPosition() + sf::Vector2f(-4, -6));
+    interact_box.setSize(sf::Vector2f(Core::GetWindowWidth() - interact_box.getPosition().x * 2 + 2, 8 + 5));
 
     y_pos -= spacing * 2;
 
 
     lines.resize(line_count);
     for(int i = 0; i < lines.size(); i++){
-        lines[i].setPosition(spacing * 2, y_pos);
+        lines[i].setPosition(spacing * 4, y_pos);
         lines[i].setFont(*font);
         lines[i].setCharacterSize(8);
-        lines[i].setString("TESTING 123 adadada herllo @ apple");
+        lines[i].setString("");
         lines[i].setFillColor(sf::Color::White);
         y_pos -= spacing;
     }
 
 }
 
-void Console::CatchEvent(sf::Event event){
+
+void ConsoleVisual::CatchEvent(sf::Event event){
     if (event.type == sf::Event::KeyPressed)
     {
         // function
@@ -51,6 +75,7 @@ void Console::CatchEvent(sf::Event event){
                 break;
             }
             case sf::Keyboard::Scan::Escape:{
+                interact_line.setString("");
                 active = false;
                 break;
             }
@@ -65,6 +90,24 @@ void Console::CatchEvent(sf::Event event){
         
         switch (event.key.scancode)
         {
+            // submit input
+            case sf::Keyboard::Scan::Enter: {
+                
+                ConsoleLine result = CommandParser::Execute(interact_line.getString());
+                if(result.message != ""){
+                    bool send_packet = false;
+                    if(result.colour == sf::Color::White){
+                        send_packet = true;
+                    }
+
+                    this->Print(result, send_packet);
+
+                }
+                interact_line.setString("");
+                active = false;
+                break;
+            }
+
             case sf::Keyboard::Scan::Backspace: {
                 // removes on character from the end, using substring manipulation
                 if(interact_line.getString().getSize() > 0){
@@ -73,6 +116,13 @@ void Console::CatchEvent(sf::Event event){
                 }
                 break;
             }
+        }
+
+        if(interact_line.getString().getSize() >= 50){
+            return;
+        }
+
+        switch(event.key.scancode){
 
 
             KEYPRESS_CASE(sf::Keyboard::Scan::A, "A")
@@ -122,16 +172,37 @@ void Console::CatchEvent(sf::Event event){
 }
 
 
-void Console::Draw(sf::RenderTarget& texture){
+void ConsoleVisual::Draw(sf::RenderTarget& texture){
 
     if(active){
 
         texture.draw(interact_box);
 
-        for(int i = 0; i < lines.size(); i++){
-            texture.draw(lines[i]);
-        }
-        texture.draw(interact_line);
     }
+
+    for(int i = 0; i < lines.size(); i++){
+        texture.draw(lines[i]);
+    }
+    texture.draw(interact_line);
 }
 
+void ConsoleVisual::Print(const ConsoleLine& message, bool send_packet){
+    
+    // shifts each line up a place
+    for(int i = line_count - 2; i >= 0; i--){
+        lines[i + 1].setString(lines[i].getString());
+        lines[i + 1].setColor(lines[i].getColor());
+    }
+    lines[0].setString(message.message);
+    lines[0].setColor(message.colour);
+
+    if(send_packet){
+        client->SendChatMessage(message.message);
+    }
+
+}
+void ConsoleVisual::ClearLines(){
+    for(int i = 0; i < line_count; i++){
+        lines[i].setString("");
+    }
+}

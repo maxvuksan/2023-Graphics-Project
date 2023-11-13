@@ -3,6 +3,7 @@
 #include "../../Core/Core.h"
 #include <iostream>
 
+SpriteRenderer::SpriteRenderer(): offset(0,0){}
 
 void SpriteRenderer::Start(){}
 
@@ -10,7 +11,7 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
 
     // convert position to camera relative position "screen position"
     sprite.setPosition(Camera::WorldToScreenPosition(
-        object->GetTransform()->position
+        object->GetTransform()->position + offset
     ));
     
     surface.draw(sprite);
@@ -51,4 +52,8 @@ bool SpriteRenderer::GetFlip(){
     else{ 
         return true;
     } 
+}
+
+void SpriteRenderer::SetOffset(sf::Vector2f offset){
+    this->offset = offset;
 }

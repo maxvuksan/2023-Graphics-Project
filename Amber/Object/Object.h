@@ -155,6 +155,12 @@ class Object{
         */
         void DestroyCascadeToChildren();
 
+        /*
+            (for UI objects) should this object be renderered on top of everything else (regardless of display size)
+        */
+        void SetRenderAtWindowSize(bool render_at_window_size);
+        bool GetRenderAtWindowSize();
+
     protected:
         /*
             removes the object from the scene, should be called by the object itself
@@ -173,7 +179,9 @@ class Object{
         bool active;
 
         // should this object be deleted from the ui map or object map
-        bool deleted_from_ui_map; 
+        bool deleted_from_ui_map;
+        // specifically for UI objects, should this be drawn onto the window 
+        bool render_at_window_size;
 
         Scene* scene;
         Transform* transform;

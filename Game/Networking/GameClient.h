@@ -1,10 +1,16 @@
 #pragma once
 #include "../../Amber/Framework.h"
 #include "PacketTypes.h"
+#include "../CommandParser.h"
 
 class World;
 class Player;
+class PlayerController;
+class ConsoleVisual;
+
 class GameClient : public Client {
+
+    friend class CommandParser; 
 
     public:
 
@@ -17,6 +23,7 @@ class GameClient : public Client {
 
         void SendPlayerControl();
         void SendSetBlock(short tile_index, int x, int y);
+        void SendChatMessage(const std::string& message);
 
         void CatchPeerEvent(ENetEvent event) override;
         void InterpretPacket(ENetEvent& event);
@@ -34,8 +41,10 @@ class GameClient : public Client {
         std::map<int, Player*> connected_clients;
 
         Player* player;
+        PlayerController* player_controller;
         sf::Vector2f previous_player_position;
 
+        ConsoleVisual* console_visual;
         World* world;
 
 };

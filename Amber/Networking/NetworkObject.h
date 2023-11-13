@@ -24,14 +24,10 @@ class NetworkObject{
         
         virtual void Update(){}
 
-        /*
-            the header_type enum should be relateted to the type T we are sending
-        */
         template <typename T>
         void SendPacket(ENetPeer* peer, T packet){
 
             ENetPacket* enet_packet = enet_packet_create((void*)&packet, sizeof(packet), ENET_PACKET_FLAG_RELIABLE);
-    
             enet_peer_send(peer, 0, enet_packet);
         }
 

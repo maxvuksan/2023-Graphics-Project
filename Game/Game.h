@@ -23,22 +23,14 @@ class Game : public Core{
             AssetManager::CreateTexture("demoTexture", "tiles.png");
             AssetManager::CreateTexture("player", "player.png");
 
+            AssetManager::CreateTexture("pickups", "pickups.png");
+
             AssetManager::CreateSound("hit", "hit.wav");
             AssetManager::CreateSound("break", "break.wav");
 
             AssetManager::CreateScene<TestScene>("TestScene");
 
             LoadScene("TestScene");
-        }
-
-        void CatchEvent(sf::Event event) override{
-            
-            // restart scene with 'E'
-            if(event.type == sf::Event::KeyPressed){
-                if(event.key.code == sf::Keyboard::E){
-                    LoadScene("TestScene");
-                }
-            }
         }
 
         GameServer server;

@@ -2,6 +2,8 @@
 #include "../../Amber/Framework.h"
 #include "../BlockTypes.h"
 
+#define PACKET_STRING_SIZE 50
+
 enum PACKET{
     
     /*
@@ -21,8 +23,9 @@ enum PACKET{
     */
     PACKET_PlayerControl,
     PACKET_SetBlock,
+    PACKET_ChatMessage,
+    
     PACKET_SetChunk,
-    PACKET_WorldData,
 };
 
 struct PacketHeader{
@@ -46,6 +49,11 @@ struct p_SetBlock{
     short tile_index;
     int pos_x;
     int pos_y;
+};
+
+struct p_ChatMessage{
+    PacketHeader header;
+    char message;
 };
 
 struct p_SetChunk{

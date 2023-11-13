@@ -26,7 +26,7 @@ class RenderManager{
 
     private:
         static void ClearRenderTextures();
-        static void RenderLayer(sf::RenderTarget&, std::vector<Object*>& objects_at_layer);
+        static void RenderLayer(sf::RenderTarget&, std::vector<Object*>& objects_at_layer, bool render_at_window_size = false);
         static void RenderDebug(sf::RenderTarget&, Scene*);
         static void RenderUI(sf::RenderTarget&, Scene*);
 

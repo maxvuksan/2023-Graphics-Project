@@ -122,7 +122,6 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         RenderLayer(*render_textures[COMPOSITE], layer->second);
     }
 
-    
     render_textures[COMPOSITE]->display();
 
 
@@ -131,6 +130,11 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     final_image.setScale(sf::Vector2f(Core::GetWindowWidth() / (float)Core::GetDisplayWidth(), Core::GetWindowHeight() / (float)Core::GetDisplayHeight()));
     
     surface.draw(final_image); 
+
+    // UI elements which are configured to render at the window size
+    for (auto layer = ui->begin(); layer != ui->end(); layer++) {
+        RenderLayer(surface, layer->second, true);
+    }
 
 }
 
@@ -160,11 +164,14 @@ void RenderManager::RenderDebug(sf::RenderTarget& surface, Scene* scene){
 }
 
 
-void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>& objects_at_layer){
+void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>& objects_at_layer, bool render_at_window_size){
 
     for(auto obj : objects_at_layer){
 
         if(!obj->IsActive()){
+            continue;
+        }
+        if(obj->GetRenderAtWindowSize() != render_at_window_size){
             continue;
         }
 

@@ -3,7 +3,7 @@
 #include "../Core/Scene.h"
 #include <iostream>
 
-Object::Object() : active(true), parent(nullptr), deleted_from_ui_map(false){
+Object::Object() : active(true), parent(nullptr), deleted_from_ui_map(false), render_at_window_size(false){
     this->transform = AddComponent<Transform>();
 }
 
@@ -60,4 +60,12 @@ void Object::ClearComponents(){
     }
     
     components.clear();
+}
+
+void Object::SetRenderAtWindowSize(bool render_at_window_size){
+    this->render_at_window_size = render_at_window_size;
+}
+
+bool Object::GetRenderAtWindowSize(){
+    return this->render_at_window_size;
 }

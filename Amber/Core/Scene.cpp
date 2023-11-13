@@ -4,8 +4,11 @@
 #include "../Object/Physics/BoxCollider.h"
 #include "../Object/Rendering/Tilemap.h"
 #include <iostream>
+#include <climits>
 
 Camera* Scene::active_camera = nullptr;
+
+Scene::Scene() : bounds_min_x(INT_MIN), bounds_min_y(INT_MIN), bounds_max_x(INT_MAX), bounds_max_y(INT_MAX){}
 
 Core* Scene::GetCore(){
     return this->core;
@@ -195,3 +198,15 @@ void Scene::ClearAll(){
     ui.clear();
 }
 
+void Scene::SetMinXBound(int x){
+    bounds_min_x = x;
+}
+void Scene::SetMinYBound(int y){
+    bounds_min_y = y;
+}
+void Scene::SetMaxXBound(int x){
+    bounds_max_x = x;
+}
+void Scene::SetMaxYBound(int y){
+    bounds_max_y = y;
+}

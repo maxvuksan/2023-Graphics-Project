@@ -1,5 +1,6 @@
 #pragma once
 #include <math.h>
+#include <SFML/Graphics.hpp>
 
 class Calc{
 
@@ -27,6 +28,10 @@ class Calc{
 
         static float Lerp(float a, float b, float t){
             return a * (1.0 - t) + b * t;
+        }
+
+        static sf::Vector2f Lerp(const sf::Vector2f& a, const sf::Vector2f& b, float t){
+            return sf::Vector2f(Lerp(a.x, b.x, t), Lerp(a.y, b.y, t));
         }
 
 };

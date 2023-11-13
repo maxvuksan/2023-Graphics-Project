@@ -48,7 +48,8 @@ class BoxCollider : public Collider {
 
         void Move(sf::Vector2f movement, PhysicsBody* pb) override;
         std::vector<Rect*> DetermineBoxOverlaps();
-
+        // determines if bounds specified bounds overlap this collider
+        bool Overlaps(float other_left, float other_right, float other_top, float other_bottom);
 
         void Draw_Debug(sf::RenderTarget& surface) override;
 

@@ -1,14 +1,23 @@
 #include "Camera.h"
 #include "Object.h"
+#include "../Utility/Calc.h"
 #include "../Core/Core.h"
+
+sf::Vector2f Camera::bounded_position;
 
 Camera::Camera() :background_colour(Globals::DEFAULT_BACKGROUND_COLOUR)
 {}
 
 sf::Vector2f Camera::WorldToScreenPosition(sf::Vector2f world){
     
+    return world + bounded_position + sf::Vector2f(Core::GetDisplayWidth() / 2.0f, Core::GetDisplayHeight() / 2.0f);
+}
+
+void Camera::Update(){
     Camera* active_cam = Scene::GetActiveCamera();
-    sf::Vector2i display_size = Core::GetDisplaySize();
-    
-    return world + active_cam->offset - active_cam->GetObject()->GetTransform()->position + sf::Vector2f(display_size.x / 2.0f, display_size.y / 2.0f);
+
+    bounded_position = active_cam->GetObject()->GetTransform()->position;
+
+    bounded_position.x = -Calc::Clamp(bounded_position.x, object->GetScene()->GetMinBounds().x + Core::GetDisplayWidth() / 2.0f , object->GetScene()->GetMaxBounds().x - Core::GetDisplayWidth() / 2.0f);
+    bounded_position.y = -Calc::Clamp(bounded_position.y, object->GetScene()->GetMinBounds().y + Core::GetDisplayHeight() / 2.0f, object->GetScene()->GetMaxBounds().y - Core::GetDisplayHeight() / 2.0f);
 }

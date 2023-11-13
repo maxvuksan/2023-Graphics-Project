@@ -18,7 +18,7 @@ namespace Globals {
 
     const float TILEMAP_SHADOW_BLUR = 6.0f;
 
-    const sf::Color DEBUG_COLOUR = sf::Color(0,255,0);
+    const sf::Color DEBUG_COLOUR = sf::Color(87, 235, 82);
     const sf::Color DEBUG_COLOUR_SECONDARY = sf::Color(255,255,0);
     const sf::Color DEBUG_COLOUR_3 = sf::Color(255,100,100);
 };

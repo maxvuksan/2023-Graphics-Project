@@ -6,11 +6,10 @@ void PlayerController::Start(){
     
     object->GetScene()->SetActiveCamera(object->AddComponent<Camera>());
 
-    pb = object->AddComponent<PhysicsBody>();
 
-    auto col = object->AddComponent<BoxCollider>();
-    col->SetSize(sf::Vector2f(8, 16));
-    col->SetOffset(sf::Vector2f(-4,-8));
+    body_collider = object->AddComponent<BoxCollider>();
+    body_collider->SetSize(sf::Vector2f(6, 16));
+    body_collider->SetOffset(sf::Vector2f(-3,-8));
 
     ground = object->AddComponent<BoxCollider>();
     ground->SetIsTrigger(true);
@@ -26,8 +25,12 @@ void PlayerController::Start(){
     right->SetIsTrigger(true);
     right->SetSize(sf::Vector2f(2, 6));
     right->SetOffset(sf::Vector2f(6,-3));
+    
+    pb = object->AddComponent<PhysicsBody>();
 
     cursor_graphic = object->GetScene()->AddUI<CursorGraphic>();
+    selected_block = 0;
+    in_fly_mode = false;
 
 }
 
@@ -48,8 +51,24 @@ void PlayerController::Update(){
         pb->velocity.x = 0;       
     }
 
+    if(in_fly_mode){
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+        {
+            pb->velocity.y = -0.08;
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+        {
+            pb->velocity.y = 0.08;
+        }
+        else{
+            pb->velocity.y = 0;       
+        }
+    }
+
+
+
     CalculateMouse();
-    
 }
 
 
@@ -81,7 +100,7 @@ void PlayerController::CalculateMouse(){
         }
 
         if(focused_block != -1){
-            float increment = 0.02f * Time::Dt() / (float)Blocks[focused_block].durability;
+            float increment = 0.02f * Time::Dt() / (float)Items[focused_block].durability;
             breaking_completeness += increment;
             sound_increment += increment;
 
@@ -96,7 +115,7 @@ void PlayerController::CalculateMouse(){
         if(breaking_completeness >= 1){
             // block breaks...
             Sound::Play("break", 10);
-            world->SetTileWorld(-1, cursor.x, cursor.y, SetLocation::FOREGROUND, true);
+            world->BreakTileWorld(cursor.x, cursor.y, SetLocation::FOREGROUND, true);
             focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
         }
     }
@@ -106,7 +125,10 @@ void PlayerController::CalculateMouse(){
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Right)){
         
-        if(focused_block != selected_block){
+        if(focused_block != selected_block && 
+        !body_collider->Overlaps(mouse_world_pos.x, mouse_world_pos.x + 8, 
+                                mouse_world_pos.y, mouse_world_pos.y + 8)){
+
             world->SetTileWorld(selected_block, mouse_world_pos.x, mouse_world_pos.y, SetLocation::FOREGROUND, true);
         }
     }
@@ -119,13 +141,12 @@ void PlayerController::CatchEvent(sf::Event event){
     {
         switch(event.key.scancode){
 
-            case sf::Keyboard::Scan::R:{
-                object->GetTransform()->position = sf::Vector2f(50, -500);
-                break;
-            }
-
             case sf::Keyboard::Scan::W: {
         
+                if(in_fly_mode){
+                    break;
+                }
+
                 // only allow jumping when we have ground below
                 if(ground->Triggered()){
                     pb->velocity.y = -jump_height;
@@ -143,18 +164,47 @@ void PlayerController::CatchEvent(sf::Event event){
 
             case sf::Keyboard::Scan::Num1: {
                 selected_block--;
-                selected_block %= BlockCode::c_NUMBER_OF_BLOCKS;
+                selected_block %= ItemCode::c_NUMBER_OF_ITEMS;
                 if(selected_block < 0){
-                    selected_block = BlockCode::c_NUMBER_OF_BLOCKS - 1;
+                    selected_block = ItemCode::c_NUMBER_OF_ITEMS - 1;
                 }
+
+                while(!Items[selected_block].placable){
+                    selected_block--;
+                    selected_block %= ItemCode::c_NUMBER_OF_ITEMS;
+                    if(selected_block < 0){
+                        selected_block = ItemCode::c_NUMBER_OF_ITEMS - 1;
+                    }
+                }
+
                 break;
             }
             case sf::Keyboard::Scan::Num2: {
                 selected_block++;
-                selected_block %= BlockCode::c_NUMBER_OF_BLOCKS;
-                break;
+                selected_block %= ItemCode::c_NUMBER_OF_ITEMS;
+
+                while(!Items[selected_block].placable){
+                    selected_block--;
+                    selected_block %= ItemCode::c_NUMBER_OF_ITEMS;
+                    if(selected_block < 0){
+                        selected_block = ItemCode::c_NUMBER_OF_ITEMS - 1;
+                    }
+                }
             }        
         }
         
     }       
+}
+
+void PlayerController::Respawn(){
+    object->GetTransform()->position = sf::Vector2f(50, -500);
+}
+
+
+void PlayerController::SetFlyMode(bool state){
+    in_fly_mode = state;
+    pb->SetGravityState(!state);
+}
+bool PlayerController::GetFlyMode(){
+    return in_fly_mode;
 }

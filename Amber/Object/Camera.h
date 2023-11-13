@@ -14,9 +14,13 @@ class Camera : public Component {
     public:
         Camera();
 
-        sf::Vector2f offset;
         sf::Color background_colour;
+
+        void Update() override;
 
         // Converts a position to its position relative to the scenes active camera
         static sf::Vector2f WorldToScreenPosition(sf::Vector2f world);
+
+    private:
+        static sf::Vector2f bounded_position;
 };

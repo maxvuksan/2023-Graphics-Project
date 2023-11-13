@@ -82,6 +82,17 @@ std::vector<BoxCollider::Rect*> BoxCollider::DetermineBoxOverlaps(){
     return overlaps;
 }
 
+bool BoxCollider::Overlaps(float other_left, float other_right, float other_top, float other_bottom){
+    
+    if(rects[0].Top() < other_bottom && rects[0].Bottom() > other_top){
+        if(rects[0].Right() > other_left && rects[0].Left() < other_right){
+
+            return true;
+        }            
+    }
+    return false;
+}
+
 void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
 
     Transform* transform = object->GetTransform();
@@ -132,6 +143,23 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
         }
     }
 
+    // keep collider within bounds
+
+    sf::Vector2i min_bounds = object->GetScene()->GetMinBounds();
+    sf::Vector2i max_bounds = object->GetScene()->GetMaxBounds();
+
+    if(rects[0].Left() < min_bounds.x){
+        transform->position.x = min_bounds.x - rects[0].x;
+    }
+    else if(rects[0].Top() < min_bounds.y){
+        transform->position.y = min_bounds.y - rects[0].y;
+    }
+    if(rects[0].Right() > max_bounds.x){
+        transform->position.x = max_bounds.x - rects[0].x - rects[0].width;
+    }
+    else if(rects[0].Bottom() > max_bounds.y){
+        transform->position.y = max_bounds.y - rects[0].y - rects[0].height;
+    }
 }
 
 

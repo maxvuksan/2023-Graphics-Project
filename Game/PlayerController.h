@@ -15,7 +15,14 @@ class PlayerController : public Component {
         void LinkWorld(World* world){this->world = world;}
         void CalculateMouse();
 
+        void Respawn();
+
+        void SetFlyMode(bool state);
+        bool GetFlyMode();
+
     private:
+
+        bool in_fly_mode;
     
         CursorGraphic* cursor_graphic;
         sf::Vector2i focused_block_position;
@@ -33,6 +40,8 @@ class PlayerController : public Component {
         BoxCollider* ground;
         BoxCollider* left;
         BoxCollider* right;
+        BoxCollider* body_collider;
+
 
         PhysicsBody* pb;
         float jump_height = 0.15;

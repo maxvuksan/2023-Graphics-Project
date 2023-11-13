@@ -5,6 +5,8 @@ class SpriteRenderer : public Component{
     
     public:
 
+        SpriteRenderer();
+
         void Start() override;
         void Draw(sf::RenderTarget& surface) override;
 
@@ -18,7 +20,10 @@ class SpriteRenderer : public Component{
         void SetFlip(bool flip);
         bool GetFlip();
 
+        void SetOffset(sf::Vector2f offset);
+
     protected:
+        sf::Vector2f offset;
         int flip_factor;
         sf::Sprite sprite;
         sf::Texture* texture;
