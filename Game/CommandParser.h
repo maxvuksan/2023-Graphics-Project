@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
-#include "Player.h"
-#include "World.h"
+#include "Player/Player.h"
+#include "World/World.h"
 
 class GameClient;
 

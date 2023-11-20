@@ -65,6 +65,6 @@ const ItemData Items[c_NUMBER_OF_ITEMS]{
     {12, sf::Color(171,110,83), s_Copper},
     {14, sf::Color(199,144,120), s_Iron},
     {16, sf::Color(197,151,90), s_Gold}
-
 };
+
 

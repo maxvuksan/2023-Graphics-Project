@@ -1,7 +1,7 @@
 #include "../Amber/Framework.h"
-#include "Player.h"
-#include "PlayerController.h"
-#include "World.h"
+#include "Player/Player.h"
+#include "Player/PlayerController.h"
+#include "World/World.h"
 #include <math.h>
 #include "Networking/GameClient.h"
 

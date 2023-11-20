@@ -21,7 +21,7 @@ class Tilemap : public Component
     
         void Draw(sf::RenderTarget& surface) override;
 
-        void Draw_EdgeLighting(sf::RenderTarget& surface);
+        void DrawTilemapShadow(sf::RenderTarget& surface);
 
         /*
             @param texture_label What the tile texture is saved as (in AssetManager)

@@ -51,7 +51,7 @@ class BoxCollider : public Collider {
         // determines if bounds specified bounds overlap this collider
         bool Overlaps(float other_left, float other_right, float other_top, float other_bottom);
 
-        void Draw_Debug(sf::RenderTarget& surface) override;
+        void DrawDebug(sf::RenderTarget& surface) override;
 
         void SetOffset(sf::Vector2f offset, int index = 0);
         void SetSize(sf::Vector2f size, int index = 0);

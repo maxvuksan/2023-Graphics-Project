@@ -29,8 +29,9 @@ class Object{
 
         virtual void Start(){}
         virtual void Update(){}
-        virtual void Draw_Debug(sf::RenderTarget&){}
-        virtual void Draw_Window(sf::RenderTarget&){}
+        // updates only when the scene has no event focus or this object is the focus
+        virtual void UpdateEventFocusBounded(){}
+        virtual void DrawDebug(sf::RenderTarget&){}
         virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
         virtual void OnSetActive(){} // is called when SetActive(true) occurs

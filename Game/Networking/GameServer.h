@@ -1,7 +1,7 @@
 #pragma once
 #include "../../Amber/Framework.h"
 #include "PacketTypes.h"
-#include "../World.h"
+#include "../World/World.h"
 
 class GameServer : public Server {
 

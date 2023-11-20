@@ -175,6 +175,9 @@ class Scene {
         Core* core;
         static Camera* active_camera;
 
+        bool object_holds_event_focus;
+        Object* event_focus;
+
         int bounds_min_x;
         int bounds_min_y;
         int bounds_max_x;

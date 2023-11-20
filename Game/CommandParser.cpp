@@ -1,7 +1,7 @@
 #include "CommandParser.h"
 #include "../Amber/Framework.h"
 #include "Networking/GameClient.h"
-#include "PlayerController.h"
+#include "Player/PlayerController.h"
 #include <cstring>
 #include "ConsoleVisual.h"
 
@@ -40,11 +40,12 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         client->player_controller->SetFlyMode(!client->player_controller->GetFlyMode());
         return {""};
     }
-    else if(cmd_raw == "POSITION"){
-        return {"Player Position : {" + std::to_string(client->player->GetTransform()->GetGlobalPosition().x) + ", " + std::to_string(client->player->GetTransform()->GetGlobalPosition().y) + "}" ,debug_grey};
+    else if(cmd_raw == "FPS"){
+        client->console_visual->SetShowFps(!client->console_visual->GetShowFps());
+        return {""};
     }
     else if(cmd_raw == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /POSITION", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS", Globals::DEBUG_COLOUR};
     }
 
     return {"'/" + cmd_raw + "' is not a command, see /HELP", sf::Color(235, 124, 124)};

@@ -8,7 +8,7 @@
 
 Camera* Scene::active_camera = nullptr;
 
-Scene::Scene() : bounds_min_x(INT_MIN), bounds_min_y(INT_MIN), bounds_max_x(INT_MAX), bounds_max_y(INT_MAX){}
+Scene::Scene() : bounds_min_x(INT_MIN), bounds_min_y(INT_MIN), bounds_max_x(INT_MAX), bounds_max_y(INT_MAX), event_focus(nullptr), object_holds_event_focus(false){}
 
 Core* Scene::GetCore(){
     return this->core;
@@ -54,8 +54,17 @@ void Scene::InternalUpdate(){
             if(!obj->IsActive()){
                 continue;
             }
+            
+            obj->UpdateEventFocusBounded();
 
             for(auto comp : *obj->GetComponents()){
+                // ignore disabled comps
+                if(!comp->IsActive()){
+                    continue;
+                }
+
+                comp->UpdateEventFocusBounded();
+                
                 comp->Update();
                 comp->UpdateSecondary();
             }
@@ -74,7 +83,17 @@ void Scene::InternalUpdate(){
                 continue;
             }
 
+
+            obj->UpdateEventFocusBounded();
+
+
             for(auto comp : *obj->GetComponents()){
+                // ignore disabled comps
+                if(!comp->IsActive()){
+                    continue;
+                }
+
+                comp->UpdateEventFocusBounded();
                 comp->Update();
                 comp->UpdateSecondary();
             }
@@ -87,12 +106,15 @@ void Scene::InternalCatchEvent(sf::Event event){
 
     this->CatchEvent(event);
     
+    // block all events if ^ we have a focus
+
     // iterate over each render layer
     for (auto layer = objects.begin(); layer != objects.end(); layer++) {
 
         // iterate over each object
 
         for(auto obj : layer->second){
+
             // skip disabled objects
             if(!obj->IsActive()){
                 continue;
@@ -101,6 +123,10 @@ void Scene::InternalCatchEvent(sf::Event event){
             obj->CatchEvent(event);
             
             for(auto comp : *obj->GetComponents()){
+                // ignore disabled comps
+                if(!comp->IsActive()){
+                    continue;
+                }
                 comp->CatchEvent(event);
             }
         }
@@ -120,11 +146,17 @@ void Scene::InternalCatchEvent(sf::Event event){
             obj->CatchEvent(event);
         
             for(auto comp : *obj->GetComponents()){
+                // ignore disabled comps
+                if(!comp->IsActive()){
+                    continue;
+                }
                 comp->CatchEvent(event);
             }
         }
     }
 }
+
+
 
 
 void Scene::AddBoxCollider(BoxCollider* collider){
@@ -172,7 +204,7 @@ void Scene::RemoveTilemap(Tilemap* tilemap){
 void Scene::ClearAll(){
     
     active_camera = nullptr;
-    
+
     point_lights.clear();
     tilemaps.clear();
     box_colliders.clear();
@@ -197,6 +229,7 @@ void Scene::ClearAll(){
     }
     ui.clear();
 }
+
 
 void Scene::SetMinXBound(int x){
     bounds_min_x = x;

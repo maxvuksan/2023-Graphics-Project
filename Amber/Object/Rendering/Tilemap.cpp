@@ -63,7 +63,7 @@ void Tilemap::Draw(sf::RenderTarget& surface){
     }
 }
 
-void Tilemap::Draw_EdgeLighting(sf::RenderTarget& surface){
+void Tilemap::DrawTilemapShadow(sf::RenderTarget& surface){
     tilemap_primitive.SetTexture(AssetManager::GetTexture("Amber_Black"));
     surface.draw(tilemap_primitive);
     tilemap_primitive.RevertTexture();

@@ -163,7 +163,7 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
 }
 
 
-void BoxCollider::Draw_Debug(sf::RenderTarget& surface){
+void BoxCollider::DrawDebug(sf::RenderTarget& surface){
 
     /*
         draws an outline of the collider rect

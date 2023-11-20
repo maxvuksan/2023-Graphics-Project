@@ -25,13 +25,18 @@ void ConsoleVisual::LinkClient(GameClient* client){
 
 void ConsoleVisual::Start(){ 
 
+    
     this->SetRenderAtWindowSize(true);
 
-    active = false;
+    is_on = false;
 
     sf::Font* font = AssetManager::GetFont("Amber_Default");
 
-
+    show_fps = false;
+    fps_text.setFont(*font);
+    fps_text.setCharacterSize(8);
+    fps_text.setPosition(sf::Vector2f(Core::GetWindowWidth() - 100, 8));
+    
     int spacing = 12;
 
     int y_pos = Core::GetWindowHeight() - spacing * 4;
@@ -71,17 +76,13 @@ void ConsoleVisual::CatchEvent(sf::Event event){
         switch(event.key.scancode){
 
             case sf::Keyboard::Scan::Slash:{
-                active = true;
-                break;
-            }
-            case sf::Keyboard::Scan::Escape:{
-                interact_line.setString("");
-                active = false;
+                is_on = true;
+
                 break;
             }
         }
 
-        if(!active){
+        if(!is_on){
             return;
         }
 
@@ -90,6 +91,13 @@ void ConsoleVisual::CatchEvent(sf::Event event){
         
         switch (event.key.scancode)
         {
+            case sf::Keyboard::Scan::Escape:{
+                interact_line.setString("");
+                is_on = false;
+
+                break;
+            }
+
             // submit input
             case sf::Keyboard::Scan::Enter: {
                 
@@ -104,7 +112,9 @@ void ConsoleVisual::CatchEvent(sf::Event event){
 
                 }
                 interact_line.setString("");
-                active = false;
+                is_on = false;
+
+
                 break;
             }
 
@@ -174,7 +184,7 @@ void ConsoleVisual::CatchEvent(sf::Event event){
 
 void ConsoleVisual::Draw(sf::RenderTarget& texture){
 
-    if(active){
+    if(is_on){
 
         texture.draw(interact_box);
 
@@ -184,6 +194,18 @@ void ConsoleVisual::Draw(sf::RenderTarget& texture){
         texture.draw(lines[i]);
     }
     texture.draw(interact_line);
+
+    if(show_fps){
+
+        // prevent flickering when fps changes
+        if(fps_refresh_delay_tracked > fps_refresh_delay){
+            fps_refresh_delay_tracked = 0;
+            fps_text.setString("FPS: " + std::to_string(1000 / Time::Dt()));
+
+        }
+        fps_refresh_delay_tracked += Time::Dt();
+        texture.draw(fps_text);
+    }
 }
 
 void ConsoleVisual::Print(const ConsoleLine& message, bool send_packet){
@@ -205,4 +227,8 @@ void ConsoleVisual::ClearLines(){
     for(int i = 0; i < line_count; i++){
         lines[i].setString("");
     }
+}
+
+void ConsoleVisual::SetShowFps(bool show_fps){
+    this->show_fps = show_fps;
 }

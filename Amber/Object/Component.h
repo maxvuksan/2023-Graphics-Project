@@ -14,17 +14,16 @@ class Component{
 
     public:
 
+        Component();
+
         virtual void Start(){}
         virtual void Update(){}
+        virtual void UpdateEventFocusBounded(){}
         virtual void CatchEvent(sf::Event event){}
         virtual void UpdateSecondary(){} // in case of inheritance using up functions
 
-        // drawing out what on screen is in shadow, black is fully in shadow, white is fully lit
-        virtual void Draw_ShadowPass(sf::RenderTarget& surface){}
-        // after the shadow texture has been blurred we can change it before it is composed with the scene
-        virtual void Draw_ShadowPass_PostBlur(sf::RenderTarget& surface){}
         virtual void Draw(sf::RenderTarget& surface){}
-        virtual void Draw_Debug(sf::RenderTarget& surface){}
+        virtual void DrawDebug(sf::RenderTarget& surface){}
 
         virtual ~Component(){}
 
@@ -32,8 +31,12 @@ class Component{
         void LinkObject(Object* object);
         Object* GetObject();
 
+        bool IsActive(){return active;}
+        void SetActive(bool state);
+
     protected:
 
+        bool active;
         Object* object;
 
 };

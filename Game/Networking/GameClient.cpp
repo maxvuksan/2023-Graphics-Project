@@ -1,8 +1,14 @@
 #include "GameClient.h"
-#include "../World.h"
-#include "../PlayerController.h"
-#include "../Player.h"
+#include "../World/World.h"
+#include "../Player/PlayerController.h"
+#include "../Player/Player.h"
 #include "../ConsoleVisual.h"
+#include "../Player/PlayerWorldInteractions.h"
+
+/*
+    blocks multiplayer based code, when playing in single player
+*/
+#define IF_ONLINE if(!playing_online){return;}
 
 void GameClient::LinkScene(Scene* scene){
     this->scene = scene;
@@ -10,10 +16,12 @@ void GameClient::LinkScene(Scene* scene){
 
 void GameClient::CreateObjects(){
     
-    CommandParser::LinkClient(this);
-
+    // create world
     world = scene->AddObject<World>();
     world->LinkClient(this);
+    // pathfinding 
+    pathfinding_graph = scene->AddObject<PathfindingGraph>();
+    pathfinding_graph->LinkWorld(world);
 
     // setting scene bounds
     WorldProfile* wp = world->GetWorldProfile();
@@ -22,17 +30,26 @@ void GameClient::CreateObjects(){
     scene->SetMaxXBound(wp->width * wp->tilemap_profile.width * wp->tilemap_profile.tile_width);
     scene->SetMaxYBound(wp->height * wp->tilemap_profile.height * wp->tilemap_profile.tile_height);
 
-    // creating player
+    // creating player and adding all player based components
     player = scene->AddObject<Player>();
     player_controller = player->AddComponent<PlayerController>();
-    player_controller->LinkWorld(world);
-    
+    player_world_interactions = player->AddComponent<PlayerWorldInteractions>();
+    player_world_interactions->LinkWorld(world);
+    inventory = scene->AddUI<Inventory>();
+    player_world_interactions->LinkInventory(inventory);
+      
+    // tell the world we want to focus around the player
     world->SetFocus(player->GetTransform());
 
+    // create command console
+    CommandParser::LinkClient(this);
     console_visual = scene->AddUI<ConsoleVisual>();
+
 }
 
 void GameClient::SendPlayerControl(){
+
+    IF_ONLINE
 
     if(player->GetTransform()->position != previous_player_position){
         
@@ -42,17 +59,27 @@ void GameClient::SendPlayerControl(){
 }
 
 void GameClient::SendSetBlock(short tile_index, int x, int y){
+    
+    IF_ONLINE
+
     SendPacket<p_SetBlock>(server, {{PACKET_SetBlock, client_id}, tile_index, x, y});
 }
 
 void GameClient::SendChatMessage(const std::string& message){
+    
+    IF_ONLINE
+
+    // having problems with strings in packets, ignore for now
     return;
+
     char msg[50];
     SendPacket<p_ChatMessage>(server, {{PACKET_ChatMessage, client_id}});
 }
 
 
 void GameClient::Update(){
+
+    IF_ONLINE
 
     // if the server hasn't responded in a while, timeout / drop connection
     if(time_since_last_packet > timeout_limit){
@@ -63,6 +90,8 @@ void GameClient::Update(){
 }
 
 void GameClient::CatchPeerEvent(ENetEvent event){
+
+    IF_ONLINE
 
     time_since_last_packet = 0;
 
@@ -77,7 +106,6 @@ void GameClient::CatchPeerEvent(ENetEvent event){
 
             break;        
         }
-    
 
     }
 }
@@ -86,6 +114,8 @@ void GameClient::CatchPeerEvent(ENetEvent event){
 
 void GameClient::InterpretPacket(ENetEvent& event){
     
+    IF_ONLINE
+
     // copy to the header portion of the message into PacketHeader object
     PacketHeader header;
     memcpy(&header, event.packet->data, sizeof(PacketHeader));
@@ -141,7 +171,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             p_ChatMessage body;
             memcpy(&body.message, event.packet->data, sizeof(p_ChatMessage));
 
-            console_visual->Print({"message recieved"}, false);
+            //console_visual->Print({"message recieved"}, false);
 
             break;
         }
@@ -149,5 +179,8 @@ void GameClient::InterpretPacket(ENetEvent& event){
 }
 
 void GameClient::OnDisconnect(){
-    scene->DeleteObject(world);
+
+    IF_ONLINE
+     
+    //scene->DeleteObject(world);
 }

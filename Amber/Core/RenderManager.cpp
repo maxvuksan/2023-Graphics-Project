@@ -38,6 +38,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     auto blur_hor_shader = AssetManager::GetShader("Amber_BlurHorizontal");
     auto blur_vert_shader = AssetManager::GetShader("Amber_BlurVertical");
 
+    // assign blur shader uniforms
     blur_hor_shader->setUniform("u_texture_pixel_step", 
         sf::Vector2f(1 / (float)Core::GetDisplayWidth(),
                     1 / (float)Core::GetDisplayHeight()));
@@ -48,7 +49,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
                     1 / (float)Core::GetDisplayHeight()));
     blur_vert_shader->setUniform("u_strength", Globals::TILEMAP_SHADOW_BLUR);
 
-
+    // draw all objects
     for (auto layer = objects->begin(); layer != objects->end(); layer++) {
         
         // clear lighting texture for this layer
@@ -66,7 +67,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
             // if it has a tilemap, we must consider lighting conditions
             Tilemap* tilemap = obj->GetComponent<Tilemap>();
             if(tilemap != nullptr){
-                tilemap->Draw_EdgeLighting(*render_textures[LIGHTING]);
+                tilemap->DrawTilemapShadow(*render_textures[LIGHTING]);
             }
 
             for(auto light : *scene->GetPointLights()){
@@ -80,6 +81,10 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
             // draw objects and components
             for(auto comp : *obj->GetComponents()){
+                
+                if(!comp->IsActive()){
+                    continue;
+                }
                 comp->Draw(*render_textures[SCENE_OFFSCREEN]);       
             }
             obj->Draw(*render_textures[SCENE_OFFSCREEN]);       
@@ -91,8 +96,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
         render_textures[LIGHTING]->display();
         render_textures[SCENE_OFFSCREEN]->display();
-
-
+    
         render_textures[LIGHTING_OFFSCREEN]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), blur_hor_shader);
         render_textures[LIGHTING_OFFSCREEN]->display();
 
@@ -155,9 +159,9 @@ void RenderManager::RenderDebug(sf::RenderTarget& surface, Scene* scene){
             surface.draw(debug_circle);
 
             for(auto comp : *obj->GetComponents()){
-                comp->Draw_Debug(surface);       
+                comp->DrawDebug(surface);       
             }
-            obj->Draw_Debug(surface);
+            obj->DrawDebug(surface);
         }
     }
 
@@ -176,6 +180,9 @@ void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>&
         }
 
         for(auto comp : *obj->GetComponents()){
+            if(!comp->IsActive()){
+                continue;
+            }
             comp->Draw(surface);       
         }
         obj->Draw(surface);       

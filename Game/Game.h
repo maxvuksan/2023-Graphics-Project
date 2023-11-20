@@ -6,7 +6,7 @@
 class Game : public Core{
 
     public:
-        Game(bool is_server = false) : Core(800, 600, 400, 300, "My Game")
+        Game(bool is_server = false) : Core(1200, 800, 600, 400, "My Game")
         {
             if(is_server){
                server.Run(6868); //    SendPacket<BodyTest>(server, {{7}, 123, 456, 789});
@@ -20,7 +20,7 @@ class Game : public Core{
         void Start() override{
 
             AssetManager::CreateTexture("cursor_breaking", "breaking.png");
-            AssetManager::CreateTexture("demoTexture", "tiles.png");
+            AssetManager::CreateTexture("tiles", "tiles.png");
             AssetManager::CreateTexture("player", "player.png");
 
             AssetManager::CreateTexture("pickups", "pickups.png");
@@ -31,6 +31,7 @@ class Game : public Core{
             AssetManager::CreateScene<TestScene>("TestScene");
 
             LoadScene("TestScene");
+
         }
 
         GameServer server;
