@@ -49,6 +49,8 @@ void GameClient::CreateObjects(){
 
 void GameClient::SendPlayerControl(){
 
+    pathfinding_graph->RequestPathWorld(player->GetTransform()->position, sf::Vector2i(150,30));
+
     IF_ONLINE
 
     if(player->GetTransform()->position != previous_player_position){

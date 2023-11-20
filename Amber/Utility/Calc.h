@@ -16,6 +16,7 @@ class Calc{
             return val;
         }
 
+
         static float Radians(float degrees){
             // 1Deg × π/180 = 0.01745Rad
             return degrees * 0.01745;
