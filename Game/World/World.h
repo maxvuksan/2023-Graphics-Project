@@ -37,8 +37,10 @@ class World : public Object{
         short GetTileWorld(int world_x, int world_y, SetLocation set_location = SetLocation::FOREGROUND);
         // @returns the tile_index at a specific coordinate
         short GetTile(int x, int y, SetLocation set_location = SetLocation::FOREGROUND);
+        // @returns starting at world_position, returns the nearest tile coordinate in the mouses direction
+        sf::Vector2i GetNearestTileInDirectionOfMouse(sf::Vector2f world_position, SetLocation set_location = SetLocation::FOREGROUND);
 
-        // converting world space coordinates to chunk relative and tilemap offsets
+        // @returns true if a chunk coordinate is valid
         bool ChunkInBounds(int chunk_x, int chunk_y);
         // @returns a world position rounded by increments of the tilesize
         sf::Vector2i RoundWorld(int world_x, int world_y);
@@ -64,6 +66,10 @@ class World : public Object{
 
         std::vector<std::vector<Chunk*>>* GetChunks(){ return &chunks; }
 
+        // @returns true if the world has had a change which requires pathfinding node grid to be recalculated, is reset to false by PathfindingGraph
+        bool GetWorldNeedsPathfindingRecalculating(){return world_needs_pathfinding_recalculating; }
+        void SetWorldNeedsPathfindingRecalculating(bool state);
+
     private:
         GameClient* client;
         Transform* focus;
@@ -78,9 +84,10 @@ class World : public Object{
         WorldProfile world_profile;    
         TilemapProfile* tilemap_profile;
 
-        int loading_threshold = 500;
+        int loading_threshold = 700;
         int collider_threshold = 300;
 
+        bool world_needs_pathfinding_recalculating;
 
         int half_tilemap_width;
         int half_tilemap_height;

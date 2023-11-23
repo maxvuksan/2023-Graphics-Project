@@ -1,7 +1,7 @@
 #include "../Amber/Framework.h"
 #include "Networking/GameServer.h"
 #include "Networking/GameClient.h"
-#include "TestScene.h"
+#include "WorldScene.h"
 
 class Game : public Core{
 
@@ -25,12 +25,15 @@ class Game : public Core{
 
             AssetManager::CreateTexture("pickups", "pickups.png");
 
+            AssetManager::CreateTexture("fly", "fly.png");
+            AssetManager::CreateAnimationSet("fly", { Animation("fly", 4, 0, 2, 25)}, {"default"});
+
             AssetManager::CreateSound("hit", "hit.wav");
             AssetManager::CreateSound("break", "break.wav");
 
-            AssetManager::CreateScene<TestScene>("TestScene");
+            AssetManager::CreateScene<WorldScene>("WorldScene");
 
-            LoadScene("TestScene");
+            LoadScene("WorldScene");
 
         }
 

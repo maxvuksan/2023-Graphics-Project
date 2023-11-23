@@ -35,6 +35,7 @@ void Scene::SetActiveCamera(Camera* camera){
 }
 
 
+
 void Scene::InternalUpdate(){
     
     if(active_camera == nullptr){
@@ -71,6 +72,7 @@ void Scene::InternalUpdate(){
             obj->Update();
         }
     }
+    
 
     // do the same for each ui element
     for (auto layer = ui.begin(); layer != ui.end(); layer++) {
@@ -106,7 +108,6 @@ void Scene::InternalCatchEvent(sf::Event event){
 
     this->CatchEvent(event);
     
-    // block all events if ^ we have a focus
 
     // iterate over each render layer
     for (auto layer = objects.begin(); layer != objects.end(); layer++) {
@@ -131,6 +132,7 @@ void Scene::InternalCatchEvent(sf::Event event){
             }
         }
     }
+
 
     // do the same for each ui element
     for (auto layer = ui.begin(); layer != ui.end(); layer++) {
@@ -217,6 +219,7 @@ void Scene::ClearAll(){
             Memory::Delete<Object>(obj, __FUNCTION__);
         }
     }
+
     objects.clear();
 
     for (auto layer = ui.begin(); layer != ui.end(); layer++) {
@@ -227,6 +230,7 @@ void Scene::ClearAll(){
             Memory::Delete<Object>(obj, __FUNCTION__);
         }
     }
+
     ui.clear();
 }
 

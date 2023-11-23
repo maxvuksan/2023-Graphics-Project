@@ -37,7 +37,8 @@ class Object{
         virtual void OnSetActive(){} // is called when SetActive(true) occurs
 
         bool IsActive();
-        void SetActive(bool state){ if(active){ this->OnSetActive(); } active = state; }
+        // @param state the state the object is being set to
+        void SetActive(bool state);
         // should only be set by Scene::AddUI()
         void SetUI(bool state){ deleted_from_ui_map = state;}
 
@@ -147,25 +148,20 @@ class Object{
 
         
         virtual ~Object(){}
-        /*
-            clears all the components on the object
-        */
+        // clears all the components on the object
         void ClearComponents();
-        /*
-            calls Destroy() on all child objects
-        */
+        // calls Destroy() on all child objects
         void DestroyCascadeToChildren();
 
-        /*
-            (for UI objects) should this object be renderered on top of everything else (regardless of display size)
-        */
+        
+        // Should this object be renderered on top of everything else (regardless of display size) at the windows resolution (specifically for UI Objects)
         void SetRenderAtWindowSize(bool render_at_window_size);
+        // @returns true if the object will be rendered at the window size rather (regardless of display size) (specifcally for UI Objects)
         bool GetRenderAtWindowSize();
 
     protected:
-        /*
-            removes the object from the scene, should be called by the object itself
-        */
+        
+        //removes the object from the scene, should be called by the object itself
         void Destroy();
 
     private:

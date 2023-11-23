@@ -13,14 +13,13 @@ void RenderManager::Construct() {
 
     for(int i = 0; i < render_textures.size(); i++){
         render_textures[i] = Memory::New<sf::RenderTexture>(__FUNCTION__);
+        render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
     }
-
 }
 
 void RenderManager::ClearRenderTextures(){
     // reset all render textures
     for(int i = 0; i < render_textures.size(); i++){
-        render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
         render_textures[i]->clear();
     }
 }

@@ -20,6 +20,17 @@ class CursorGraphic : public Object {
 
             completeness = -1;
             SetComplete(0);
+            auto_target_blocks = false;
+        }
+
+        void SetAutoTargetBlocks(bool auto_target_blocks){
+            this->auto_target_blocks = auto_target_blocks;
+            if(auto_target_blocks){
+                rect.setOutlineColor(sf::Color(249,159,69));
+            }
+            else{
+                rect.setOutlineColor(sf::Color(255,255,255));
+            }
         }
 
         void SetComplete(float portion){
@@ -40,6 +51,7 @@ class CursorGraphic : public Object {
 
     private:
         float completeness;
+        bool auto_target_blocks;
 
         UIImage* image;
         sf::RectangleShape rect;

@@ -5,7 +5,10 @@
 #include <math.h>
 #include "Networking/GameClient.h"
 
-class TestScene : public Scene {
+/*
+    The gameplay scene (where a world will be loaded)
+*/
+class WorldScene : public Scene {
 
     public: 
 

@@ -32,4 +32,5 @@ class RenderManager{
 
         static std::vector<sf::RenderTexture*> render_textures;
 
+
 };

@@ -2,15 +2,13 @@
 #include "../World/World.h"
 #include <queue>
 
-/*
+
 std::vector<sf::Vector2i> PathfindingGraph::previous_traversal;
-
-sf::Vector2f PathfindingGraph::active_chunk_offset; // the offset of nodes in the vector
+std::vector<std::vector<bool>> PathfindingGraph::previous_traversal_closed;
 std::vector<std::vector<PathfindingNode>> PathfindingGraph::nodes;
-
 WorldProfile* PathfindingGraph::world_profile;
 World* PathfindingGraph::world;    
-*/
+
 void PathfindingGraph::LinkWorld(World* _world){
     world = _world;
     world_profile = world->GetWorldProfile();
@@ -22,7 +20,7 @@ void PathfindingGraph::Update(){
 }
 
 
-std::vector<sf::Vector2i> PathfindingGraph::RequestPathWorld(sf::Vector2f start_world, sf::Vector2i end_world, int max_node_coverage){
+std::vector<sf::Vector2i> PathfindingGraph::RequestPathWorld(sf::Vector2f start_world, sf::Vector2f end_world, int max_node_coverage){
     
     if(nodes.size() == 0){
         std::cout << "ERROR : No nodes to traverse, PathfindingGraph::ConstructNodeGrid may need to be called\n";
@@ -38,12 +36,27 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPathWorld(sf::Vector2f start_
     return RequestPath(sf::Vector2i(start_x, start_y), sf::Vector2i(end_x, end_y), TraversalMode::BREADTH_FIRST_SEARCH, max_node_coverage);
 }
 
+bool PathfindingGraph::CoordinateWithinBounds(const sf::Vector2i& coord){
+    if(coord.x > 0 && coord.x < nodes.size() - 1){
+        if(coord.y > 0 && coord.y < nodes.at(0).size() - 1){
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::Vector2i end, TraversalMode traversal_mode, int max_node_coverage){
 
     if(start == end){
         previous_traversal = {};
         return {};
     }
+
+    struct NodeData{
+        sf::Vector2i coord;
+        float f_cost;
+    };
+
 
     std::vector<std::vector<bool>> closed; // holds if the each node is closed
     std::vector<std::vector<sf::Vector2i>> parent_node; // holds the coord of each nodes parent 
@@ -55,14 +68,20 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
         
         closed.at(x).resize(nodes.at(x).size());
         parent_node.at(x).resize(nodes.at(x).size());
+
+        for(int y = 0; y < nodes.at(x).size(); y++){
+            nodes[x][y].f_cost = 999999.0f;
+        }
     }
+    previous_traversal_closed = closed;
 
 
-    // queue of node coordinates
+
+
+    /*
+    #pragma region BREADTH_FIRST_SEARCH
     std::queue<sf::Vector2i> queue;
-
     queue.push(start);
-
     int steps = 0;
     while(!queue.empty()){
 
@@ -76,42 +95,48 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
         queue.pop();
 
         if(coord == end){
+            previous_traversal_closed = closed;
             previous_traversal = CalculatePathFromTraversal(start, end, parent_node);
             return previous_traversal;
         }
 
 
+        std::vector<sf::Vector2i> offsets;
 
         // left
         if(coord.x > 0){
-            sf::Vector2i new_coord = coord + sf::Vector2i(-1,0);
-            if(!closed[new_coord.x][new_coord.y] && nodes[new_coord.x][new_coord.y].open){
-                closed[new_coord.x][new_coord.y] = true;
-                parent_node[new_coord.x][new_coord.y] = coord;
-                queue.push(new_coord);
+            offsets.push_back(sf::Vector2i(-1,0));
+            // diagonals
+            if(coord.y > 0){
+                offsets.push_back(sf::Vector2i(1, -1));
+            }
+            if(coord.y < nodes.at(coord.x).size() - 1){
+                offsets.push_back(sf::Vector2i(1, 1));
             }
         }
         // right
         if(coord.x < nodes.size() - 1){
-            sf::Vector2i new_coord = coord + sf::Vector2i(1,0);
-            if(!closed[new_coord.x][new_coord.y] && nodes[new_coord.x][new_coord.y].open){
-                closed[new_coord.x][new_coord.y] = true;
-                parent_node[new_coord.x][new_coord.y] = coord;
-                queue.push(new_coord);
+            offsets.push_back(sf::Vector2i(1,0));
+            // diagonals
+            if(coord.y > 0){
+                offsets.push_back(sf::Vector2i(1, -1));
+            }
+            if(coord.y < nodes.at(coord.x).size() - 1){
+                offsets.push_back(sf::Vector2i(1, 1));
             }
         }
         // top
         if(coord.y > 0){
-            sf::Vector2i new_coord = coord + sf::Vector2i(0,-1);
-            if(!closed[new_coord.x][new_coord.y] && nodes[new_coord.x][new_coord.y].open){
-                closed[new_coord.x][new_coord.y] = true;
-                parent_node[new_coord.x][new_coord.y] = coord;
-                queue.push(new_coord);
-            }
+            offsets.push_back(sf::Vector2i(0,-1));
         }
         // bottom
         if(coord.y < nodes.at(coord.x).size() - 1){
-            sf::Vector2i new_coord = coord + sf::Vector2i(0,1);
+            offsets.push_back(sf::Vector2i(0,1));
+        }
+
+        // pushing each new coordinate to the queue (if valid)
+        for(sf::Vector2i& offset : offsets){
+            sf::Vector2i new_coord = coord + offset;
             if(!closed[new_coord.x][new_coord.y] && nodes[new_coord.x][new_coord.y].open){
                 closed[new_coord.x][new_coord.y] = true;
                 parent_node[new_coord.x][new_coord.y] = coord;
@@ -119,6 +144,77 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
             }
         }
     }
+
+    #pragma endregion
+    */
+
+    #pragma region A_STAR
+
+
+    // how the priority queue should compare the data type (NodeData)
+    auto f_cost_compare = [](NodeData a, NodeData b){
+        return a.f_cost > b.f_cost;
+    };
+
+    // queue of node coordinates
+    std::priority_queue<NodeData, std::vector<NodeData>, decltype(f_cost_compare)> queue(f_cost_compare);
+
+    queue.push({start});
+    nodes[start.x][start.y].f_cost = 0;
+
+    sf::Vector2i neighbours[8] = {
+                                sf::Vector2i(-1, 0), 
+                                sf::Vector2i(1, 0),
+                                sf::Vector2i(0, 1),
+                                sf::Vector2i(0, -1),
+                                sf::Vector2i(-1, 1), 
+                                sf::Vector2i(1, -1),
+                                sf::Vector2i(1, 1),
+                                sf::Vector2i(-1, -1),
+                                    };
+    
+    // 10 for left right up down, 14 for diagonals 
+
+    int steps = 0;
+    while(!queue.empty()){
+
+        steps++;
+        if(steps > max_node_coverage){
+            break;
+        }
+
+        NodeData node = queue.top();
+        closed.at(node.coord.x).at(node.coord.y) = true;
+        queue.pop();
+
+        if(node.coord == end){
+            previous_traversal_closed = closed;
+            previous_traversal = CalculatePathFromTraversal(start, end, parent_node);
+            return previous_traversal;
+        }
+
+        // pushing each new coordinate to the queue (if valid)
+        for(int i = 0; i < 8; i++){
+
+            sf::Vector2i new_coord = node.coord + neighbours[i];
+
+            if(CoordinateWithinBounds(new_coord) && nodes[new_coord.x][new_coord.y].open){
+
+
+                if(!closed[new_coord.x][new_coord.y]){
+
+
+                    nodes[new_coord.x][new_coord.y].f_cost = Calc::DistanceSimple(new_coord, start) + Calc::DistanceSimple(new_coord, end);
+                    closed[new_coord.x][new_coord.y] = true;
+                    parent_node[new_coord.x][new_coord.y] = node.coord;
+                    queue.push({new_coord, nodes[new_coord.x][new_coord.y].f_cost});
+                }
+            }
+        }
+    }
+
+    #pragma end
+
     previous_traversal = {};
     return {};
 }
@@ -143,6 +239,13 @@ std::vector<sf::Vector2i> PathfindingGraph::CalculatePathFromTraversal(sf::Vecto
 
 void PathfindingGraph::ConstructNodeGrid(){
 
+    // only recalculates node grid when a change has been made
+    if(!world->GetWorldNeedsPathfindingRecalculating()){
+        return;
+    }
+    // tell the world object we are performing recalculations
+    world->SetWorldNeedsPathfindingRecalculating(false);
+
     std::vector<std::vector<Chunk*>>* chunks = world->GetChunks();
 
     if(chunks->size() <= 0){
@@ -151,7 +254,7 @@ void PathfindingGraph::ConstructNodeGrid(){
 
     nodes.clear();
     nodes.resize(world_profile->height * world_profile->tilemap_profile.height, {});
-    //active_chunk_offset = (*chunks)[0][0]->GetTransform()->position;
+    previous_traversal_closed.resize(nodes.size(), {});
   
     for(int chunk_x = 0; chunk_x < world_profile->width; chunk_x++){
         for(int chunk_y = 0; chunk_y < world_profile->height; chunk_y++){
@@ -170,6 +273,7 @@ void PathfindingGraph::ConstructNodeGrid(){
                     }
                     
                     nodes.at(chunk_x * world_profile->tilemap_profile.width + x).push_back(new_node);
+                    previous_traversal_closed.at(chunk_x * world_profile->tilemap_profile.width + x).push_back(false);
                 }
             }
 
@@ -201,6 +305,10 @@ void PathfindingGraph::DrawDebug(sf::RenderTarget& surface){
             sf::Vertex vertex;
             vertex.color = sf::Color::Green;
 
+            if(previous_traversal_closed[x][y]){
+                vertex.color = sf::Color::Blue;
+            }
+    
             vertex.position = Camera::WorldToScreenPosition(sf::Vector2f(
                 x * world_profile->tilemap_profile.tile_width + half_t_width
                ,y * world_profile->tilemap_profile.tile_height + half_t_height));

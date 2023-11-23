@@ -6,6 +6,7 @@ void PlayerWorldInteractions::Start(){
     
     cursor_graphic = object->GetScene()->AddUI<CursorGraphic>();
     selected_block = 0;
+    auto_target_blocks = false;
 }
 
 void PlayerWorldInteractions::LinkWorld(World* world){
@@ -28,6 +29,18 @@ void PlayerWorldInteractions::Update(){
     CalculateMouse();
 }
 
+void PlayerWorldInteractions::CatchEvent(sf::Event event){
+    
+    if (event.type == sf::Event::KeyPressed)
+    {
+        if(event.key.scancode == sf::Keyboard::Scan::LAlt){
+            
+            auto_target_blocks = !auto_target_blocks;
+            cursor_graphic->SetAutoTargetBlocks(auto_target_blocks);
+        }
+    }
+}
+
 void PlayerWorldInteractions::CalculateMouse(){
 
     sf::Vector2i _mouse_pos = Mouse::DisplayPosition();
@@ -41,9 +54,19 @@ void PlayerWorldInteractions::CalculateMouse(){
 
 
 
-    sf::Vector2i cursor = world->RoundWorld(mouse_world_pos.x, mouse_world_pos.y);
-    cursor_graphic->GetTransform()->position = sf::Vector2f(cursor.x, cursor.y);
+    sf::Vector2i auto_selected_tile = world->GetNearestTileInDirectionOfMouse(object->GetTransform()->position, SetLocation::FOREGROUND);
 
+    sf::Vector2i cursor;
+    
+    if(auto_selected_tile != sf::Vector2i(-1,-1) && auto_target_blocks){
+        // convert auto coord to world space
+        cursor = world->CoordToWorld(auto_selected_tile.x, auto_selected_tile.y);
+    }
+    else{
+        cursor = world->RoundWorld(mouse_world_pos.x, mouse_world_pos.y);
+    }
+
+    cursor_graphic->GetTransform()->position = sf::Vector2f(cursor.x, cursor.y);
     focused_block = world->GetTileWorld(cursor.x, cursor.y);
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){

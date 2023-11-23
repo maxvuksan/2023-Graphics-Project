@@ -34,6 +34,9 @@ class GameClient : public Client {
 
         Inventory* GetInventory(){return inventory;}
 
+        static sf::Vector2f player_pos;
+
+
     private:
         
         int timeout_limit = 300;
@@ -58,4 +61,5 @@ class GameClient : public Client {
         World* world;
 
         PathfindingGraph* pathfinding_graph;
+
 };

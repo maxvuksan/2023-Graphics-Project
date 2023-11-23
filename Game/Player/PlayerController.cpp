@@ -33,36 +33,42 @@ void PlayerController::Start(){
 
 void PlayerController::UpdateEventFocusBounded(){
 
+    float speed = 0.08;
+
     // Movement...
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-    {
-        pb->velocity.x = -0.08;
-        object->GetComponent<SpriteRenderer>()->SetFlip(true);
-    }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-    {
-        pb->velocity.x = 0.08;
-        object->GetComponent<SpriteRenderer>()->SetFlip(false);
-    }
-    else{
-        pb->velocity.x = 0;       
-    }
 
     if(in_fly_mode){
 
+        // double speed in fly mode
+        speed *= 2;
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
-            pb->velocity.y = -0.08;
+            pb->velocity.y = -speed;
         }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
-            pb->velocity.y = 0.08;
+            pb->velocity.y = speed;
         }
         else{
             pb->velocity.y = 0;       
         }
     }
 
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    {
+        pb->velocity.x = -speed;
+        object->GetComponent<SpriteRenderer>()->SetFlip(true);
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    {
+        pb->velocity.x = speed;
+        object->GetComponent<SpriteRenderer>()->SetFlip(false);
+    }
+    else{
+        pb->velocity.x = 0;       
+    }
 }
 
 

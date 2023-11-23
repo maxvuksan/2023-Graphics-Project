@@ -14,6 +14,8 @@ class AnimationRenderer : public Component{
 
         void Draw(sf::RenderTarget& surface) override;
 
+        sf::Sprite& GetSprite(){return sprite;}
+
         void SetAnimationSet(const char* label);
         void SetState(const char* label);
 

@@ -12,6 +12,8 @@ class PlayerWorldInteractions : public Component {
         void CalculateMouse();
         void Update();
 
+        void CatchEvent(sf::Event) override;
+
         void LinkWorld(World* world);
         void LinkInventory(Inventory* inventory);
 
@@ -22,6 +24,8 @@ class PlayerWorldInteractions : public Component {
         float breaking_completeness;
         float sound_increment;
         int focused_block;
+
+        bool auto_target_blocks;
 
         Inventory* inventory;
         World* world;

@@ -27,7 +27,7 @@ void World::Start() {
         for(int y = 0; y < world_profile.height; y++){
 
             // create chunk and place it in the correct position
-            chunks[x][y] = GetScene()->AddObject<Chunk>();
+            chunks[x][y] = GetScene()->AddObject<Chunk>(0);
             chunks[x][y]->Init(tilemap_profile, wall_colour);
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilemap_profile->tile_width * tilemap_profile->width, y * tilemap_profile->tile_height * tilemap_profile->height);
         }
@@ -115,6 +115,7 @@ bool World::SetTile(short tile_index, int x, int y, SetLocation set_location, Se
         client->SendSetBlock(tile_index, x, y);
     }
 
+    world_needs_pathfinding_recalculating = true;
 
     return true;
 }
@@ -151,6 +152,32 @@ short World::GetTile(int x, int y, SetLocation get_location){
     sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
     return chunks.at(chunk.x).at(chunk.y)->GetTile(pos.x, pos.y, get_location); 
 }
+
+sf::Vector2i World::GetNearestTileInDirectionOfMouse(sf::Vector2f world_position, SetLocation set_location){
+
+    sf::Vector2f mouse_world_pos = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
+    sf::Vector2f direction = Calc::Normalize(mouse_world_pos - world_position);
+
+    for(int i = 0; i < 5; i++){
+        
+        world_position += direction * 4.0f;
+
+        sf::Vector2i rounded_world = RoundWorld(world_position.x, world_position.y);
+        sf::Vector2i coord = WorldToCoord(rounded_world.x, rounded_world.y);
+
+        std::vector<sf::Vector2i> tiles_in_radius = GetOffsetsInRadius(2);
+
+        for(auto tile : tiles_in_radius){
+
+            short _found_tile = GetTile(coord.x + tile.x, coord.y + tile.y, set_location);
+            if(_found_tile != -1){
+                return sf::Vector2i(coord.x + tile.x, coord.y + tile.y);
+            }
+        }
+    }
+    return sf::Vector2i(-1,-1);
+}
+
 
 bool World::ChunkInBounds(int chunk_x, int chunk_y){
     if(chunk_x < 0 || chunk_y < 0 || chunk_x >= world_profile.width || chunk_y >= world_profile.height){
@@ -256,6 +283,32 @@ void World::Update(){
         return;
     }
 
+    sf::Vector2i wrld_to_coord = WorldToCoord(focus->position.x, focus->position.y);
+    sf::Vector2i chunk_focus_is_in = ChunkFromCoord(wrld_to_coord.x, wrld_to_coord.y);
+
+    int load = 5;
+
+    for(int x = 0; x < world_profile.width; x++){
+        for(int y = 0; y < world_profile.height; y++){
+
+            
+            if(x > chunk_focus_is_in.x - load && x < chunk_focus_is_in.x + load){
+                if(y > chunk_focus_is_in.y - load && y < chunk_focus_is_in.y + load){
+
+                    chunks[x][y]->EnableColliders();
+                    chunks[x][y]->SetActive(true);
+                    continue;
+                }
+            }
+
+            chunks[x][y]->ClearColliders();
+            chunks[x][y]->SetActive(false);
+
+        }
+    }
+
+
+    /*
     for(int x = 0; x < world_profile.width; x++){
         for(int y = 0; y < world_profile.height; y++){
 
@@ -286,5 +339,10 @@ void World::Update(){
             }
         }
     }
+    */
 
+}
+
+void World::SetWorldNeedsPathfindingRecalculating(bool state){
+    world_needs_pathfinding_recalculating = state;
 }

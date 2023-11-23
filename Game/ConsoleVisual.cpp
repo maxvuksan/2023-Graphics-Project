@@ -109,7 +109,7 @@ void ConsoleVisual::CatchEvent(sf::Event event){
                     }
 
                     this->Print(result, send_packet);
-
+                    
                 }
                 interact_line.setString("");
                 is_on = false;
@@ -219,7 +219,7 @@ void ConsoleVisual::Print(const ConsoleLine& message, bool send_packet){
     lines[0].setColor(message.colour);
 
     if(send_packet){
-        client->SendChatMessage(message.message);
+        //client->SendChatMessage(message.message);
     }
 
 }

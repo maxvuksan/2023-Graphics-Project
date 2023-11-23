@@ -25,6 +25,14 @@ bool Object::IsActive(){
     return true;
 }
 
+void Object::SetActive(bool new_active){
+    if(active)
+    { 
+        this->OnSetActive(); 
+    } 
+    active = new_active; 
+}
+
 Object* Object::AddObjectToScene(Object* object, int render_layer){
     scene->AddExisitingObject(object, render_layer);
     return object;

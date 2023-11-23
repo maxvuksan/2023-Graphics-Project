@@ -12,19 +12,19 @@ class Tilemap;
 class Core;
 class BoxCollider;
 
+/*
+    A way to divide sections of content, 
+    
+    an example of this division could be...
+
+    Main Menu Page
+    Settings Page
+    Level Select
+    Level World
+    etc...
+*/
 class Scene {
 
-    /*
-        A way to divide sections of content, 
-        
-        some scenes could include...
-
-        Main Menu Page
-        Level Select
-        Level 1
-        Level 2
-        etc...
-    */
 
     public:
 
@@ -58,8 +58,9 @@ class Scene {
             }
 
             T* obj = Memory::New<T>(__FUNCTION__);
-            objects[render_layer].push_back(obj);
 
+            objects[render_layer].push_back(obj);
+            
             obj->LinkScene(this, render_layer);
             obj->Start();
 
@@ -133,7 +134,10 @@ class Scene {
             }
         }
 
+
+        // @returns all the active objects in the scene
         std::map<int, std::vector<Object*>>* GetObjects(){ return &objects;}
+        // @returns all the active UI objects in the scene
         std::map<int, std::vector<Object*>>* GetUI(){ return &ui;}
 
         void AddBoxCollider(BoxCollider* collider);
@@ -162,11 +166,10 @@ class Scene {
 
     private:
 
-
-        // render layer, vector<Object*>
+        // structured as : <render layer, object vector>
         std::map<int, std::vector<Object*>> objects;
         std::map<int, std::vector<Object*>> ui;
-
+        
         std::vector<PointLight*> point_lights;
         std::vector<Tilemap*> tilemaps;
         std::vector<BoxCollider*> box_colliders;

@@ -1,3 +1,4 @@
+#pragma once
 #include "../../Amber/Framework.h"
 
 class World;
@@ -10,8 +11,13 @@ enum TraversalMode {
 
 struct PathfindingNode{
     bool open; 
+
+    float f_cost;
 };
 
+/*
+    Creates a graph representation of the world (thus relies on LinkWorld()), aiming to allow AI to navigate terrain
+*/
 class PathfindingGraph : public Object {
 
     public:
@@ -22,20 +28,21 @@ class PathfindingGraph : public Object {
         void Update() override;
 
         // converts start and end world based positions to node based positions, then @returns series of points representing the path between start and end
-        std::vector<sf::Vector2i> RequestPathWorld(sf::Vector2f start_world, sf::Vector2i end_world, int max_node_coverage = 5000);
+        static std::vector<sf::Vector2i> RequestPathWorld(sf::Vector2f start_world, sf::Vector2f end_world, int max_node_coverage = 5000);
         void ConstructNodeGrid();
-
-    private:
         
-        std::vector<sf::Vector2i> RequestPath(sf::Vector2i start, sf::Vector2i end, TraversalMode traversal_mode = TraversalMode::BREADTH_FIRST_SEARCH, int max_node_coverage = 200);
+    private:
+        // @returns true if the coordinate is within the node grid bounds
+        static bool CoordinateWithinBounds(const sf::Vector2i& coordinate);
+        static std::vector<sf::Vector2i> RequestPath(sf::Vector2i start, sf::Vector2i end, TraversalMode traversal_mode = TraversalMode::BREADTH_FIRST_SEARCH, int max_node_coverage = 5000);
         // called by Traverse(), performs backtracking to determine the path of traversal
         static std::vector<sf::Vector2i> CalculatePathFromTraversal(sf::Vector2i start, sf::Vector2i end, std::vector<std::vector<sf::Vector2i>>& parent_node);
 
-        std::vector<sf::Vector2i> previous_traversal;
+        static std::vector<sf::Vector2i> previous_traversal;
+        static std::vector<std::vector<bool>> previous_traversal_closed; // holds if the each node is closed by the traversal function
 
-        sf::Vector2f active_chunk_offset; // the offset of nodes in the vector
-        std::vector<std::vector<PathfindingNode>> nodes;
+        static std::vector<std::vector<PathfindingNode>> nodes;
 
-        WorldProfile* world_profile;
-        World* world;        
+        static WorldProfile* world_profile;
+        static World* world;        
 };

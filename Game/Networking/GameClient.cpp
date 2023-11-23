@@ -4,6 +4,10 @@
 #include "../Player/Player.h"
 #include "../ConsoleVisual.h"
 #include "../Player/PlayerWorldInteractions.h"
+#include "../Fly.h"
+
+
+sf::Vector2f GameClient::player_pos;
 
 /*
     blocks multiplayer based code, when playing in single player
@@ -20,8 +24,8 @@ void GameClient::CreateObjects(){
     world = scene->AddObject<World>();
     world->LinkClient(this);
     // pathfinding 
-    pathfinding_graph = scene->AddObject<PathfindingGraph>();
-    pathfinding_graph->LinkWorld(world);
+    //pathfinding_graph = scene->AddObject<PathfindingGraph>();
+    //pathfinding_graph->LinkWorld(world);
 
     // setting scene bounds
     WorldProfile* wp = world->GetWorldProfile();
@@ -45,11 +49,15 @@ void GameClient::CreateObjects(){
     CommandParser::LinkClient(this);
     console_visual = scene->AddUI<ConsoleVisual>();
 
+    for(int i = 0; i < 40; i++){
+        //Fly* fly = scene->AddObject<Fly>();
+        //fly->GetTransform()->position = sf::Vector2f(50,50);
+    }
 }
 
 void GameClient::SendPlayerControl(){
 
-    pathfinding_graph->RequestPathWorld(player->GetTransform()->position, sf::Vector2i(150,30));
+    player_pos = player->GetTransform()->position;
 
     IF_ONLINE
 
@@ -74,8 +82,8 @@ void GameClient::SendChatMessage(const std::string& message){
     // having problems with strings in packets, ignore for now
     return;
 
-    char msg[50];
-    SendPacket<p_ChatMessage>(server, {{PACKET_ChatMessage, client_id}});
+    //char msg[50];
+    //SendPacket<p_ChatMessage>(server, {{PACKET_ChatMessage, client_id}});
 }
 
 
@@ -170,10 +178,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
 
         case PACKET_ChatMessage : {
             
-            p_ChatMessage body;
-            memcpy(&body.message, event.packet->data, sizeof(p_ChatMessage));
 
-            //console_visual->Print({"message recieved"}, false);
 
             break;
         }
