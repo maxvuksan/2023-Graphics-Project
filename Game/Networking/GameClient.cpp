@@ -4,8 +4,8 @@
 #include "../Player/Player.h"
 #include "../ConsoleVisual.h"
 #include "../Player/PlayerWorldInteractions.h"
-#include "../Fly.h"
-
+#include "../Pathfinding/Fly.h"
+#include "../Pathfinding/NoodleCreature.h"
 
 sf::Vector2f GameClient::player_pos;
 
@@ -17,11 +17,14 @@ sf::Vector2f GameClient::player_pos;
 void GameClient::LinkScene(Scene* scene){
     this->scene = scene;
 }
+void GameClient::LinkWorld(World* world){
+    this->world = world;
+}
 
 void GameClient::CreateObjects(){
     
+
     // create world
-    world = scene->AddObject<World>();
     world->LinkClient(this);
     // pathfinding 
     //pathfinding_graph = scene->AddObject<PathfindingGraph>();
@@ -42,6 +45,10 @@ void GameClient::CreateObjects(){
     inventory = scene->AddUI<Inventory>();
     player_world_interactions->LinkInventory(inventory);
       
+
+
+    scene->GetActiveCamera()->SetBackgroundTexture("background");
+
     // tell the world we want to focus around the player
     world->SetFocus(player->GetTransform());
 
@@ -49,10 +56,13 @@ void GameClient::CreateObjects(){
     CommandParser::LinkClient(this);
     console_visual = scene->AddUI<ConsoleVisual>();
 
+/*
     for(int i = 0; i < 40; i++){
-        //Fly* fly = scene->AddObject<Fly>();
-        //fly->GetTransform()->position = sf::Vector2f(50,50);
+       // Fly* fly = scene->AddObject<Fly>();
+     //   fly->GetTransform()->position = sf::Vector2f(50,50);
     }
+    //scene->AddObject<NoodleCreature>();
+*/
 }
 
 void GameClient::SendPlayerControl(){
@@ -171,7 +181,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             p_SetBlock body;
             memcpy(&body, event.packet->data, sizeof(p_SetBlock));
 
-            world->SetTile(body.tile_index, body.pos_x, body.pos_y, SetLocation::FOREGROUND, SetMode::OVERRIDE, false);
+            world->SetTile(body.tile_index, body.pos_x, body.pos_y, SetLocation::MAIN, SetMode::OVERRIDE, false);
             
             break;
         }

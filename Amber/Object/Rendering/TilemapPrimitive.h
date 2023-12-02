@@ -1,6 +1,12 @@
 #pragma once
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include "TilemapProfile.h"
+
+/*
+    allows the range -128 -> 127
+*/
+typedef signed char signed_byte; 
 
 class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 {
@@ -12,13 +18,13 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 
     public:
         
-        bool Load(sf::Texture* texture, sf::Vector2u tile_size, unsigned int width, unsigned int height, int default_tile = -1);
+        bool Load(sf::Texture* texture, TilemapProfile* tilemap_profile, int default_tile = -1);
 
         /*
             @returns A 2D vector of integer values representing the tilemap
         */
-        std::vector<std::vector<short>>& GetGrid();
-        void SetTile(short tile_index, unsigned int x, unsigned int y);
+        std::vector<std::vector<signed_byte>>& GetGrid();
+        void SetTile(signed_byte tile_index, unsigned int x, unsigned int y);
         /*
             swaps back to the tilemap texture
         */
@@ -29,12 +35,11 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         void SetTexture(sf::Texture* texture);
 
 
-        sf::Vector2u size;
-        sf::Vector2u tile_size;
+        TilemapProfile* tilemap_profile;
         
     private:
 
-        std::vector<std::vector<short>> grid;
+        std::vector<std::vector<signed_byte>> grid;
 
         sf::VertexArray m_vertices;
         

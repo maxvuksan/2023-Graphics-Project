@@ -15,6 +15,12 @@ class Camera : public Component {
         Camera();
 
         sf::Color background_colour;
+        sf::Color ui_overlay_colour;
+        
+        // will display an image on the background, if no background image is provided, the background colour should be used
+        void SetBackgroundTexture(const char* label);
+        // @returns a reference to the background sprite, returns nullptr if no background is set, set with Camera::SetBackgroundTexture()
+        sf::Sprite* GetBackgroundSprite();
 
         void Update() override;
 
@@ -24,6 +30,10 @@ class Camera : public Component {
         // Converts a screen space position to its position in the world 
         static sf::Vector2f ScreenToWorldPosition(sf::Vector2f screen);
         static sf::Vector2f ScreenToWorldPosition(sf::Vector2i screen);             
+    
     private:
+
+        sf::Sprite background_sprite;
+
         static sf::Vector2f bounded_position;
 };

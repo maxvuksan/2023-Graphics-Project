@@ -7,7 +7,6 @@
 
 void BoxCollider::Start(){
     AddRect({0,0,16,16});
-    object->GetScene()->AddBoxCollider(this);
 }
 
 void BoxCollider::Update(){
@@ -35,7 +34,7 @@ std::vector<BoxCollider::Rect*> BoxCollider::DetermineBoxOverlaps(){
     for(auto& collider : *box_colliders){
 
         // ignore itself and triggers
-        if(collider == this || collider->GetObject() == object){
+        if(collider == this || collider->GetThisObject() == object){
             continue; 
         }
         if(collider->IsTrigger()){
@@ -237,5 +236,4 @@ void BoxCollider::SetSize(sf::Vector2f size, int index){
 }
 
 BoxCollider::~BoxCollider(){
-    object->GetScene()->RemoveBoxCollider(this);
 }

@@ -11,12 +11,10 @@ void Tilemap::Start(){
     show_overlay_colour = false;
     overlay_colour = sf::Color(0,0,0,0.5);
 
-    object->GetScene()->AddTilemap(this);
 }
 
 Tilemap::~Tilemap(){
 
-    object->GetScene()->RemoveTilemap(this);
 }
 
 void Tilemap::UpdateSecondary(){
@@ -32,8 +30,8 @@ void Tilemap::UpdateSecondary(){
 }
 
 
-short Tilemap::GetTile(int x, int y){
-    std::vector<std::vector<short>>& grid = tilemap_primitive.GetGrid();
+signed_byte Tilemap::GetTile(int x, int y){
+    std::vector<std::vector<signed_byte>>& grid = tilemap_primitive.GetGrid();
 
     if(x < tilemap_profile->width && x >= 0){
         if(y < tilemap_profile->height && y >= 0){
@@ -72,7 +70,7 @@ void Tilemap::DrawTilemapShadow(sf::RenderTarget& surface){
 bool Tilemap::Load(const char* texture_label, TilemapProfile* profile, int default_tile){
     
         
-    bool state = tilemap_primitive.Load(AssetManager::GetTexture(texture_label), sf::Vector2u(profile->tile_width, profile->tile_height), profile->width, profile->height, default_tile);
+    bool state = tilemap_primitive.Load(AssetManager::GetTexture(texture_label), profile, default_tile);
     
     if(state == false){
         std::cout << "ERROR : Failed to call TilemapPrimitive::Load()\n";
@@ -90,11 +88,11 @@ bool Tilemap::Load(const char* texture_label, TilemapProfile* profile, int defau
 
 
 
-void Tilemap::SetTile(short tile_index, unsigned int x, unsigned int y){
+void Tilemap::SetTile(signed_byte tile_index, unsigned int x, unsigned int y){
     tilemap_primitive.SetTile(tile_index, x, y);
     has_changed = true;
 }
-bool Tilemap::SetTileSafe(short tile_index, int x, int y){
+bool Tilemap::SetTileSafe(signed_byte tile_index, int x, int y){
 
     if(x >= 0 && x < tilemap_profile->width){
         if(y >= 0 && y < tilemap_profile->height){
@@ -106,26 +104,26 @@ bool Tilemap::SetTileSafe(short tile_index, int x, int y){
     return false;
 }
 
-void Tilemap::SetRow(short tile_index, unsigned int row){    
-    for(unsigned int x = 0; x < tilemap_primitive.size.x; x++){
+void Tilemap::SetRow(signed_byte tile_index, unsigned int row){    
+    for(unsigned int x = 0; x < tilemap_profile->width; x++){
         tilemap_primitive.SetTile(tile_index, x, row);
     }
 }
-void Tilemap::SetColumn(short tile_index, unsigned int column){
-    for(unsigned int y = 0; y < tilemap_primitive.size.y; y++){
+void Tilemap::SetColumn(signed_byte tile_index, unsigned int column){
+    for(unsigned int y = 0; y < tilemap_profile->height; y++){
         tilemap_primitive.SetTile(tile_index, column, y);
     }
 }
-void Tilemap::SetArea(short tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max){
+void Tilemap::SetArea(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max){
     for(unsigned int x = x_min; x < x_max; x++){
         for(unsigned int y = y_min; y < y_max; y++){
             tilemap_primitive.SetTile(tile_index, x, y);            
         }
     }
 }
-void Tilemap::SetAll(short tile_index){
-    for(unsigned int y = 0; y < tilemap_primitive.size.y; y++){
-        for(unsigned int x = 0; x < tilemap_primitive.size.x; x++){
+void Tilemap::SetAll(signed_byte tile_index){
+    for(unsigned int y = 0; y < tilemap_profile->height; y++){
+        for(unsigned int x = 0; x < tilemap_profile->width; x++){
             tilemap_primitive.SetTile(tile_index, x, y);
         }
     }

@@ -7,7 +7,8 @@ std::vector<sf::Vector2i> PathfindingGraph::previous_traversal;
 std::vector<std::vector<bool>> PathfindingGraph::previous_traversal_closed;
 std::vector<std::vector<PathfindingNode>> PathfindingGraph::nodes;
 WorldProfile* PathfindingGraph::world_profile;
-World* PathfindingGraph::world;    
+World* PathfindingGraph::world; 
+sf::Vector2f PathfindingGraph::node_offset_from_chunk;   
 
 void PathfindingGraph::LinkWorld(World* _world){
     world = _world;
@@ -233,6 +234,7 @@ std::vector<sf::Vector2i> PathfindingGraph::CalculatePathFromTraversal(sf::Vecto
         curr = parent_node[curr.x][curr.y];
     }
 
+    std::reverse(path_so_far.begin(), path_so_far.end());
     return path_so_far;
 
 }
@@ -252,28 +254,45 @@ void PathfindingGraph::ConstructNodeGrid(){
         return;
     }
 
-    nodes.clear();
-    nodes.resize(world_profile->height * world_profile->tilemap_profile.height, {});
-    previous_traversal_closed.resize(nodes.size(), {});
-  
-    for(int chunk_x = 0; chunk_x < world_profile->width; chunk_x++){
-        for(int chunk_y = 0; chunk_y < world_profile->height; chunk_y++){
+    Transform* focus = world->GetFocus();
+    int load = world->GetLoadDistance();
 
-            Chunk* curr_chunk = chunks->at(chunk_x).at(chunk_y);
+    sf::Vector2i chunk_with_focus = sf::Vector2i(floor(focus->position.x / ((float)world_profile->tilemap_profile.width * (float)world_profile->tilemap_profile.tile_width) )
+                                               , floor(focus->position.y / ((float)world_profile->tilemap_profile.height * (float)world_profile->tilemap_profile.tile_height)));
+
+    nodes.clear();
+    //nodes.resize((load + 1) * world_profile->tilemap_profile.width, {});
+
+    int chunk_x_min = Calc::Clamp(chunk_with_focus.x - load, 0, world_profile->width - 1);
+    int chunk_y_min = Calc::Clamp(chunk_with_focus.y - load, 0, world_profile->height - 1);
+    int chunk_x_max = Calc::Clamp(chunk_with_focus.x + load + 1, 0, world_profile->width);
+    int chunk_y_max = Calc::Clamp(chunk_with_focus.y + load + 1, 0, world_profile->height);
+    
+    node_offset_from_chunk = chunks->at(chunk_x_min)[chunk_y_min]->GetTransform()->position;
+  
+    nodes.resize(pow(chunk_x_max - chunk_x_min, 2) * world_profile->tilemap_profile.tile_width, {});
+    previous_traversal_closed.resize(nodes.size(), {});
+
+
+    for(int chunk_x = chunk_x_min; chunk_x < chunk_x_max; chunk_x++){
+
+        for(int chunk_y = chunk_y_min; chunk_y < chunk_y_max; chunk_y++){
             
-            for(int y = 0; y < world_profile->tilemap_profile.height; y++){
+            Chunk* curr_chunk = chunks->at(chunk_x).at(chunk_y);
+
                 for(int x = 0; x < world_profile->tilemap_profile.width; x++){
-                              
+                    
+                    for(int y = 0; y < world_profile->tilemap_profile.height; y++){
         
                     PathfindingNode new_node = {false};
 
                     // curr_chunk->IsActive()                 is the tile empty? (valid)
-                    if(true && curr_chunk->GetTilemap(SetLocation::FOREGROUND)->GetTile(x, y) <= -1){
+                    
+                    if(curr_chunk->GetTilemap(SetLocation::MAIN)->GetTile(x, y) <= -1){
                         new_node.open = true;
                     }
-                    
-                    nodes.at(chunk_x * world_profile->tilemap_profile.width + x).push_back(new_node);
-                    previous_traversal_closed.at(chunk_x * world_profile->tilemap_profile.width + x).push_back(false);
+                    nodes.at((chunk_x - chunk_x_min) * world_profile->tilemap_profile.width + x).push_back(new_node);
+                    previous_traversal_closed.at((chunk_x - chunk_x_min) * world_profile->tilemap_profile.width + x).push_back(false);
                 }
             }
 
@@ -310,8 +329,8 @@ void PathfindingGraph::DrawDebug(sf::RenderTarget& surface){
             }
     
             vertex.position = Camera::WorldToScreenPosition(sf::Vector2f(
-                x * world_profile->tilemap_profile.tile_width + half_t_width
-               ,y * world_profile->tilemap_profile.tile_height + half_t_height));
+                x * world_profile->tilemap_profile.tile_width + half_t_width + node_offset_from_chunk.x
+               ,y * world_profile->tilemap_profile.tile_height + half_t_height + node_offset_from_chunk.y));
             
             points.append(vertex);
         }
@@ -327,8 +346,8 @@ void PathfindingGraph::DrawDebug(sf::RenderTarget& surface){
         sf::Vertex vertex;
         vertex.color = sf::Color::Yellow;
         vertex.position = Camera::WorldToScreenPosition(sf::Vector2f(
-                previous_traversal[i].x * world_profile->tilemap_profile.tile_width + half_t_width
-               ,previous_traversal[i].y * world_profile->tilemap_profile.tile_height + half_t_height));
+                previous_traversal[i].x * world_profile->tilemap_profile.tile_width + half_t_width + node_offset_from_chunk.x
+               ,previous_traversal[i].y * world_profile->tilemap_profile.tile_height + half_t_height + node_offset_from_chunk.y));
 
         points.append(vertex);
     }

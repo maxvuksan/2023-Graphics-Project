@@ -1,5 +1,5 @@
 #pragma once
-#include "../BlockTypes.h"
+#include "../Items/ItemDictionary.h"
 
 /*
     determines if a tile is allowed to be set
@@ -11,8 +11,9 @@ enum SetMode{
 };
 
 enum SetLocation{
-    FOREGROUND, // collidable ground
-    BACKGROUND, // decoratie background
+    MAIN, // collidable ground
+    FOREGROUND,
+    BACKGROUND, 
 };
 
 struct WorldSettings{
@@ -23,12 +24,17 @@ struct WorldSettings{
     int LEVEL_DIRT = 8;
     int LEVEL_DIRT_TO_STONE = 9;
 
-    int MIN_TUNNEL_SPACING = 15; // the minimum distance surface tunnels can spawn be next to each other
-
     // percentages
 
+    float SURFACE_TUNNEL_PERCENT = 1;
+    float SURFACE_TUNNEL_CHANCE_DIRECTION_PERCENT = 15;
+    float SURFACE_TUNNEL_SPLIT_PERCENT = 4;
+
+    float SURFACE_GRASS_PERCENT = 40;
+
+    float TREE_PERCENT = 7; 
     float ORE_PERCENT = 20;
 
-    std::vector<ItemCode> SURFACE_ORE_POOL = { ItemCode::c_Stone };
-    std::vector<ItemCode> CAVERN_ORE_POOL = { ItemCode::c_Dirt, ItemCode::c_Copper, ItemCode::c_Iron, ItemCode::c_Gold };
+    std::vector<MainBlockCode> SURFACE_ORE_POOL = { MainBlockCode::main_Stone };
+    std::vector<MainBlockCode> CAVERN_ORE_POOL = { MainBlockCode::main_Dirt, MainBlockCode::main_Copper, MainBlockCode::main_Iron, MainBlockCode::main_Gold };
 };

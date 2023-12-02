@@ -28,12 +28,13 @@ class UIRect : public Component {
         UIRect(): width(0), height(0), screen_location(FREE){}
 
         // snap the rect into different screen locations
-        void SetAlign(ScreenLocation);
-        
+        void SetAlign(ScreenLocation alignment);
         void Align();
         
         int width;
         int height;
+
+        static int padding;
 
     protected:
         ScreenLocation screen_location;

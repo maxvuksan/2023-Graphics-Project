@@ -6,15 +6,16 @@ Pickup::Pickup() : target(nullptr), attract_tracked(0){}
 
 void Pickup::Start(){
 
+    SetRenderLayer(3);
+    GetTransform()->scale = sf::Vector2f(0.5f,0.5f);
     sr = AddComponent<SpriteRenderer>();
-    sr->SetTexture("pickups");
     sr->SetOffset(sf::Vector2f(1,1));
 }
 
 
 void Pickup::SetItemCode(ItemCode item){
     this->item_code = item;
-    sr->SetTextureRect((int)item_code * 6, 0, 6, 6);
+    ItemDictionary::SetItemSprite(*sr->GetSprite(), item);
 }
 ItemCode Pickup::GetItemCode(){
     return item_code;

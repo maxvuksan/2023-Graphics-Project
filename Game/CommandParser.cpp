@@ -41,11 +41,15 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {""};
     }
     else if(cmd_raw == "FPS"){
-        client->console_visual->SetShowFps(!client->console_visual->GetShowFps());
+        Core::SHOW_FPS = !Core::SHOW_FPS;
+        return {""};
+    }
+    else if(cmd_raw == "SHOWMAP"){
+        client->world->minimap->reveal_all = !client->world->minimap->reveal_all;
         return {""};
     }
     else if(cmd_raw == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP", Globals::DEBUG_COLOUR};
     }
 
     return {"'/" + cmd_raw + "' is not a command, see /HELP", sf::Color(235, 124, 124)};

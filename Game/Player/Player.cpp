@@ -2,6 +2,8 @@
 
 void Player::Start(){
 
-    AddComponent<SpriteRenderer>()->SetTexture("player", true);
+    auto sr = AddComponent<SpriteRenderer>();
+    sr->SetTexture("player", true);
+    sr->SetRenderLayer(2);
 }
 

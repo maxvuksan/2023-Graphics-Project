@@ -1,5 +1,5 @@
 #include "../../Amber/Framework.h"
-#include "../BlockTypes.h"
+#include "../Items/ItemDictionary.h"
 #include "CursorGraphic.h"
 
 class World;
@@ -9,8 +9,8 @@ class PlayerWorldInteractions : public Component {
 
     public:
         void Start();
-        void CalculateMouse();
-        void Update();
+        void Draw(sf::RenderTarget&) override;
+        void CalculateMouse(sf::RenderTarget&);
 
         void CatchEvent(sf::Event) override;
 
@@ -20,6 +20,11 @@ class PlayerWorldInteractions : public Component {
     private:
         CursorGraphic* cursor_graphic;
         sf::Vector2i focused_block_position;
+
+        // shows the player the footprint of a utility object
+        sf::Sprite utility_hologram;
+        bool utility_location_valid;
+
 
         float breaking_completeness;
         float sound_increment;

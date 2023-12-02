@@ -2,8 +2,11 @@
 
 struct WorldProfile{
 
-    int width = 100;
-    int height = 100;
+    int width = 75;
+    int height = 40;
 
-    TilemapProfile tilemap_profile;
+    TilemapProfile tilemap_profile = {
+        8,8,
+        32,32
+    };
 }; 

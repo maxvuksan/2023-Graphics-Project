@@ -3,15 +3,14 @@
 #include "../Core/Scene.h"
 #include <iostream>
 
-Object::Object() : active(true), parent(nullptr), deleted_from_ui_map(false), render_at_window_size(false){
+Object::Object() : active(true), parent(nullptr), deleted_from_ui_map(false), render_at_window_size(false), render_layer(0){
     this->transform = AddComponent<Transform>();
 }
 
-void Object::LinkScene(Scene* scene, int render_layer){
+void Object::LinkScene(Scene* scene){
     if(scene == nullptr){
         std::cout << "ERROR : Attempting to link objects scene property to a nullptr Object::LinkScene()\n";
     }
-    this->render_layer = render_layer;
     this->scene = scene;
 }
 
@@ -76,4 +75,12 @@ void Object::SetRenderAtWindowSize(bool render_at_window_size){
 
 bool Object::GetRenderAtWindowSize(){
     return this->render_at_window_size;
+}
+
+
+void Object::SetRenderLayer(int _render_layer){
+    if(this->render_layer != _render_layer){
+        this->render_layer = _render_layer;
+        scene->DefineNewRenderLayer(_render_layer, deleted_from_ui_map);
+    }
 }

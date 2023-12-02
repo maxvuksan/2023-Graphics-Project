@@ -1,11 +1,12 @@
 #include "PlayerController.h"
 #include "../World/World.h"
-#include "../BlockTypes.h"
+#include "../Items/ItemDictionary.h"
 
 void PlayerController::Start(){
     
+    // set player camera as scene camera
     object->GetScene()->SetActiveCamera(object->AddComponent<Camera>());
-
+    // set still background
 
     body_collider = object->AddComponent<BoxCollider>();
     body_collider->SetSize(sf::Vector2f(6, 16));

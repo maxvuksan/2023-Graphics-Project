@@ -13,8 +13,6 @@ void PointLight::Start()
 {
     point_shader = AssetManager::GetShader("Amber_LightSource");
     
-    object->GetScene()->AddPointLight(this);
-
     auto display_size = Core::GetDisplaySize();
     texture.create(display_size.x, display_size.y);
 
@@ -66,5 +64,4 @@ void PointLight::DrawLightRenderTexture(){
 
 
 PointLight::~PointLight(){
-    object->GetScene()->RemovePointLight(this);
 }

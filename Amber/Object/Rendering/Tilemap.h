@@ -10,6 +10,8 @@
 class Tilemap : public Component
 {
 
+    friend class TilemapCollider;
+
     public:
 
         Tilemap() : loaded(false){}
@@ -30,21 +32,21 @@ class Tilemap : public Component
         */
         bool Load(const char* texture_label, TilemapProfile* profile, int default_tile = -1);
 
-        short GetTile(int x, int y);
+        signed_byte GetTile(int x, int y);
         
-        void SetTile(short tile_index, unsigned int x, unsigned int y);
+        void SetTile(signed_byte tile_index, unsigned int x, unsigned int y);
         // performs a bounds check to ensure tile can be set... ignores out of bounds operations, 
         // @returns true if the tile was successfully set
-        bool SetTileSafe(short tile_index, int x, int y);
+        bool SetTileSafe(signed_byte tile_index, int x, int y);
 
         int GetWidth();
         int GetHeight();
         sf::Vector2i GetTileSize();
 
-        void SetRow(short tile_index, unsigned int row);
-        void SetColumn(short tile_index, unsigned int column);
-        void SetArea(short tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
-        void SetAll(short tile_index);
+        void SetRow(signed_byte tile_index, unsigned int row);
+        void SetColumn(signed_byte tile_index, unsigned int column);
+        void SetArea(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
+        void SetAll(signed_byte tile_index);
 
         // do the tiles have an effect on lighting
         void SetInteractsLight(bool interacts);

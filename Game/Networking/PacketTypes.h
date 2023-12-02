@@ -1,6 +1,5 @@
 #pragma once
 #include "../../Amber/Framework.h"
-#include "../BlockTypes.h"
 
 #define PACKET_STRING_SIZE 50
 

@@ -1,5 +1,5 @@
-#include "../Amber/Framework.h"
-#include "Pathfinding/PathfindingGraph.h"
+#include "../../Amber/Framework.h"
+#include "PathfindingGraph.h"
 
 class Fly : public Object {
 
@@ -40,13 +40,13 @@ class Fly : public Object {
 
         void NewEndpoint(){
             end_point = sf::Vector2f(rand() % 120 - 60, rand() % 120 - 60);
-            path = PathfindingGraph::RequestPathWorld(GameClient::player_pos + end_point, GetTransform()->position, 90);
+            path = PathfindingGraph::RequestPathWorld(GameClient::player_pos + end_point, GetTransform()->position, 1500);
             current_node = 0;
         }
 
     private:
 
-        float search_again_delay = 1000;
+        float search_again_delay = 3;
         float search_again_delay_tracked = 0;
 
         int current_node = 0;

@@ -26,7 +26,7 @@ class AssetManager {
         static void Destruct();
 
         static sf::Font* CreateFontObj(const char* label, const std::string file_location);
-        static sf::Font* GetFont(const char* label);
+        static sf::Font* GetFont(const char* label = "Amber_Default");
 
         // assuming all shaders are fragment
         static sf::Shader* CreateShader(const char* label, const std::string fragment_file_location);

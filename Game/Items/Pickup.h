@@ -1,5 +1,5 @@
-#include "../Amber/Framework.h"
-#include "BlockTypes.h"
+#include "../../Amber/Framework.h"
+#include "ItemDictionary.h"
 
 class Pickup : public Object { 
 

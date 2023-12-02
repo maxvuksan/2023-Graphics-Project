@@ -41,10 +41,12 @@ class Object{
         void SetActive(bool state);
         // should only be set by Scene::AddUI()
         void SetUI(bool state){ deleted_from_ui_map = state;}
+        bool IsUI(){ return deleted_from_ui_map; }
 
         // An objects render layer is determined when it is initally added to the scene, Scene::AddObject<>( render_Layer )
         int GetRenderLayer(){return render_layer;}
-        void LinkScene(Scene* scene, int render_layer);
+        void SetRenderLayer(int render_layer);
+        void LinkScene(Scene* scene);
         Scene* GetScene(){ return scene; }
 
         Transform* GetTransform() { return transform; }
@@ -52,7 +54,7 @@ class Object{
         std::vector<Component*>* GetComponents(){ return &components; }
 
         template <typename T>
-        T* AddComponent(){
+        T* AddComponent(int render_layer = 0){
             
             T* comp = Memory::New<T>(__FUNCTION__);
             Component* casted_comp = static_cast<Component*>(comp);
@@ -61,6 +63,7 @@ class Object{
 
             casted_comp->LinkObject(this);          
             casted_comp->Start();
+            casted_comp->SetRenderLayer(render_layer);
 
             return comp;
         }
@@ -175,7 +178,7 @@ class Object{
         Object* parent; 
         bool active;
 
-        // should this object be deleted from the ui map or object map
+        // should this object be deleted from the ui map or object map, is it an ui object
         bool deleted_from_ui_map;
         // specifically for UI objects, should this be drawn onto the window 
         bool render_at_window_size;

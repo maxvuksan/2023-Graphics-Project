@@ -1,8 +1,16 @@
 #include "World.h"
 #include <cmath>
 #include "../Networking/GameClient.h"
-#include "../Pickup.h"
-void World::Start() {
+#include "../Items/Pickup.h"
+#include "../WorldScene.h"
+
+void World::LinkWorldScene(WorldScene* world_scene){
+    this->world_scene = world_scene;
+}
+
+
+void World::Create() {
+
 
     tilemap_profile = &world_profile.tilemap_profile;
     // creating each tilemap...
@@ -19,7 +27,10 @@ void World::Start() {
     }
 
     minimap = GetScene()->AddUI<Minimap>();
-    minimap->GetPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
+    minimap->GetMainPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
+    minimap->GetBackgroundPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
+    minimap->GetForegroundPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
+    minimap->GetExploredPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Black);
 
     sf::Color wall_colour(Globals::BASE_SHADOW_COLOUR.r / 6, Globals::BASE_SHADOW_COLOUR.g / 6, Globals::BASE_SHADOW_COLOUR.b / 6, 210);
 
@@ -27,7 +38,11 @@ void World::Start() {
         for(int y = 0; y < world_profile.height; y++){
 
             // create chunk and place it in the correct position
-            chunks[x][y] = GetScene()->AddObject<Chunk>(0);
+            // chunks are not held in the scenes generic object array for performance reasons.
+            // instead we keep it in a seperate 2d array and move ONLY nearby chunks into the scenes simulation
+            // this allows disabled chunks to have little to no CPU involement, essentially being idle in RAM
+            chunks[x][y] = Memory::New<Chunk>(__FUNCTION__);
+            chunks[x][y]->LinkScene(world_scene);
             chunks[x][y]->Init(tilemap_profile, wall_colour);
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilemap_profile->tile_width * tilemap_profile->width, y * tilemap_profile->tile_height * tilemap_profile->height);
         }
@@ -57,14 +72,14 @@ void World::CalculateMinimap(){
                     int final_x = x * tilemap_profile->width + t_x;
                     int final_y = y * tilemap_profile->height + t_y;
 
-                    int tile = chunks.at(x).at(y)->GetTile(t_x, t_y, SetLocation::FOREGROUND);
+                    int tile_main = chunks.at(x).at(y)->GetTile(t_x, t_y, SetLocation::MAIN);
+                    int tile_foreground = chunks.at(x).at(y)->GetTile(t_x, t_y, SetLocation::FOREGROUND);
+                    int tile_background = chunks.at(x).at(y)->GetTile(t_x, t_y, SetLocation::BACKGROUND);
 
-                    if(tile == -1){
-                        minimap->GetPixelGrid()->SetPixel(final_x, final_y, sf::Color::Transparent);
-                    }
-                    else{
-                       minimap->GetPixelGrid()->SetPixel(final_x, final_y, Items[tile].base_colour);
-                    }
+                    DrawTileToMinimap(tile_main, final_x, final_y, SetLocation::MAIN);
+                    DrawTileToMinimap(tile_foreground, final_x, final_y, SetLocation::FOREGROUND);
+                    DrawTileToMinimap(tile_background, final_x, final_y, SetLocation::BACKGROUND);
+
                 }
             }
 
@@ -72,13 +87,13 @@ void World::CalculateMinimap(){
     }
 }
 
-bool World::SetTileWorld(short tile_index, int world_x, int world_y, SetLocation set_location, bool send_packet){
+bool World::SetTileWorld(signed_byte tile_index, int world_x, int world_y, SetLocation set_location, bool send_packet){
 
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
     return SetTile(tile_index, coord.x, coord.y, set_location, SetMode::OVERRIDE, send_packet);
 }
 
-bool World::SetTile(short tile_index, int x, int y, SetLocation set_location, SetMode set_mode, bool send_packet){
+bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_location, SetMode set_mode, bool send_packet){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
@@ -87,7 +102,7 @@ bool World::SetTile(short tile_index, int x, int y, SetLocation set_location, Se
 
     if(set_mode != SetMode::OVERRIDE){
 
-        int tile = GetTile(x, y, set_location);
+        int tile = GetTile(x, y, SetLocation::MAIN);
 
         if(tile == -1 && set_mode == SetMode::ONLY_BLOCK){
             return false;
@@ -100,16 +115,10 @@ bool World::SetTile(short tile_index, int x, int y, SetLocation set_location, Se
     sf::Vector2i pos = OffsetFromCoord(x, y, chunk.x, chunk.y);
 
     chunks.at(chunk.x).at(chunk.y)->SetTile(tile_index, pos.x, pos.y, set_location);
+    chunks[chunk.x][chunk.y]->dirty = true; // marking the chunk as "dirty" (changed)
 
 
-
-    // updating minimap... 
-    if(tile_index == -1){
-        minimap->GetPixelGrid()->SetPixel(x, y,  sf::Color::Transparent);
-    }
-    else{
-        minimap->GetPixelGrid()->SetPixel(x, y, Items[tile_index].base_colour);
-    }
+    DrawTileToMinimap(tile_index, x, y, set_location);
 
     if(send_packet){
         client->SendSetBlock(tile_index, x, y);
@@ -119,30 +128,116 @@ bool World::SetTile(short tile_index, int x, int y, SetLocation set_location, Se
 
     return true;
 }
+
+void World::DrawTileToMinimap(signed_byte tile_index, int x, int y, SetLocation set_location){
+
+    switch(set_location){
+
+        case SetLocation::BACKGROUND:
+            
+            if(tile_index == -1){                           // a nice sky colour
+                minimap->GetBackgroundPixelGrid()->SetPixel(x, y,  sf::Color(130, 152, 150));
+            }
+            else{
+                minimap->GetBackgroundPixelGrid()->SetPixel(x, y, ItemDictionary::BACKGROUND_BLOCK_DATA[tile_index].base_colour);
+            }
+            break;
+        case SetLocation::FOREGROUND:
+            
+            if(tile_index == -1){                          
+                minimap->GetForegroundPixelGrid()->SetPixel(x, y,  sf::Color::Transparent);
+            }
+            else{
+                minimap->GetForegroundPixelGrid()->SetPixel(x, y, ItemDictionary::FOREGROUND_BLOCK_DATA[tile_index].base_colour);
+            }
+            break;
+        case SetLocation::MAIN:
+            
+            if(tile_index == -1){                      
+                minimap->GetMainPixelGrid()->SetPixel(x, y,  sf::Color::Transparent);
+            }
+            else{
+                minimap->GetMainPixelGrid()->SetPixel(x, y, ItemDictionary::MAIN_BLOCK_DATA[tile_index].base_colour);
+            }
+            break;
+    }
+}
+
 bool World::BreakTileWorld(int world_x, int world_y, SetLocation set_location, bool send_packet){
 
-    // get code
+    std::vector<ItemCode> items_to_drop;
+    
+    sf::Vector2i coord = WorldToCoord(world_x, world_y);
 
-    ItemCode item = (ItemCode)GetTileWorld(world_x, world_y, set_location);
+    // if we are mining on the MAIN SetLocation, remove and drop both MAIN and FOREGROUND
+    if(set_location == SetLocation::MAIN){
+        signed_byte main_block = GetTile(coord.x, coord.y, SetLocation::MAIN);
+        if(main_block != -1){
+            ItemCode pickup = ItemDictionary::MAIN_BLOCK_DATA[main_block].pickup;
+            items_to_drop.push_back(pickup);
+        }
 
-    // create pickup
+        // removes foreground blocks attached to the main block we may have broken
+        signed_byte foreground_block = GetTile(coord.x, coord.y, SetLocation::FOREGROUND);
+        if(foreground_block != -1){
+            ItemCode pickup = ItemDictionary::FOREGROUND_BLOCK_DATA[foreground_block].pickup;
+            items_to_drop.push_back(pickup);
+        }
 
-    Pickup* pickup = GetScene()->AddObject<Pickup>();
-    pickup->SetItemCode(item);
-    pickup->GetTransform()->position = sf::Vector2f(world_x, world_y);
-    pickup->AttractToTransform(focus);
 
-    client->GetInventory()->PickupItem(item);
+        // checks if a foregorund block is standing upon this block, (e.g. grass)
+        signed_byte main_above = GetTile(coord.x, coord.y - 1, SetLocation::MAIN);
+        signed_byte foreground_above = GetTile(coord.x, coord.y - 1, SetLocation::FOREGROUND); 
+        if(main_above == -1 && foreground_above != -1){
+            
+            SetTile(-1, coord.x, coord.y - 1, SetLocation::FOREGROUND, SetMode::OVERRIDE, send_packet);
+            ItemCode pickup = ItemDictionary::FOREGROUND_BLOCK_DATA[foreground_above].pickup;
+            items_to_drop.push_back(pickup);
+        }
+    }
+    else if(set_location == SetLocation::BACKGROUND){
+        
+        signed_byte background_block = GetTile(coord.x, coord.y, SetLocation::BACKGROUND);
+        if(background_block != -1){
+
+            ItemCode pickup = ItemDictionary::BACKGROUND_BLOCK_DATA[background_block].pickup;
+            items_to_drop.push_back(pickup);
+        } 
+    }
+
+    // create pickups
+
+    for(int i = 0; i < items_to_drop.size(); i++){
+
+        // ignore drops marked as nothing
+        if(items_to_drop[i] == item_NO_DROP){
+            continue;
+        }
+
+        Pickup* pickup = GetScene()->AddObject<Pickup>();
+        pickup->SetItemCode(items_to_drop[i]);
+        pickup->GetTransform()->position = sf::Vector2f(world_x, world_y);
+        pickup->AttractToTransform(focus);
+        client->GetInventory()->PickupItem(items_to_drop[i]);
+
+    }
+
+
+    // if we break a MAIN tile, we also remove its FOREGROUND tile
+    if(set_location == SetLocation::MAIN){
+        SetTile(-1, coord.x, coord.y, SetLocation::FOREGROUND, SetMode::OVERRIDE, send_packet);
+    }
 
     return SetTileWorld(-1, world_x, world_y, set_location, send_packet);
 }
 
-short World::GetTileWorld(int world_x, int world_y, SetLocation get_location){
+
+signed_byte World::GetTileWorld(int world_x, int world_y, SetLocation get_location){
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
     return GetTile(coord.x, coord.y, get_location);
 }
 
-short World::GetTile(int x, int y, SetLocation get_location){
+signed_byte World::GetTile(int x, int y, SetLocation get_location){
     
     sf::Vector2i chunk = ChunkFromCoord(x, y);
     if(!ChunkInBounds(chunk.x, chunk.y)){
@@ -169,7 +264,7 @@ sf::Vector2i World::GetNearestTileInDirectionOfMouse(sf::Vector2f world_position
 
         for(auto tile : tiles_in_radius){
 
-            short _found_tile = GetTile(coord.x + tile.x, coord.y + tile.y, set_location);
+            signed_byte _found_tile = GetTile(coord.x + tile.x, coord.y + tile.y, set_location);
             if(_found_tile != -1){
                 return sf::Vector2i(coord.x + tile.x, coord.y + tile.y);
             }
@@ -178,9 +273,14 @@ sf::Vector2i World::GetNearestTileInDirectionOfMouse(sf::Vector2f world_position
     return sf::Vector2i(-1,-1);
 }
 
-
 bool World::ChunkInBounds(int chunk_x, int chunk_y){
     if(chunk_x < 0 || chunk_y < 0 || chunk_x >= world_profile.width || chunk_y >= world_profile.height){
+        return false;
+    }
+    return true;
+}
+bool World::CoordInBounds(int x, int y){
+    if(x < 0 || x >= world_profile.width * tilemap_profile->width || y < 0 || y >= world_profile.height * tilemap_profile->height){
         return false;
     }
     return true;
@@ -259,7 +359,7 @@ std::vector<sf::Vector2i> World::CalculateOffsetsInRadius(int radius){
     return in_radius;
 }
 
-void World::SetCircle(short tile_index, int x, int y, int radius, SetLocation set_location, SetMode set_mode){
+void World::SetCircle(signed_byte tile_index, int x, int y, int radius, SetLocation set_location, SetMode set_mode){
 
     // set all tiles
     for(auto& offset : GetOffsetsInRadius(radius)){
@@ -283,66 +383,100 @@ void World::Update(){
         return;
     }
 
+    std::vector<Object*>* objects_additional = world_scene->GetThisObjectsAdditional();
+    objects_additional->clear();
+
     sf::Vector2i wrld_to_coord = WorldToCoord(focus->position.x, focus->position.y);
     sf::Vector2i chunk_focus_is_in = ChunkFromCoord(wrld_to_coord.x, wrld_to_coord.y);
 
-    int load = 5;
+    bool change_made = false;
 
     for(int x = 0; x < world_profile.width; x++){
         for(int y = 0; y < world_profile.height; y++){
-
             
-            if(x > chunk_focus_is_in.x - load && x < chunk_focus_is_in.x + load){
-                if(y > chunk_focus_is_in.y - load && y < chunk_focus_is_in.y + load){
+            if(x > chunk_focus_is_in.x - load_distance && x < chunk_focus_is_in.x + load_distance){
+                if(y > chunk_focus_is_in.y - load_distance && y < chunk_focus_is_in.y + load_distance){
 
-                    chunks[x][y]->EnableColliders();
-                    chunks[x][y]->SetActive(true);
+                    // when a chunk initally loads in, we recalculate colliders no matter what
+                    if(!chunks[x][y]->loaded_in_scene){
+                        change_made = true;
+                        chunks[x][y]->ResetColliders();
+                    }
+                    else{ // only recalculating colliders if a change is made to said chunk
+                        chunks[x][y]->ResetCollidersIfChanged();
+                    }
+
+                    chunks[x][y]->loaded_in_scene = true;
+
+                    // adding objects found in chunk
+                    for(int i = 0; i < chunks[x][y]->GetThisObjectsInChunk()->size(); i++){
+                        objects_additional->push_back((*chunks[x][y]->GetThisObjectsInChunk())[i]);
+                    }
+
+
+                    objects_additional->push_back(chunks[x][y]);
                     continue;
                 }
             }
 
+            if(chunks[x][y]->loaded_in_scene){
+                change_made = true;
+            }
+
             chunks[x][y]->ClearColliders();
-            chunks[x][y]->SetActive(false);
+            chunks[x][y]->loaded_in_scene = false;
+        }
 
+        if(change_made){
+            world_needs_pathfinding_recalculating = true;
         }
     }
 
-
-    /*
-    for(int x = 0; x < world_profile.width; x++){
-        for(int y = 0; y < world_profile.height; y++){
-
-            int real_x = x * tilemap_profile->width * tilemap_profile->tile_width;
-            int real_y = y * tilemap_profile->height * tilemap_profile->tile_height;
-            
-            int dis_x = abs(focus->position.x - real_x);
-            int dis_y = abs(focus->position.y - real_y);
-
-            if(dis_x < collider_threshold &&
-               dis_y < collider_threshold){
-                
-                chunks[x][y]->EnableColliders();
-            }
-            else{
-                chunks[x][y]->ClearColliders();
-            }
-
-
-            if(dis_x < loading_threshold &&
-               dis_y < loading_threshold){
-
-                chunks[x][y]->SetActive(true);
-
-            }
-            else{
-                chunks[x][y]->SetActive(false);
-            }
-        }
-    }
-    */
-
+    RevealMapAroundFocus();
 }
+
+void World::RevealMapAroundFocus(){
+    sf::Vector2i pos = WorldToCoord(focus->position.x, focus->position.y);
+
+
+    for(auto offset : GetOffsetsInRadius(Minimap::exploring_radius)){
+        
+        sf::Vector2i _pos = offset + pos;
+        
+        if(CoordInBounds(_pos.x, _pos.y)){
+            
+            if(offset.x + offset.y > Minimap::exploring_radius){
+                minimap->GetExploredPixelGrid()->SetPixel(_pos.x, _pos.y, sf::Color::Transparent);
+            }
+
+        }
+    }
+}
+
+bool World::CoordIsConnectedToOtherTiles(int x, int y){
+
+
+    sf::Vector2i offsets_to_check[] = {sf::Vector2i(0,0), sf::Vector2i(0,1), sf::Vector2i(1,0), sf::Vector2i(-1,0), sf::Vector2i(0,-1)};
+
+    for(int i = 0; i < 5; i++){
+        if(GetTile(x + offsets_to_check[i].x, y + offsets_to_check[i].y, SetLocation::BACKGROUND) != -1){
+            return true;
+        }
+        if(GetTile(x + offsets_to_check[i].x, y + offsets_to_check[i].y, SetLocation::MAIN) != -1){
+            return true;
+        }
+    }
+}
+
 
 void World::SetWorldNeedsPathfindingRecalculating(bool state){
     world_needs_pathfinding_recalculating = state;
+}
+
+World::~World(){
+    for(int x = 0; x < world_profile.width; x++){
+        for(int y = 0; y < world_profile.height; y++){
+            Memory::Delete<Chunk>(chunks[x][y], __FUNCTION__);
+        }
+    }
 }

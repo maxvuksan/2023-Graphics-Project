@@ -3,7 +3,7 @@
 #include "../../Core/Core.h"
 #include <iostream>
 
-SpriteRenderer::SpriteRenderer(): offset(0,0){}
+SpriteRenderer::SpriteRenderer(): offset(0,0), flip_factor(1){}
 
 void SpriteRenderer::Start(){}
 
@@ -13,6 +13,7 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
     sprite.setPosition(Camera::WorldToScreenPosition(
         object->GetTransform()->position + offset
     ));
+    sprite.setScale(sf::Vector2f(object->GetTransform()->scale.x * this->flip_factor, object->GetTransform()->scale.y));
     
     surface.draw(sprite);
 }
@@ -43,7 +44,6 @@ void SpriteRenderer::SetFlip(bool flip){
     else{
         this->flip_factor = 1;
     }
-    sprite.setScale(this->flip_factor, 1);
 }
 bool SpriteRenderer::GetFlip(){ 
     if(flip_factor == 1){ 

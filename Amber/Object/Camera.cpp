@@ -5,7 +5,7 @@
 
 sf::Vector2f Camera::bounded_position;
 
-Camera::Camera() :background_colour(Globals::DEFAULT_BACKGROUND_COLOUR)
+Camera::Camera() :background_colour(Globals::DEFAULT_BACKGROUND_COLOUR), ui_overlay_colour(sf::Color::Transparent)
 {}
 
 sf::Vector2f Camera::WorldToScreenPosition(sf::Vector2f world){
@@ -25,8 +25,26 @@ sf::Vector2f Camera::ScreenToWorldPosition(sf::Vector2i screen){
 void Camera::Update(){
     Camera* active_cam = Scene::GetActiveCamera();
 
-    bounded_position = active_cam->GetObject()->GetTransform()->position;
+    bounded_position = active_cam->GetThisObject()->GetTransform()->position;
 
     bounded_position.x = Calc::Clamp(bounded_position.x, object->GetScene()->GetMinBounds().x + Core::GetDisplayWidth() / 2.0f , object->GetScene()->GetMaxBounds().x - Core::GetDisplayWidth() / 2.0f);
     bounded_position.y = Calc::Clamp(bounded_position.y, object->GetScene()->GetMinBounds().y + Core::GetDisplayHeight() / 2.0f, object->GetScene()->GetMaxBounds().y - Core::GetDisplayHeight() / 2.0f);
+}
+
+void Camera::SetBackgroundTexture(const char* label){
+    // assign texture to sprite
+    this->background_sprite.setTexture(*AssetManager::GetTexture(label));
+    // center texture
+    this->background_sprite.setOrigin(sf::Vector2f(background_sprite.getTexture()->getSize().x / 2.0f, background_sprite.getTexture()->getSize().y / 2.0f));
+}
+
+sf::Sprite* Camera::GetBackgroundSprite(){
+    
+    // return nullptr if the no background texture has been assigned
+    if(this->background_sprite.getTexture() == nullptr){
+        return nullptr;
+    }
+    else{
+        return &this->background_sprite;
+    }
 }

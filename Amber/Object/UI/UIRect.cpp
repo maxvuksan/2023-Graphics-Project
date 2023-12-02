@@ -2,6 +2,8 @@
 #include "../Object.h"
 #include "../../Core/Core.h"
 
+int UIRect::padding = 8;
+
 void UIRect::Align(){
 
     sf::Vector2i screen_size = Core::GetDisplaySize();
@@ -10,17 +12,17 @@ void UIRect::Align(){
     float _height = object->GetTransform()->scale.y * height;
 
     sf::Vector2f positions[10] = {
-        sf::Vector2f(0,0),
-        sf::Vector2f(screen_size.x - _width,0),
-        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f,0),
+        sf::Vector2f(padding,padding),
+        sf::Vector2f(screen_size.x - _width - padding,padding),
+        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f,padding),
 
-        sf::Vector2f(0,screen_size.y / 2.0f - _height / 2.0f),
-        sf::Vector2f(screen_size.x - _width,screen_size.y / 2.0f - _height / 2.0f ),
+        sf::Vector2f(padding,screen_size.y / 2.0f - _height / 2.0f),
+        sf::Vector2f(screen_size.x - _width - padding,screen_size.y / 2.0f - _height / 2.0f ),
         sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f,screen_size.y / 2.0f - _height / 2.0f),
         
-        sf::Vector2f(0, screen_size.y - _height),
-        sf::Vector2f(screen_size.x - _width, screen_size.y - _height),
-        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f, screen_size.y - _height),
+        sf::Vector2f(padding, screen_size.y - _height - padding),
+        sf::Vector2f(screen_size.x - _width - padding, screen_size.y - _height),
+        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f, screen_size.y - _height - padding),
 
         object->GetTransform()->position, // FREE, does not realign
     };

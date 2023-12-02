@@ -32,11 +32,6 @@ void ConsoleVisual::Start(){
 
     sf::Font* font = AssetManager::GetFont("Amber_Default");
 
-    show_fps = false;
-    fps_text.setFont(*font);
-    fps_text.setCharacterSize(8);
-    fps_text.setPosition(sf::Vector2f(Core::GetWindowWidth() - 100, 8));
-    
     int spacing = 12;
 
     int y_pos = Core::GetWindowHeight() - spacing * 4;
@@ -195,17 +190,6 @@ void ConsoleVisual::Draw(sf::RenderTarget& texture){
     }
     texture.draw(interact_line);
 
-    if(show_fps){
-
-        // prevent flickering when fps changes
-        if(fps_refresh_delay_tracked > fps_refresh_delay){
-            fps_refresh_delay_tracked = 0;
-            fps_text.setString("FPS: " + std::to_string(1000 / Time::Dt()));
-
-        }
-        fps_refresh_delay_tracked += Time::Dt();
-        texture.draw(fps_text);
-    }
 }
 
 void ConsoleVisual::Print(const ConsoleLine& message, bool send_packet){
@@ -227,8 +211,4 @@ void ConsoleVisual::ClearLines(){
     for(int i = 0; i < line_count; i++){
         lines[i].setString("");
     }
-}
-
-void ConsoleVisual::SetShowFps(bool show_fps){
-    this->show_fps = show_fps;
 }

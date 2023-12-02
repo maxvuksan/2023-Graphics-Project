@@ -55,10 +55,10 @@ class Core{
         static sf::Vector2f GetWindowToDisplayMultiplier() { return window_to_display_multiplier; }
 
         static bool DEBUG_MODE;
-
+        static bool SHOW_FPS;
     private:
 
-        
+
         static sf::Clock delta_clock;
         static sf::RenderWindow window;
         static Scene* current_scene;

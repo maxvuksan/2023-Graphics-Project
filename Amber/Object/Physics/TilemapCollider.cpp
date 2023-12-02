@@ -29,6 +29,7 @@ void TilemapCollider::Reset(){
     reset = true;
 }
 
+
 bool TilemapCollider::WithinBoundsX(float x){
 
     if(tilemap == nullptr){

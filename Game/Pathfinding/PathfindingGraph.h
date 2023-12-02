@@ -40,6 +40,8 @@ class PathfindingGraph : public Object {
 
         static std::vector<sf::Vector2i> previous_traversal;
         static std::vector<std::vector<bool>> previous_traversal_closed; // holds if the each node is closed by the traversal function
+        
+        static sf::Vector2f node_offset_from_chunk; 
 
         static std::vector<std::vector<PathfindingNode>> nodes;
 

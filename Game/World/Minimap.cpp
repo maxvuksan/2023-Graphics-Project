@@ -1,10 +1,25 @@
 #include "Minimap.h"
 
+int Minimap::exploring_radius = 20;
+
 void Minimap::Start(){
-    pixel_grid = AddComponent<UIPixelGrid>();
-    pixel_grid->SetAlign(ScreenLocation::CENTER);
+    background_pixel_grid = AddComponent<UIPixelGrid>();
+    background_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    background_pixel_grid->SetActive(false);
+
+    main_pixel_grid = AddComponent<UIPixelGrid>();
+    main_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    main_pixel_grid->SetActive(false);
+
+    foreground_pixel_grid = AddComponent<UIPixelGrid>();
+    foreground_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    foreground_pixel_grid->SetActive(false);
+
+    explored_pixel_grid = AddComponent<UIPixelGrid>();
+    explored_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    explored_pixel_grid->SetActive(false);
+
     set_pan = false;
-    pixel_grid->SetActive(false);
 }
 
 void Minimap::OnSetActive(){
@@ -18,7 +33,16 @@ void Minimap::CatchEvent(sf::Event event){
     {
         if(event.key.scancode == sf::Keyboard::Scan::M){
             
-            pixel_grid->SetActive(!pixel_grid->IsActive());
+            background_pixel_grid->SetActive(!background_pixel_grid->IsActive());
+            foreground_pixel_grid->SetActive(!foreground_pixel_grid->IsActive());
+            main_pixel_grid->SetActive(!main_pixel_grid->IsActive());
+
+            if(reveal_all){           
+                explored_pixel_grid->SetActive(false);
+            }
+            else{
+                explored_pixel_grid->SetActive(main_pixel_grid->IsActive());
+            }
         }
     }
 

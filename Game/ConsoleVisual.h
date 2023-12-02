@@ -22,9 +22,6 @@ class ConsoleVisual : public Object {
 
         void ClearLines();
 
-        void SetShowFps(bool show_fps);
-        bool GetShowFps(){return show_fps;}
-
     private:
         int line_count = 15;
         std::vector<sf::Text> lines;
@@ -37,11 +34,6 @@ class ConsoleVisual : public Object {
         sf::RectangleShape interact_box;
 
         bool is_on;
-        int fps_refresh_delay_tracked;
-        int fps_refresh_delay = 150;
-
-        bool show_fps;
-        sf::Text fps_text;
 
         GameClient* client;
 };

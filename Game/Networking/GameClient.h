@@ -18,6 +18,7 @@ class GameClient : public Client {
     public:
 
         void LinkScene(Scene* scene);
+        void LinkWorld(World* world);
 
         void Update() override;
 

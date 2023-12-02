@@ -20,6 +20,8 @@ class SpriteRenderer : public Component{
         void SetFlip(bool flip);
         bool GetFlip();
 
+        sf::Sprite* GetSprite(){return &sprite;}
+
         void SetOffset(sf::Vector2f offset);
 
     protected:

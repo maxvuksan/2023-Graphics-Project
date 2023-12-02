@@ -1,6 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
+
+
+
+
 /*
     Configurable global values 
     accessed via Globals::var_name
@@ -10,7 +14,7 @@ namespace Globals {
 
     const bool PROFILE_MEMORY = false;
 
-    const int FRAMERATE_LIMIT = 120;
+    const int FRAMERATE_LIMIT = 300;
 
     const sf::Color DEFAULT_BACKGROUND_COLOUR = sf::Color(140, 150, 163);   
     const sf::Color BASE_SHADOW_COLOUR = sf::Color(160 / 6, 140 / 6, 180 / 6 ); //sf::Color(150/2,130/2,170/2);
