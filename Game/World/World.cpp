@@ -384,8 +384,10 @@ void World::Update(){
     }
 
     std::vector<Object*>* objects_additional = world_scene->GetThisObjectsAdditional();
+    std::vector<Object*>* ui_additional = world_scene->GetUIAdditional();
     objects_additional->clear();
-
+    ui_additional->clear();
+    
     sf::Vector2i wrld_to_coord = WorldToCoord(focus->position.x, focus->position.y);
     sf::Vector2i chunk_focus_is_in = ChunkFromCoord(wrld_to_coord.x, wrld_to_coord.y);
 
@@ -412,7 +414,9 @@ void World::Update(){
                     for(int i = 0; i < chunks[x][y]->GetThisObjectsInChunk()->size(); i++){
                         objects_additional->push_back((*chunks[x][y]->GetThisObjectsInChunk())[i]);
                     }
-
+                    for(int i = 0; i < chunks[x][y]->GetUIInChunk()->size(); i++){
+                        ui_additional->push_back((*chunks[x][y]->GetUIInChunk())[i]);
+                    }
 
                     objects_additional->push_back(chunks[x][y]);
                     continue;

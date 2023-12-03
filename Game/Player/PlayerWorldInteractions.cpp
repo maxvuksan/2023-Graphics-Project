@@ -1,7 +1,8 @@
 #include "PlayerWorldInteractions.h"
 #include "../World/World.h"
 #include "Inventory.h"
-#include "../UtilityStation.h"
+#include "../Utility/UtilityStation.h"
+#include "../Utility/Chest.h"
 
 void PlayerWorldInteractions::Start(){
     
@@ -194,19 +195,45 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
             if(utility_location_valid){
                 
-                sf::Vector2i chunk = world->ChunkFromCoord(coord_tile.x, coord_tile.y);
-
-                if(world->ChunkInBounds(chunk.x, chunk.y)){
-                    
-                    UtilityStation* station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<UtilityStation>();
-                    station->SetItemType((ItemCode)item_in_hand);
-                    station->GetTransform()->position = sf::Vector2f(rounded_world.x, rounded_world.y);
-                    
-                    inventory->DecrementSelectedSlot();
-                }
+                PlaceUtility(rounded_world, coord_tile, (ItemCode)item_in_hand);
             }
         }
 
     }
 
+}
+
+void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code){
+
+    sf::Vector2i chunk = world->ChunkFromCoord(coord_tile.x, coord_tile.y);
+
+    if(world->ChunkInBounds(chunk.x, chunk.y)){
+        
+        UtilityStation* station;
+        
+        switch(ItemDictionary::ITEM_DATA[item_code].code_in_type){
+
+
+            case utility_Furnace:
+                station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<Chest>();
+                break;
+
+             case utility_Chest:
+                station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<Chest>();
+                break;               
+        }
+
+
+
+
+        if(station == nullptr){
+            return;
+        }
+        station->LinkChunk(world->GetChunks()->at(chunk.x)[chunk.y]);
+        station->OnStart();
+        
+        station->SetItemType((ItemCode)item_code);
+        station->GetTransform()->position = sf::Vector2f(rounded_world.x, rounded_world.y);
+        inventory->DecrementSelectedSlot();
+    }
 }

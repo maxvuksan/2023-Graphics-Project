@@ -65,6 +65,7 @@ void Scene::InternalUpdate(){
     UpdateObjectArray(objects);
     UpdateObjectArray(objects_additional);
     UpdateObjectArray(ui);
+    UpdateObjectArray(ui_additional);
 }
 
 void Scene::InternalCatchEvent(sf::Event event){
@@ -74,6 +75,7 @@ void Scene::InternalCatchEvent(sf::Event event){
     CatchEventObjectArray(objects, event);
     CatchEventObjectArray(objects_additional, event);
     CatchEventObjectArray(ui, event);
+    CatchEventObjectArray(ui_additional, event);
 }
 
 void Scene::UpdateObjectArray(std::vector<Object*>& array){

@@ -129,6 +129,8 @@ class Scene {
         std::vector<Object*>* GetThisObjectsAdditional(){ return &objects_additional; };
         // @returns all the active UI objects in the scene
         std::vector<Object*>* GetUI(){ return &ui;}
+        // providing inheritied scenes control over there own object container (drawn in terms of ui)
+        std::vector<Object*>* GetUIAdditional(){ return &ui_additional; };
 
         // checks if a box collider exists in each object
         void CollectBoxCollider(std::vector<Object*>& array);
@@ -164,12 +166,13 @@ class Scene {
         void CatchEventObjectArray(std::vector<Object*>& array, sf::Event event);
         void ClearObjectArray(std::vector<Object*>& array);
 
-        // structured as : <render layer, object vector>
         std::vector<Object*> objects;
+        std::vector<Object*> ui;
+
         // reserved for scenes for have there own object container to manipulate (e.g. lots of chunks we dont want to keep in simulation at all times)
         std::vector<Object*> objects_additional;
-        std::vector<Object*> ui;
-        
+        std::vector<Object*> ui_additional;
+           
         std::vector<PointLight*> point_lights;
         std::vector<Tilemap*> tilemaps;
         std::vector<BoxCollider*> box_colliders;

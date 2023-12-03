@@ -76,4 +76,7 @@ Chunk::~Chunk(){
     for(auto obj : objects_bound_to_chunk){
         Memory::Delete<Object>(obj, __FUNCTION__);
     }
+    for(auto obj : ui_bound_to_chunk){
+        Memory::Delete<Object>(obj, __FUNCTION__);
+    }
 }

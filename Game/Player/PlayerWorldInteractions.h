@@ -12,10 +12,15 @@ class PlayerWorldInteractions : public Component {
         void Draw(sf::RenderTarget&) override;
         void CalculateMouse(sf::RenderTarget&);
 
+        void PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code);
+
+
         void CatchEvent(sf::Event) override;
 
         void LinkWorld(World* world);
         void LinkInventory(Inventory* inventory);
+
+
 
     private:
         CursorGraphic* cursor_graphic;

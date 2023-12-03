@@ -92,9 +92,13 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // draw all ui
     auto ui = scene->GetUI();
+    auto ui_additional = scene->GetUIAdditional();
+
     std::vector<int>* ui_render_layers = scene->GetUIRenderLayers();
+    
     for(int i = 0; i < ui_render_layers->size(); i++){
         RenderLayer(*render_textures[COMPOSITE], *ui, false, ui_render_layers->at(i));
+        RenderLayer(*render_textures[COMPOSITE], *ui_additional, false, ui_render_layers->at(i));
     }
 
     // we have drawn everything in the "Display"

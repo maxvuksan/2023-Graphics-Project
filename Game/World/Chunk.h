@@ -21,23 +21,40 @@ class Chunk : public Object {
         bool dirty; // has a block been updated in this chunk?
 
         template <typename T>
-        T* AddObjectToChunk(){
+        T* AddObjectToChunk(int render_layer = 0){
             T* obj = Memory::New<T>(__FUNCTION__);
             
             obj->LinkScene(GetScene());
+            obj->SetRenderLayer(render_layer);
             obj->Start();
             objects_bound_to_chunk.push_back(obj);
 
             return obj;
 
         }
+
+        template <typename T>
+        T* AddUIToChunk(int render_layer = 0){
+            T* obj = Memory::New<T>(__FUNCTION__);
+            
+            obj->SetUI(true);
+            obj->LinkScene(GetScene());
+            obj->SetRenderLayer(render_layer);
+            obj->Start();
+            ui_bound_to_chunk.push_back(obj);
+
+            return obj;
+        }
+
         std::vector<Object*>* GetThisObjectsInChunk() { return &objects_bound_to_chunk;}
+        std::vector<Object*>* GetUIInChunk() { return &ui_bound_to_chunk;}
 
         ~Chunk();
 
     private:
 
         std::vector<Object*> objects_bound_to_chunk;
+        std::vector<Object*> ui_bound_to_chunk;
 
         Tilemap* foreground_tilemap;
         Tilemap* main_tilemap;
