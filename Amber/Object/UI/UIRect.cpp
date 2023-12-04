@@ -6,32 +6,51 @@ int UIRect::padding = 8;
 
 void UIRect::Align(){
 
-    sf::Vector2i screen_size = Core::GetDisplaySize();
-
     float _width = object->GetTransform()->scale.x * width;
     float _height = object->GetTransform()->scale.y * height;
 
-    sf::Vector2f positions[10] = {
-        sf::Vector2f(padding,padding),
-        sf::Vector2f(screen_size.x - _width - padding,padding),
-        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f,padding),
-
-        sf::Vector2f(padding,screen_size.y / 2.0f - _height / 2.0f),
-        sf::Vector2f(screen_size.x - _width - padding,screen_size.y / 2.0f - _height / 2.0f ),
-        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f,screen_size.y / 2.0f - _height / 2.0f),
-        
-        sf::Vector2f(padding, screen_size.y - _height - padding),
-        sf::Vector2f(screen_size.x - _width - padding, screen_size.y - _height),
-        sf::Vector2f(screen_size.x / 2.0f - _width / 2.0f, screen_size.y - _height - padding),
-
-        object->GetTransform()->position, // FREE, does not realign
-    };
-
-    object->GetTransform()->position = positions[screen_location];
+    Align(object->GetTransform(), _width, _height, screen_location_x, screen_location_y);
 }
 
-void UIRect::SetAlign(ScreenLocation _location){
+void UIRect::Align(Transform* transform, int _width, int _height, ScreenLocationX align_x, ScreenLocationY align_y){
 
-    screen_location = _location;
+    AlignX(transform, _width, align_x);
+    AlignY(transform, _height, align_y);
+}
+
+void UIRect::AlignX(Transform* transform, int _width, ScreenLocationX align_x){
+
+    int screen_width = Core::GetDisplayWidth();
+
+    float positions[4] = {
+        padding, 
+        screen_width / 2.0f - _width / 2.0f,
+        screen_width - _width - padding,
+
+        transform->position.x, // FREE, does not realign
+    };
+
+    transform->position.x = positions[(int)align_x];
+}
+void UIRect::AlignY(Transform* transform, int _height, ScreenLocationY align_y){
+
+    int screen_height = Core::GetDisplayHeight();
+
+    float positions[4] = {
+        padding, 
+        screen_height / 2.0f - _height / 2.0f,
+        screen_height - _height - padding,
+
+        transform->position.y, // FREE, does not realign
+    };
+
+    transform->position.y = positions[(int)align_y];
+}
+
+
+void UIRect::SetAlign(ScreenLocationX align_x, ScreenLocationY align_y){
+
+    screen_location_x = align_x;
+    screen_location_y = align_y;
     Align();
 }

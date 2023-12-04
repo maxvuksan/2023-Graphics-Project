@@ -10,21 +10,15 @@ void SlotSet::Construct(){
         return;
     }
     slot_sprite.setTexture(*texture);
+
 }
 
 void SlotSet::Start(){
-
-    ui_rect = AddComponent<UIRect>();
-    ui_rect->SetAlign(ScreenLocation::FREE);
 }
 
-void SlotSet::SetAlign(ScreenLocation alignemnt){
+void SlotSet::Align(ScreenLocationX align_x, ScreenLocationY align_y){
 
-    if(ui_rect == nullptr){
-        std::cout << "UIRect component is nullptr in SlotSet::SetAlignNULL\n";
-    }
-
-    ui_rect->SetAlign(alignemnt);
+    UIRect::Align(GetTransform(), GetWidth(), GetHeight(), align_x, align_y);
 }
 
 void SlotSet::DefineGrid(int width, int height, SlotType type){
@@ -32,15 +26,18 @@ void SlotSet::DefineGrid(int width, int height, SlotType type){
     slots.resize(width, {});
 
     for(int x = 0; x < width; x++){
-        slots.push_back({});
-
         for(int y = 0; y < height; y++){
             slots.at(x).emplace_back(type);
         }
     }
+}
 
-    ui_rect->width = width * Slot::cellsize;
-    ui_rect->height = height * Slot::cellsize;
+int SlotSet::GetWidth(){
+    return slots.size() * Slot::cellsize;
+}
+
+int SlotSet::GetHeight(){
+    return slots.at(0).size() * Slot::cellsize;
 }
 
 void SlotSet::SetSlotType(int slot_x, int slot_y, SlotType type){
@@ -48,9 +45,6 @@ void SlotSet::SetSlotType(int slot_x, int slot_y, SlotType type){
 }
 
 void SlotSet::Draw(sf::RenderTarget& surface){
-    
-    hovered_slot.x = -1;
-    hovered_slot.y = -1;
     
     // draw slot background
     for(int x = 0; x < slots.size(); x++){
@@ -61,11 +55,6 @@ void SlotSet::Draw(sf::RenderTarget& surface){
 
             slot_sprite.setPosition(position);
             surface.draw(slot_sprite);
-
-            if (slots[x][y].Hovered(position)) {
-                hovered_slot.x = x;
-                hovered_slot.y = y;
-            }
 
         }
     } 
@@ -80,7 +69,7 @@ void SlotSet::Draw(sf::RenderTarget& surface){
     } 
 }
 
-HoveredSlot SlotSet::GetHoveredSlotFromMultipleSets(std::vector<SlotSet*> slot_sets){
+HoveredSlot SlotSet::GetHoveredSlotFromMultipleSets(std::vector<SlotSet*>& slot_sets){
     
     for(int set = 0; set < slot_sets.size(); set++){
 

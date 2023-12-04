@@ -1,23 +1,26 @@
 #include "Inventory.h"
+#include "../GameUI/SlotSpace.h"
 
 int Inventory::row_length = 8;
 int Inventory::row_count = 6;
-sf::Color Inventory::ui_overlay_colour = sf::Color(63,64,74,185);
 
 void Inventory::Start() {
 
-    open = true;
+
     selected_slot = 0;
 
     SetRenderLayer(1);
 
     hotbar_slot_set = GetScene()->AddUI<SlotSet>();
     backpack_slot_set = GetScene()->AddUI<SlotSet>();
+
     hotbar_slot_set->DefineGrid(row_length, 1, SlotType::OPEN);
     backpack_slot_set->DefineGrid(row_length, row_count - 1, SlotType::CLOSED);
 
-    hotbar_slot_set->SetAlign(ScreenLocation::BOTTOM_CENTER);
-    backpack_slot_set->SetAlign(ScreenLocation::CENTER);
+    hotbar_slot_set->Align(ScreenLocationX::CENTER, ScreenLocationY::BOTTOM);
+
+    SlotSpace::DefineInventorySlotsets(hotbar_slot_set, backpack_slot_set);
+    SlotSpace::SetOpen(false);
 
     holding_item = false;
 
@@ -25,7 +28,7 @@ void Inventory::Start() {
     PickupItem(ItemCode::item_Gold_Picaxe);
     PickupItem(ItemCode::item_Copper_Picaxe);
     PickupItem(ItemCode::item_Utility_Furnace);
-        PickupItem(ItemCode::item_Utility_Chest);
+    PickupItem(ItemCode::item_Utility_Chest);
     PickupItem(ItemCode::item_BigLeaf);
     PickupItem(ItemCode::item_Fibre);
     //PickupItem(ItemCode::item_Fibre);
@@ -41,28 +44,9 @@ void Inventory::Start() {
 
 void Inventory::Draw(sf::RenderTarget& surface) {
 
+    SlotSpace::Update();
+
     int rows_to_render = 1;
-
-    if (open) {
-        backpack_slot_set->SetActive(true);
-    }
-    else{
-        backpack_slot_set->SetActive(false);
-    }
-
-    HoveredSlot hovered_data = SlotSet::GetHoveredSlotFromMultipleSets({hotbar_slot_set, backpack_slot_set});
-    if(hovered_data.set_parent == hotbar_slot_set){
-        hovered_slot.x = hovered_data.x;
-        hovered_slot.y = hovered_data.y;
-    }
-    else if(hovered_data.set_parent == backpack_slot_set){
-        hovered_slot.x = hovered_data.x;
-        hovered_slot.y = hovered_data.y + 1;
-    }
-    else{
-        hovered_slot.x = -1;
-        hovered_slot.y = -1;
-    }
 
     if (holding_item) {
         ItemDictionary::SetItemSprite(held_item_sprite, held_item);
@@ -73,7 +57,7 @@ void Inventory::Draw(sf::RenderTarget& surface) {
     }
 }
 
-Slot* Inventory::GetSlot(int x, int y){
+Slot* Inventory::GetInventorySlot(int x, int y){
     if(y == 0){
         return hotbar_slot_set->GetSlot(x,0);
     }
@@ -81,9 +65,11 @@ Slot* Inventory::GetSlot(int x, int y){
         return backpack_slot_set->GetSlot(x,y - 1);
     }
 }
-Slot* Inventory::GetSlot(sf::Vector2i coord){
-    return GetSlot(coord.x, coord.y);
+
+Slot* Inventory::GetHoveredSlot(){
+    return SlotSpace::GetHovered().set_parent->GetSlot(SlotSpace::GetHovered().x, SlotSpace::GetHovered().y);
 }
+
 
 void Inventory::CatchEvent(sf::Event event) {
   if (event.type == sf::Event::KeyPressed) {
@@ -91,42 +77,47 @@ void Inventory::CatchEvent(sf::Event event) {
     int previous_selected = selected_slot;
 
     switch (event.key.scancode) {
-      case sf::Keyboard::Scan::E:
-        open = !open;
 
-        // set overlay colour only when inventory open
-        if(open){
-            Scene::GetActiveCamera()->ui_overlay_colour = ui_overlay_colour;
+        // open inventory
+        case sf::Keyboard::Scan::E:
+        
+        SlotSpace::SetOpen(true);
+
+        break;
+
+        // close inventory
+        case sf::Keyboard::Scan::Escape:
+            SlotSpace::Clear();
+            SlotSpace::SetOpen(false);
+            break;
+    
+        // choose selected slot
+        case sf::Keyboard::Scan::Num1:
+        case sf::Keyboard::Scan::Num2:
+        case sf::Keyboard::Scan::Num3:
+        case sf::Keyboard::Scan::Num4:
+        case sf::Keyboard::Scan::Num5:
+        case sf::Keyboard::Scan::Num6:
+        case sf::Keyboard::Scan::Num7:
+        case sf::Keyboard::Scan::Num8:
+            selected_slot = event.key.scancode - 26;
+            break;
+
+
+            
+    }
+
+    // allows scrolling through hotbar
+    if (event.type == sf::Event::MouseWheelScrolled)
+    {
+        if (event.mouseWheelScroll.delta > 0) // moving up
+        {
+            selected_slot++;
         }
         else{
-            Scene::GetActiveCamera()->ui_overlay_colour = sf::Color::Transparent;
+            selected_slot--;
         }
-
-        break;
-      case sf::Keyboard::Scan::Num1:
-        selected_slot = 0;
-        break;
-      case sf::Keyboard::Scan::Num2:
-        selected_slot = 1;
-        break;
-      case sf::Keyboard::Scan::Num3:
-        selected_slot = 2;
-        break;
-      case sf::Keyboard::Scan::Num4:
-        selected_slot = 3;
-        break;
-      case sf::Keyboard::Scan::Num5:
-        selected_slot = 4;
-        break;
-      case sf::Keyboard::Scan::Num6:
-        selected_slot = 5;
-        break;
-      case sf::Keyboard::Scan::Num7:
-        selected_slot = 6;
-        break;
-      case sf::Keyboard::Scan::Num8:
-        selected_slot = 7;
-        break;
+        selected_slot = selected_slot % row_length;
     }
 
     if(previous_selected != selected_slot){
@@ -134,13 +125,14 @@ void Inventory::CatchEvent(sf::Event event) {
     }
 
   }
-  // only check if inventory open
-  if (!open) {
+  // only procceed if inventory open
+  if(!SlotSpace::Open()){
     return;
   }
+
   if (event.type == sf::Event::MouseButtonPressed) {
     
-    if (hovered_slot.x == -1) {
+    if (SlotSpace::GetHovered().set_parent == nullptr) {
         // we are not hovering something, in future maybe drop item?
         return;
     }
@@ -164,14 +156,14 @@ void Inventory::CatchEvent(sf::Event event) {
 
 void Inventory::LeftClickOnSlot(){
     // swap with slot
-    if (GetSlot(hovered_slot)->Occupied()) {
+    if (GetHoveredSlot()->Occupied()) {
 
         ItemCode was_in_hand = held_item;
         unsigned int was_in_hand_count = held_item_count;
 
-        held_item = GetSlot(hovered_slot)->item_code;
-        held_item_count = GetSlot(hovered_slot)->count;
-        GetSlot(hovered_slot)->count = 0; // taking item out
+        held_item = GetHoveredSlot()->item_code;
+        held_item_count = GetHoveredSlot()->count;
+        GetHoveredSlot()->count = 0; // taking item out
 
         bool _hlding_item = holding_item;
         holding_item = true;
@@ -181,20 +173,20 @@ void Inventory::LeftClickOnSlot(){
 
             // items are the same, join stack
             if(was_in_hand == held_item){
-                GetSlot(hovered_slot)->count += was_in_hand_count;
+                GetHoveredSlot()->count += was_in_hand_count;
                 holding_item = false;
             }
             else{ // swap, they are different items
-                GetSlot(hovered_slot)->item_code = was_in_hand;
-                GetSlot(hovered_slot)->count = was_in_hand_count;    
+                GetHoveredSlot()->item_code = was_in_hand;
+                GetHoveredSlot()->count = was_in_hand_count;    
                             
             }
         }
 
     } 
     else if (holding_item) {
-        GetSlot(hovered_slot)->item_code = held_item;
-        GetSlot(hovered_slot)->count = held_item_count;
+        GetHoveredSlot()->item_code = held_item;
+        GetHoveredSlot()->count = held_item_count;
 
         holding_item = false;
     }
@@ -208,16 +200,16 @@ void Inventory::LeftClickOnSlot(){
 
 void Inventory::RightClickOnSlot(){
     // swap with slot
-    if (!holding_item && GetSlot(hovered_slot)->Occupied()) {
+    if (!holding_item && GetHoveredSlot()->Occupied()) {
 
         // take half of stack
-        int count_to_take = ceil(GetSlot(hovered_slot)->count / 2.0f);
-        held_item = GetSlot(hovered_slot)->item_code;
+        int count_to_take = ceil(GetHoveredSlot()->count / 2.0f);
+        held_item = GetHoveredSlot()->item_code;
         held_item_count = count_to_take;
         holding_item = true;
 
         // remove what we are taking from the stack
-        GetSlot(hovered_slot)->count -= count_to_take;
+        GetHoveredSlot()->count -= count_to_take;
 
         Sound::Play("noisy_blip");
         return;
@@ -263,7 +255,7 @@ void Inventory::PickupItem(ItemCode item) {
 
 int Inventory::GetItemInSelectedSlot() {
 
-    Slot* slot = GetSlot(selected_slot, 0);
+    Slot* slot = GetInventorySlot(selected_slot, 0);
 
     if(slot->Occupied()){
     return slot->item_code;
@@ -272,13 +264,13 @@ int Inventory::GetItemInSelectedSlot() {
 }
 
 void Inventory::DecrementSelectedSlot() {
-    GetSlot(selected_slot, 0)->count--;
+    GetInventorySlot(selected_slot, 0)->count--;
 }
 
 sf::Vector2i Inventory::FindNextFreeSlot() {
   for (int y = 0; y < row_count; y++) {
     for (int x = 0; x < row_length; x++) {
-      if (!GetSlot(x,y)->Occupied()) {
+      if (!GetInventorySlot(x, y)->Occupied()) {
         return sf::Vector2i(x, y);
       }
     }
@@ -293,7 +285,7 @@ sf::Vector2i Inventory::FindSlotContainingItem(ItemCode item) {
   for (int y = 0; y < row_count; y++) {
     for (int x = 0; x < row_length; x++) {
 
-        slot = GetSlot(x,y);
+        slot = GetInventorySlot(x, y);
 
       if (slot->Occupied() && slot->item_code == item) {
         return sf::Vector2i(x, y);
@@ -305,7 +297,7 @@ sf::Vector2i Inventory::FindSlotContainingItem(ItemCode item) {
 
 void Inventory::AddItemToSlot(ItemCode item, int x, int y) {
 
-  Slot* slot = GetSlot(x,y);
+  Slot* slot = GetInventorySlot(x, y);
 
   if (slot->item_code == item && slot->Occupied()) {
     slot->count++;

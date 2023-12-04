@@ -23,8 +23,9 @@ class Inventory : public Object {
         // decrements a selected inventory slots count, if count is 0, mark as not occupied
         void DecrementSelectedSlot();
 
-        Slot* GetSlot(int x, int y);
-        Slot* GetSlot(sf::Vector2i coordinate);
+        Slot* GetHoveredSlot();
+        // either the backpack or hotbar
+        Slot* GetInventorySlot(int x, int y);
 
     private:
 
@@ -39,7 +40,6 @@ class Inventory : public Object {
 
         static int row_length;
         static int row_count;
-        static sf::Color ui_overlay_colour;
 
         sf::RectangleShape rectangle_shape;
         sf::RectangleShape rectangle_shape_inside;
@@ -51,6 +51,4 @@ class Inventory : public Object {
         sf::Sprite held_item_sprite;
 
         int selected_slot;
-
-        bool open;
 };

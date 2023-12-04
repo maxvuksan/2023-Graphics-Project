@@ -4,19 +4,19 @@ int Minimap::exploring_radius = 20;
 
 void Minimap::Start(){
     background_pixel_grid = AddComponent<UIPixelGrid>();
-    background_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    background_pixel_grid->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     background_pixel_grid->SetActive(false);
 
     main_pixel_grid = AddComponent<UIPixelGrid>();
-    main_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    main_pixel_grid->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     main_pixel_grid->SetActive(false);
 
     foreground_pixel_grid = AddComponent<UIPixelGrid>();
-    foreground_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    foreground_pixel_grid->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     foreground_pixel_grid->SetActive(false);
 
     explored_pixel_grid = AddComponent<UIPixelGrid>();
-    explored_pixel_grid->SetAlign(ScreenLocation::CENTER);
+    explored_pixel_grid->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     explored_pixel_grid->SetActive(false);
 
     set_pan = false;
