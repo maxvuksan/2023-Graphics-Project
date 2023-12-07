@@ -3,54 +3,16 @@
 #include "../../Amber/Core/AssetManager.h"
 #include "Block.h"
 #include "Sprites.h"
+#include "Recipes.h"
 #include <math.h>
 
 
+/*
 
+    Idea : 
 
-
-enum ItemCode{
-
-    item_NO_DROP,
-
-    // main blocks
-    item_Main_Dirt,
-    item_Main_Stone,
-
-    item_Main_StoneBricks,
-    item_Main_StonePlate,
-    item_Main_StonePlateCracked,
-    
-    item_Main_SandStone,
-    item_Main_SandStonePlate,
-    
-    item_Copper,
-    item_Iron,
-    item_Gold,
-
-    // background
-    item_Background_Dirt,
-    item_Background_Stone,
-
-    // utility
-    item_Utility_CraftingStool,
-    item_Utility_WorkBench,
-    item_Utility_Furnace,
-    item_Utility_HeavyFurnace,
-    item_Utility_Chest,
-
-    // picaxe
-    item_Copper_Picaxe,
-    item_Iron_Picaxe,
-    item_Gold_Picaxe,
-
-    item_Fibre,
-    item_BigLeaf,
-    item_Book,
-
-    item_NUMBER_OF_ITEMS,
-
-};
+    Fridge, prevents food expiration
+*/
 
 struct BlockData{
 
@@ -71,6 +33,7 @@ struct ItemData{
 struct UtilityBlockData{
     BlockData block_data;
 
+
     sf::Vector2i footprint; // how many tiles the object takes up
     sf::Vector2i texture_coordinate; // which coordinate on the texture is it, assuming the texture follows an 8px grid
 };
@@ -78,11 +41,20 @@ struct UtilityBlockData{
 namespace ItemDictionary {
 
     const int tile_size = 8;
+    const int inventory_item_tile_size = 16;
     
     const int main_tiles_sprites_per_row = 6;
-
     const int inventory_sprites_per_row = 12;
-    const int inventory_item_tile_size = 16;
+
+    const short TYPE_STACK_SIZES[type_NUMBER_OF_TYPES] = {
+        16,      //type_Main,
+        16,       //type_Foreground,
+        16,        //type_Background,
+        16,     //type_Utility,
+        1,      //type_Picaxe,
+        1,      //type_Hammer,
+        16,
+    };
 
     const BlockData MAIN_BLOCK_DATA[main_NUMBER_OF_BLOCKS]{
 
@@ -128,6 +100,33 @@ namespace ItemDictionary {
         {2, 13.1f} // Gold
     };
 
+    const PicaxeData HAMMER_DATA[hammer_NUMBER_OF_HAMMERS]{
+        {1, 2.0f}, // Copper
+        {1, 2.6f}, // Iron
+        {2, 13.1f} // Gold
+    };
+
+    const RecipeData RECIPE_DATA[recipe_NUMBER_OF_RECIPES]{
+        // picaxe
+        { {item_Copper_Picaxe}, {{item_Copper, 6}}  },
+        { {item_Iron_Picaxe}, {{item_Iron, 6}}  },
+        { {item_Gold_Picaxe}, {{item_Gold, 6}}  },
+
+        // hammer
+        { {item_Copper_Hammer}, {{item_Copper, 6}}  },
+        { {item_Iron_Hammer}, {{item_Iron, 6}}  },
+        { {item_Gold_Hammer}, {{item_Gold, 6}}  },
+
+        // sword
+        { {item_Copper_Sword}, {{item_Copper, 6}}  },
+        { {item_Iron_Sword}, {{item_Iron, 6}}  },
+        { {item_Gold_Sword}, {{item_Gold, 6}}  }
+    };
+
+    const RecipeGroupData RECIPE_GROUP[rgroup_NUMBER_OF_RECIPE_GROUPS] = {
+        {3,3, {{recipe_Copper_Picaxe, recipe_Copper_Hammer, recipe_Copper_Sword}, {recipe_Iron_Picaxe, recipe_Iron_Hammer, recipe_Iron_Sword}, {recipe_Gold_Picaxe, recipe_Gold_Hammer, recipe_Gold_Sword}}}
+    };
+
     const ItemData ITEM_DATA[item_NUMBER_OF_ITEMS]{
 
         // name, type, index within type
@@ -162,14 +161,25 @@ namespace ItemDictionary {
         { "Chest", type_Utility, utility_Chest },
 
         // picaxe
-        { "Cooper Picaxe", type_Picaxe, picaxe_Copper, isprite_Copper_Picaxe },
+        { "Copper Picaxe", type_Picaxe, picaxe_Copper, isprite_Copper_Picaxe },
         { "Iron Picaxe", type_Picaxe, picaxe_Iron, isprite_Iron_Picaxe},
         { "Gold Picaxe", type_Picaxe, picaxe_Gold, isprite_Gold_Picaxe },
 
-        { "Fibre", type_Picaxe, picaxe_Copper, isprite_Fibre},
-        { "Spade Leaf", type_Picaxe, picaxe_Copper, isprite_BigLeaf},
-        { "Book", type_Picaxe, picaxe_Copper, isprite_Book},
+        // hammer
+        { "Copper Hammer", type_Hammer, hammer_Copper, isprite_Copper_Hammer },
+        { "Iron Hammer", type_Hammer, hammer_Iron, isprite_Iron_Hammer},
+        { "Gold Hammer", type_Hammer, hammer_Gold, isprite_Gold_Hammer },
+
+        // sword
+        { "Copper Sword", type_Hammer, hammer_Copper, isprite_Copper_Sword },
+        { "Iron Sword", type_Hammer, hammer_Iron, isprite_Iron_Sword},
+        { "Gold Sword", type_Hammer, hammer_Gold, isprite_Gold_Sword },
+
+        { "Fibre", type_Resource, picaxe_Copper, isprite_Fibre},
+        { "Spade Leaf", type_Resource, picaxe_Copper, isprite_BigLeaf},
+        { "Book", type_Resource, picaxe_Copper, isprite_Book},
     };
+
 
     // helper function to fetch the appropriate sprite for a specific item (since different block types are spread over different textures)
     inline void SetItemSprite(sf::Sprite& sprite, ItemCode item_index, bool get_inventory_sprite = true){

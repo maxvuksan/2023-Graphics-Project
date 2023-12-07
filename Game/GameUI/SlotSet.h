@@ -1,6 +1,7 @@
 #pragma once
 #include "../../Amber/Framework.h"
 #include "Slot.h"
+#include "../Items/Recipes.h"
 
 class SlotSet;
 
@@ -22,11 +23,15 @@ class SlotSet : public Object{
         // should be called after a grid is defined
         void Align(ScreenLocationX align_x, ScreenLocationY align_y);
 
+        void DefineRecipeGrid(const std::vector<std::vector<Recipes>>& recipes);
         void DefineGrid(int width, int height, SlotType type);
         void SetSlotType(int slot_x, int slot_y, SlotType type);
 
         int GetWidth();
         int GetHeight();
+
+        int GetRowLength();
+        int GetRowCount();
 
         void Draw(sf::RenderTarget& surface) override;
 
@@ -35,9 +40,11 @@ class SlotSet : public Object{
         std::vector<std::vector<Slot>>* GetSlots() { return &slots; }
 
         Slot* GetSlot(int x, int y){ return &slots.at(x).at(y); }
-
+        
+        const RecipeData& GetRecipe(int x, int y);
     private:
 
+        std::vector<std::vector<Recipes>> recipes;
         std::vector<std::vector<Slot>> slots;
 
         sf::Vector2i hovered_slot;

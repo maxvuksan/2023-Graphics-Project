@@ -3,6 +3,7 @@
 #include "../Networking/GameClient.h"
 #include "../Items/Pickup.h"
 #include "../WorldScene.h"
+#include "LightingManager.h"
 
 void World::LinkWorldScene(WorldScene* world_scene){
     this->world_scene = world_scene;
@@ -11,6 +12,8 @@ void World::LinkWorldScene(WorldScene* world_scene){
 
 void World::Create() {
 
+
+    LightingManager::LinkWorld(this);
 
     tilemap_profile = &world_profile.tilemap_profile;
     // creating each tilemap...
@@ -44,6 +47,7 @@ void World::Create() {
             chunks[x][y] = Memory::New<Chunk>(__FUNCTION__);
             chunks[x][y]->LinkScene(world_scene);
             chunks[x][y]->Init(tilemap_profile, wall_colour);
+            chunks[x][y]->SetActive(false); 
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilemap_profile->tile_width * tilemap_profile->width, y * tilemap_profile->tile_height * tilemap_profile->height);
         }
     }
@@ -125,6 +129,8 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     }
 
     world_needs_pathfinding_recalculating = true;
+
+    LightingManager::PropogateLighting(sf::Vector2i(x,y));
 
     return true;
 }
@@ -382,6 +388,7 @@ void World::Update(){
         std::cout << "ERROR : The world has no focus, use World::SetFocus()\n";
         return;
     }
+    
 
     std::vector<Object*>* objects_additional = world_scene->GetThisObjectsAdditional();
     std::vector<Object*>* ui_additional = world_scene->GetUIAdditional();
@@ -419,9 +426,12 @@ void World::Update(){
                     }
 
                     objects_additional->push_back(chunks[x][y]);
+                    chunks[x][y]->SetActive(true);
+                    
                     continue;
                 }
             }
+            chunks[x][y]->SetActive(false);
 
             if(chunks[x][y]->loaded_in_scene){
                 change_made = true;
@@ -436,12 +446,13 @@ void World::Update(){
         }
     }
 
+    LightingManager::Update();
+
     RevealMapAroundFocus();
 }
 
 void World::RevealMapAroundFocus(){
     sf::Vector2i pos = WorldToCoord(focus->position.x, focus->position.y);
-
 
     for(auto offset : GetOffsetsInRadius(Minimap::exploring_radius)){
         

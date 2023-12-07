@@ -15,6 +15,11 @@ class Chunk : public Object {
         void ResetCollidersIfChanged();
         void ResetColliders();
 
+        virtual void OnSetActive() override;
+        virtual void OnDisable() override;
+
+        void Draw(sf::RenderTarget& surface);
+
         Tilemap* GetTilemap(SetLocation set_location);
 
         bool loaded_in_scene;
@@ -51,11 +56,19 @@ class Chunk : public Object {
 
         ~Chunk();
 
+        sf::Image& GetLightmap(){return light_map; }
+        void MarkLightmapDirty(){light_map_dirty = true;}
+
     private:
 
         std::vector<Object*> objects_bound_to_chunk;
         std::vector<Object*> ui_bound_to_chunk;
 
+        sf::Image light_map;
+        sf::Texture light_texture;
+        bool light_map_dirty;
+
+        TilemapProfile* tilemap_profile;
         Tilemap* foreground_tilemap;
         Tilemap* main_tilemap;
         Tilemap* background_tilemap;

@@ -7,12 +7,14 @@
 
 enum class SlotType{
     OPEN,  // holds items
-    CLOSED // decorative
+    CLOSED, // decorative
+    RECIPE, 
 };
 
 enum class SlotSprite{
     DEFAULT,
     SELECTED,
+    RECIPE,
 };
 
 class Slot {

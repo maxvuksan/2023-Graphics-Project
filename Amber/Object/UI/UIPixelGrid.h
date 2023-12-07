@@ -17,7 +17,7 @@ class UIPixelGrid : public UIRect {
     private:
         sf::Texture texture;
         sf::Image image;
-        
+
         bool created;
         bool changed;
 };

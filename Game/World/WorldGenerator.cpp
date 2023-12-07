@@ -244,17 +244,18 @@ void WorldGenerator::TunnelPass(){
 
 void WorldGenerator::VegetationPass(){
 
-    for(int i = 0; i < 500000; i++){
+    for(int i = 0; i < 10000; i++){
         world->SetTile(ForegroundBlockCode::foreground_Leaves, 
             rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width),
             rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height), SetLocation::FOREGROUND, SetMode::ONLY_BLOCK);
     }
-    for(int i = 0; i < 500000; i++){
+    for(int i = 0; i < 10000; i++){
         world->SetTile(ForegroundBlockCode::foreground_Moss, 
             rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width),
             rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height), SetLocation::FOREGROUND, SetMode::ONLY_BLOCK);
     }
 
+    // add grass
     for(int x = 0; x < surface_y_vector.size(); x++){
        
         signed_byte foreground_block = world->GetTile(x, surface_y_vector[x], SetLocation::FOREGROUND); 
@@ -269,6 +270,19 @@ void WorldGenerator::VegetationPass(){
             world->SetTile(foreground_Grass, x, surface_y_vector[x] - 1, SetLocation::FOREGROUND);
         }
     }
+
+    // adding trees
+    for(int x = 0; x < surface_y_vector.size(); x++){
+        if(rand() % 100 < settings.TREE_PERCENT){
+
+            sf::Vector2i chunk_coord = world->ChunkFromCoord(x, surface_y_vector[x]);
+            Chunk* chunk = world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y);
+
+            Object* tree = chunk->AddObjectToChunk<Tree>();
+            tree->GetTransform()->position = sf::Vector2f(world->CoordToWorld(x, surface_y_vector[x])) + sf::Vector2f(-96,32 + 32);
+        }
+    }
+    
 }
 
 float WorldGenerator::RandomTunnelDirection(){

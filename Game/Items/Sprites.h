@@ -27,6 +27,14 @@ enum SpriteInventory{
     isprite_Iron_Picaxe,
     isprite_Gold_Picaxe,
 
+    isprite_Copper_Hammer,
+    isprite_Iron_Hammer,
+    isprite_Gold_Hammer,
+
+    isprite_Copper_Sword,
+    isprite_Iron_Sword,
+    isprite_Gold_Sword,
+
     isprite_USE_MAIN_SPRITE // use the sprite seen in the world
 };
 

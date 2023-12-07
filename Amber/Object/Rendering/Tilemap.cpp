@@ -29,6 +29,17 @@ void Tilemap::UpdateSecondary(){
     has_changed = false; // reset changed value
 }
 
+void Tilemap::ConstructVertexArray(){
+    if(loaded){
+        tilemap_primitive.ConstructVertexArray();
+    }
+}
+
+
+void Tilemap::ClearVertexArray(){
+    tilemap_primitive.ClearVertexArray();
+}
+
 
 signed_byte Tilemap::GetTile(int x, int y){
     std::vector<std::vector<signed_byte>>& grid = tilemap_primitive.GetGrid();

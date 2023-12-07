@@ -35,7 +35,8 @@ class Object{
         virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
         virtual void OnSetActive(){} // is called when SetActive(true) occurs
-
+        virtual void OnDisable(){}
+        
         bool IsActive();
         // @param state the state the object is being set to
         void SetActive(bool state);

@@ -18,6 +18,7 @@ Object* Component::GetThisObject(){
 
 void Component::SetActive(bool state){
     this->active = state;
+
 }
 
 void Component::SetRenderLayer(int _render_layer){

@@ -4,6 +4,7 @@
 #include "Player/PlayerController.h"
 #include <cstring>
 #include "ConsoleVisual.h"
+#include <sstream>
 
 GameClient* CommandParser::client = nullptr;
 
@@ -20,38 +21,71 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
     }
 
     sf::Color debug_grey = sf::Color(200,200,200);
+    sf::Color debug_error = sf::Color(235, 124, 124);
 
     // removing '/' 
     cmd_raw = cmd_raw.substr(1, cmd_raw.length()); 
 
-    if(cmd_raw == "RESPAWN"){
+    // split into tokens
+    std::stringstream ss(cmd_raw);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string> tokens(begin, end);
+
+
+    if(tokens[0] == "RESPAWN"){
         client->player_controller->Respawn();
         return {""};
     }
-    else if(cmd_raw == "DEBUG"){
+    else if(tokens[0] == "DEBUG"){
         Core::DEBUG_MODE = !Core::DEBUG_MODE;
         return {""};
     }
-    else if(cmd_raw == "CLEAR"){
+    else if(tokens[0] == "CLEAR"){
         client->console_visual->ClearLines();
         return {""};
     }
-    else if(cmd_raw == "FLY"){
+    else if(tokens[0] == "FLY"){
         client->player_controller->SetFlyMode(!client->player_controller->GetFlyMode());
         return {""};
     }
-    else if(cmd_raw == "FPS"){
+    else if(tokens[0] == "FPS"){
         Core::SHOW_FPS = !Core::SHOW_FPS;
         return {""};
     }
-    else if(cmd_raw == "SHOWMAP"){
+    else if(tokens[0] == "SHOWMAP"){
         client->world->minimap->reveal_all = !client->world->minimap->reveal_all;
         return {""};
     }
-    else if(cmd_raw == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP", Globals::DEBUG_COLOUR};
+    else if(tokens[0] == "HELP"){
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE", Globals::DEBUG_COLOUR};
     }
 
-    return {"'/" + cmd_raw + "' is not a command, see /HELP", sf::Color(235, 124, 124)};
+    else if(tokens[0] == "GIVE"){
+        if(tokens.size() <= 1){
+            return {"'/GIVE' requires additonal arguments, '/GIVE item_code quantity=1", debug_error};
+        }
+
+        int item_code = std::stoi(tokens[1]);
+
+        if(item_code < 0 || item_code > item_NUMBER_OF_ITEMS){
+            return {"The item_code provided is invalid", debug_error};
+        }
+
+        int count = 1;
+
+        if(tokens.size() > 2){
+
+            count = std::stoi(tokens[2]);
+
+            if(count < 0 || count > 999){
+                return {"The quantity provided is invalid", debug_error};
+            }
+        }
+        client->inventory->PickupItem((ItemCode)item_code, count);
+        return {"Given ItemCode::" + std::to_string(item_code), debug_grey};
+    }
+
+    return {"'/" + cmd_raw + "' is not a command, see /HELP", debug_error};
 
 }

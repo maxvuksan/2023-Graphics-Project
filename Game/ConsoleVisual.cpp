@@ -129,7 +129,6 @@ void ConsoleVisual::CatchEvent(sf::Event event){
 
         switch(event.key.scancode){
 
-
             KEYPRESS_CASE(sf::Keyboard::Scan::A, "A")
             KEYPRESS_CASE(sf::Keyboard::Scan::B, "B")
             KEYPRESS_CASE(sf::Keyboard::Scan::C, "C")
@@ -157,6 +156,7 @@ void ConsoleVisual::CatchEvent(sf::Event event){
             KEYPRESS_CASE(sf::Keyboard::Scan::X, "X")
             KEYPRESS_CASE(sf::Keyboard::Scan::Z, "Z")
 
+            KEYPRESS_CASE(sf::Keyboard::Scan::Num0, "0")
             KEYPRESS_CASE(sf::Keyboard::Scan::Num1, "1")
             KEYPRESS_CASE(sf::Keyboard::Scan::Num2, "2")
             KEYPRESS_CASE(sf::Keyboard::Scan::Num3, "3")

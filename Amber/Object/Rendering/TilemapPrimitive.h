@@ -35,6 +35,11 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         void SetTexture(sf::Texture* texture);
 
 
+        sf::VertexArray& GetVertexArray(){return m_vertices;}
+        void ConstructVertexArray();
+        void ClearVertexArray();
+        void SetTileInVertexArray(signed_byte tile_index, unsigned int x, unsigned int y);
+
         TilemapProfile* tilemap_profile;
         
     private:
@@ -45,7 +50,6 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         
         sf::Texture* texture_reference; // the texture provided in Load()
         sf::Texture* focus_texture;
-
 
         /*
             base function for drawing, not same as the Draw() component function

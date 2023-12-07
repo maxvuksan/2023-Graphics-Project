@@ -20,7 +20,10 @@ class Tilemap : public Component
         ~Tilemap() override;
 
         void UpdateSecondary() override;
-    
+        sf::VertexArray& GetVertexArray(){return tilemap_primitive.GetVertexArray();}
+        void ConstructVertexArray();
+        void ClearVertexArray();
+
         void Draw(sf::RenderTarget& surface) override;
 
         void DrawTilemapShadow(sf::RenderTarget& surface);

@@ -12,6 +12,7 @@ class PlayerWorldInteractions : public Component {
         void Draw(sf::RenderTarget&) override;
         void CalculateMouse(sf::RenderTarget&);
 
+        void Mine(const sf::Vector2i& world_tile, ItemCode item_code);
         void PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code);
 
 
@@ -34,6 +35,7 @@ class PlayerWorldInteractions : public Component {
         float breaking_completeness;
         float sound_increment;
         int focused_block;
+        ItemCode previous_item_code;
 
         bool auto_target_blocks;
 

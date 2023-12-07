@@ -2,7 +2,7 @@
 #include "../GameUI/SlotSpace.h"
 
 int Inventory::row_length = 8;
-int Inventory::row_count = 6;
+int Inventory::row_count = 5;
 
 void Inventory::Start() {
 
@@ -44,7 +44,7 @@ void Inventory::Start() {
 
 void Inventory::Draw(sf::RenderTarget& surface) {
 
-    SlotSpace::Update();
+    SlotSpace::Update(surface);
 
     int rows_to_render = 1;
 
@@ -57,14 +57,6 @@ void Inventory::Draw(sf::RenderTarget& surface) {
     }
 }
 
-Slot* Inventory::GetInventorySlot(int x, int y){
-    if(y == 0){
-        return hotbar_slot_set->GetSlot(x,0);
-    }
-    else{
-        return backpack_slot_set->GetSlot(x,y - 1);
-    }
-}
 
 Slot* Inventory::GetHoveredSlot(){
     return SlotSpace::GetHovered().set_parent->GetSlot(SlotSpace::GetHovered().x, SlotSpace::GetHovered().y);
@@ -80,10 +72,11 @@ void Inventory::CatchEvent(sf::Event event) {
 
         // open inventory
         case sf::Keyboard::Scan::E:
-        
-        SlotSpace::SetOpen(true);
 
-        break;
+            SlotSpace::Clear();
+            SlotSpace::SetOpen(!SlotSpace::Open());
+
+            break;
 
         // close inventory
         case sf::Keyboard::Scan::Escape:
@@ -142,7 +135,12 @@ void Inventory::CatchEvent(sf::Event event) {
       
       case sf::Mouse::Button::Left: {
 
-        LeftClickOnSlot();
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)){
+            ShiftClickOnSlot();
+        }
+        else{
+            LeftClickOnSlot();
+        }
         break;
       }
 
@@ -155,6 +153,12 @@ void Inventory::CatchEvent(sf::Event event) {
 }
 
 void Inventory::LeftClickOnSlot(){
+    
+    if(GetHoveredSlot()->type == SlotType::RECIPE){
+        ClickOnRecipeSlot();
+        return;
+    }
+
     // swap with slot
     if (GetHoveredSlot()->Occupied()) {
 
@@ -194,11 +198,15 @@ void Inventory::LeftClickOnSlot(){
         return;
     }    
     Sound::Play("noisy_blip");
-
-
 }
 
 void Inventory::RightClickOnSlot(){
+
+    if(GetHoveredSlot()->type == SlotType::RECIPE){
+        ClickOnRecipeSlot();
+        return;
+    }
+
     // swap with slot
     if (!holding_item && GetHoveredSlot()->Occupied()) {
 
@@ -217,8 +225,147 @@ void Inventory::RightClickOnSlot(){
     // otherwise treat as left click
     LeftClickOnSlot();
 
-     
 }
+
+void Inventory::ShiftClickOnSlot(){
+
+    Slot* hovered = GetHoveredSlot();
+
+    // ignore empty shift clicks
+    if(!hovered->Occupied()){
+        return;
+    }
+
+    SlotSet* current_slotset = SlotSpace::GetHovered().set_parent; 
+
+    const std::vector<SlotSet*>& shift_container_1 = SlotSpace::GetShiftContainer1();
+    std::vector<SlotSet*>* opposing_slotset = &SlotSpace::GetShiftContainer1();
+
+    // establish which container we should move the item to
+    for(int i = 0; i < shift_container_1.size(); i++){
+        if(shift_container_1[i] == current_slotset){
+            opposing_slotset = &SlotSpace::GetShiftContainer2();
+            break;
+        }
+    }
+
+
+    // look for an existing slot
+    for(int i = 0; i < opposing_slotset->size(); i++){
+        
+        sf::Vector2i existing_slot = FindSlotContainingItem(opposing_slotset->at(i), hovered->item_code);
+
+        if(existing_slot != sf::Vector2i(-1,-1)){
+            opposing_slotset->at(i)->GetSlot(existing_slot.x, existing_slot.y)->count += hovered->count;
+            hovered->count = 0;
+        }
+    }
+
+    // find free slot
+    
+    for(int i = 0; i < opposing_slotset->size(); i++){
+        
+        sf::Vector2i free_slot = FindNextFreeSlot(opposing_slotset->at(i));
+
+        if(free_slot != sf::Vector2i(-1,-1)){
+            opposing_slotset->at(i)->GetSlot(free_slot.x, free_slot.y)->item_code = hovered->item_code;
+            opposing_slotset->at(i)->GetSlot(free_slot.x, free_slot.y)->count += hovered->count;
+            hovered->count = 0;
+        }
+    }
+}
+
+void Inventory::ClickOnRecipeSlot(){
+    if(holding_item){
+        return; // cannot purchase while holding item
+    }
+
+    const RecipeData& recipe = SlotSpace::GetHovered().set_parent->GetRecipe(SlotSpace::GetHovered().x, SlotSpace::GetHovered().y);
+
+    if(HasIngredientsForRecipe(recipe)){
+
+        holding_item = true;
+        held_item = recipe.result.item_code;
+        held_item_count = recipe.result.count;
+
+        RemoveIngredientsForRecipe(recipe);
+    }
+}
+
+bool Inventory::HasIngredientsForRecipe(const RecipeData& recipe){
+
+    // iterates over each ingredient checking if the inventory slot sets contain enough
+    for(int i = 0; i < recipe.ingredients.size(); i++){
+
+        int quantity = CountItemInSlotSet(hotbar_slot_set, recipe.ingredients[i].item_code) + CountItemInSlotSet(backpack_slot_set, recipe.ingredients[i].item_code);
+
+        if(recipe.ingredients[i].count > quantity){
+            return false;
+        }
+    }
+    return true;
+}
+
+int Inventory::CountItemInSlotSet(SlotSet* slot_set, ItemCode item){
+
+    int count = 0;
+
+    for (int y = 0; y < slot_set->GetRowCount(); y++) {
+        for (int x = 0; x < slot_set->GetRowLength(); x++) {
+
+            if (slot_set->GetSlot(x, y)->item_code == item) {
+                count += slot_set->GetSlot(x,y)->count;
+            }
+        }
+    }
+
+    return count;
+}
+
+void Inventory::RemoveIngredientsForRecipe(const RecipeData& recipe){
+    
+    for(int i = 0; i < recipe.ingredients.size(); i++){
+
+        int count = recipe.ingredients[i].count;
+
+        RemoveItemFromSlotSet(backpack_slot_set, recipe.ingredients[i].item_code, &count);
+        RemoveItemFromSlotSet(hotbar_slot_set, recipe.ingredients[i].item_code, &count);
+    }
+}
+
+void Inventory::RemoveItemFromSlotSet(SlotSet* slot_set, ItemCode item_code, int* count_remaining){
+
+    // dont search if we have no count remaining
+    if(*count_remaining <= 0){
+        return;
+    }
+
+    // iterate over each slot
+    for (int y = 0; y < slot_set->GetRowCount(); y++) {
+        for (int x = 0; x < slot_set->GetRowLength(); x++) {
+
+            // slot matches the item_code
+            if(slot_set->GetSlot(x, y)->item_code == item_code && slot_set->GetSlot(x,y)->Occupied()){
+
+                if(slot_set->GetSlot(x, y)->count >= *count_remaining){
+                    slot_set->GetSlot(x, y)->count -= (unsigned short)*count_remaining;
+                    *count_remaining = 0;
+                }
+                else{ 
+                    *count_remaining -= slot_set->GetSlot(x, y)->count;
+                    slot_set->GetSlot(x, y)->count = 0;
+                }
+
+                if(*count_remaining == 0){
+                    return;
+                }
+            }
+
+        }
+    }
+
+}
+
 
 void Inventory::SetSelectedSlotSprite(){
     for(int i = 0; i < row_length; i++){
@@ -232,77 +379,146 @@ void Inventory::SetSelectedSlotSprite(){
     }
 }
 
-void Inventory::PickupItem(ItemCode item) {
-  sf::Vector2i exisiting_stack = FindSlotContainingItem(item);
-  // stack found
-  if (exisiting_stack != sf::Vector2i(-1, -1)) {
-    AddItemToSlot(item, exisiting_stack.x, exisiting_stack.y);
+void Inventory::PickupItem(ItemCode item, int count) {
 
-    return;
-  }
-  // find free slot
-  else {
-    sf::Vector2i free_slot = FindNextFreeSlot();
-    if (free_slot != sf::Vector2i(-1, -1)) {
-      AddItemToSlot(item, free_slot.x, free_slot.y);
+    // should we keep looking?
+    bool continue_searching = true;
+
+    while(continue_searching){
+
+        continue_searching = false;
+
+        sf::Vector2i exisiting_stack = FindSlotContainingItem(hotbar_slot_set, item, true);
+
+        // stack found
+        if (exisiting_stack != sf::Vector2i(-1, -1)) {
+
+            if(!AddItemToSlot(hotbar_slot_set, item, exisiting_stack.x, exisiting_stack.y, &count)){
+                continue_searching = true;
+            }
+        }
+
+        // keep looking, move to backpack
+        exisiting_stack = FindSlotContainingItem(backpack_slot_set, item, true);
+
+        if (exisiting_stack != sf::Vector2i(-1, -1)) {
+
+            if(!AddItemToSlot(backpack_slot_set, item, exisiting_stack.x, exisiting_stack.y, &count)){
+                continue_searching = true;
+            }
+        }
+
+        if(count <= 0){
+            return;
+        }     
     }
 
-    return;
-  }
-  // full
-  std::cout << "ignoring item, inventory full... Inventory::PickupItem()";
+    continue_searching = true;
+    while(continue_searching){
+
+        sf::Vector2i free_slot = FindNextFreeSlot(hotbar_slot_set);
+        if (free_slot != sf::Vector2i(-1, -1)) {
+            
+            if(!AddItemToSlot(hotbar_slot_set, item, free_slot.x, free_slot.y, &count)){
+                continue_searching = true;
+            }
+        }
+
+        free_slot = FindNextFreeSlot(backpack_slot_set);
+        
+        if (free_slot != sf::Vector2i(-1, -1)) {
+            
+            if(!AddItemToSlot(backpack_slot_set, item, free_slot.x, free_slot.y, &count)){
+                continue_searching = true;
+            }
+        }
+        if(count <= 0){
+            return;
+        } 
+    }
+
+    // full
+    std::cout << "ignoring item, inventory full... Inventory::PickupItem()";
 }
 
 int Inventory::GetItemInSelectedSlot() {
 
-    Slot* slot = GetInventorySlot(selected_slot, 0);
+    Slot* slot = hotbar_slot_set->GetSlot(selected_slot, 0);
 
     if(slot->Occupied()){
-    return slot->item_code;
+        return slot->item_code;
     }
     return -1;
 }
 
 void Inventory::DecrementSelectedSlot() {
-    GetInventorySlot(selected_slot, 0)->count--;
+    hotbar_slot_set->GetSlot(selected_slot, 0)->count--;
 }
 
-sf::Vector2i Inventory::FindNextFreeSlot() {
-  for (int y = 0; y < row_count; y++) {
-    for (int x = 0; x < row_length; x++) {
-      if (!GetInventorySlot(x, y)->Occupied()) {
-        return sf::Vector2i(x, y);
-      }
+sf::Vector2i Inventory::FindNextFreeSlot(SlotSet* slot_set) {
+
+    for (int y = 0; y < slot_set->GetRowCount(); y++) {
+        for (int x = 0; x < slot_set->GetRowLength(); x++) {
+            if (!slot_set->GetSlot(x, y)->Occupied()) {
+                return sf::Vector2i(x, y);
+            }
+        }
     }
-  }
-  return sf::Vector2i(-1, -1);
+    return sf::Vector2i(-1, -1);
 }
 
-sf::Vector2i Inventory::FindSlotContainingItem(ItemCode item) {
+sf::Vector2i Inventory::FindSlotContainingItem(SlotSet* slot_set, ItemCode item, bool ignore_full) {
   
-  Slot* slot;
+    Slot* slot;
 
-  for (int y = 0; y < row_count; y++) {
-    for (int x = 0; x < row_length; x++) {
+    for (int y = 0; y < slot_set->GetRowCount(); y++) {
+        for (int x = 0; x < slot_set->GetRowLength(); x++) {
 
-        slot = GetInventorySlot(x, y);
+            slot = slot_set->GetSlot(x, y);
 
-      if (slot->Occupied() && slot->item_code == item) {
-        return sf::Vector2i(x, y);
-      }
+            if (slot->Occupied() && slot->item_code == item) {
+                if(!ignore_full || slot->count < ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[item].type]){
+                    return sf::Vector2i(x, y);
+                }
+
+            }
+        }
     }
-  }
-  return sf::Vector2i(-1, -1);
+    return sf::Vector2i(-1, -1);
 }
 
-void Inventory::AddItemToSlot(ItemCode item, int x, int y) {
+bool Inventory::AddItemToSlot(SlotSet* slot_set, ItemCode item, int x, int y, int* count_remaining) {
 
-  Slot* slot = GetInventorySlot(x, y);
+    Slot* slot = slot_set->GetSlot(x, y);
+    int count_before = *count_remaining;
 
-  if (slot->item_code == item && slot->Occupied()) {
-    slot->count++;
-  } else {
-    slot->item_code = item;
-    slot->count = 1;
-  }
+    short max_stack_size = ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[item].type];
+
+    if (slot->item_code == item && slot->Occupied()) {
+        slot->count += *count_remaining;
+    } 
+    else {
+        slot->item_code = item;
+        slot->count = *count_remaining;
+    }
+
+    // prevent item stacking overflow
+    if(slot->count > max_stack_size){
+
+        slot->count = max_stack_size;
+        *count_remaining -= slot->count - max_stack_size;
+    }
+    else{
+        *count_remaining = 0;
+    }
+
+    // clamp remaining count to 0
+    if(*count_remaining < 0){
+        *count_remaining = 0;
+    }
+
+    if(count_before == *count_remaining){
+        return false;
+    }
+    return true;
 }

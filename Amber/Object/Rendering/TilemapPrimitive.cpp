@@ -13,24 +13,39 @@ bool TilemapPrimitive::Load(sf::Texture* texture, TilemapProfile* tilemap_profil
     
     this->tilemap_profile = tilemap_profile;
 
+    m_vertices.setPrimitiveType(sf::Triangles);
+    
     texture_reference = texture;
 
-    // resize the vertex array to fit the level size
-    m_vertices.setPrimitiveType(sf::Triangles);
+    // populate the vertex array, with two triangles per tile
+    for (unsigned int x = 0; x < tilemap_profile->width; ++x){
+        
+        grid[x].resize(tilemap_profile->height);
+        
+        for (unsigned int y = 0; y < tilemap_profile->height; ++y)
+        {
+            SetTile(default_tile, x, y);
+        }
+    }
+    return true;
+}
+
+void TilemapPrimitive::ConstructVertexArray(){
+
+    m_vertices.clear();
     m_vertices.resize(tilemap_profile->width * tilemap_profile->height * 6);
 
     // populate the vertex array, with two triangles per tile
-    for (unsigned int i = 0; i < tilemap_profile->width; ++i){
-        
-        grid[i].resize(tilemap_profile->height);
-        
-        for (unsigned int j = 0; j < tilemap_profile->height; ++j)
+    for (unsigned int x = 0; x < tilemap_profile->width; ++x){
+        for (unsigned int y = 0; y < tilemap_profile->height; ++y)
         {
-            SetTile(default_tile, i, j);
+            SetTileInVertexArray(grid[x][y], x, y);
         }
     }
+}
 
-    return true;
+void TilemapPrimitive::ClearVertexArray(){
+    m_vertices.clear();
 }
 
 void TilemapPrimitive::RevertTexture(){
@@ -41,8 +56,16 @@ void TilemapPrimitive::SetTexture(sf::Texture* texture){
 }
 
 void TilemapPrimitive::SetTile(signed_byte tile_index, unsigned int x, unsigned int y){
-
     grid[x][y] = tile_index;
+    SetTileInVertexArray(tile_index, x, y);
+}
+
+void TilemapPrimitive::SetTileInVertexArray(signed_byte tile_index, unsigned int x, unsigned int y){
+
+    // the TilemapPrimitive vertex array is not constructed (likley because the parent object is not active)
+    if(m_vertices.getVertexCount() == 0){
+        return;
+    }
 
     // find its position in the tileset texture
     int tu, tv;

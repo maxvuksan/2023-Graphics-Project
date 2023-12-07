@@ -22,6 +22,8 @@ class Camera : public Component {
         // @returns a reference to the background sprite, returns nullptr if no background is set, set with Camera::SetBackgroundTexture()
         sf::Sprite* GetBackgroundSprite();
 
+        sf::Vector2f GetBoundedPosition(){ return bounded_position;}
+
         void Update() override;
 
         // Converts a world space position to its position relative to the scenes active camera
@@ -29,11 +31,14 @@ class Camera : public Component {
 
         // Converts a screen space position to its position in the world 
         static sf::Vector2f ScreenToWorldPosition(sf::Vector2f screen);
-        static sf::Vector2f ScreenToWorldPosition(sf::Vector2i screen);             
+        static sf::Vector2f ScreenToWorldPosition(sf::Vector2i screen);        
+
+
     
     private:
 
         sf::Sprite background_sprite;
 
         static sf::Vector2f bounded_position;
+        static sf::Vector2f ceil_bounded_position;
 };

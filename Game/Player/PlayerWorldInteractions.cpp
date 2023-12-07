@@ -2,7 +2,8 @@
 #include "../World/World.h"
 #include "Inventory.h"
 #include "../Utility/UtilityStation.h"
-#include "../Utility/Chest.h"
+#include "../Utility/Container.h"
+#include "../Utility/CraftingStation.h"
 
 void PlayerWorldInteractions::Start(){
     
@@ -60,9 +61,24 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     sf::Vector2i world_tile = mouse_world_pos;
     sf::Vector2i coord_tile = world->WorldToCoord(mouse_world_pos.x, mouse_world_pos.y);
 
-    if(auto_target_blocks){
 
-        sf::Vector2i auto_tile = world->GetNearestTileInDirectionOfMouse(object->GetTransform()->position, SetLocation::MAIN);
+    int item_in_hand = inventory->GetItemInSelectedSlot();
+    
+    if(item_in_hand == -1){
+        return;
+    }
+
+    const ItemData* data = &ItemDictionary::ITEM_DATA[item_in_hand];
+    
+    SetLocation set_location = SetLocation::MAIN;
+    if(data->type == ItemType::type_Hammer){
+        set_location = SetLocation::BACKGROUND;
+    }
+
+    // should we consider auto target mode?
+    if(auto_target_blocks && (data->type == ItemType::type_Hammer || data->type == ItemType::type_Picaxe)){
+
+        sf::Vector2i auto_tile = world->GetNearestTileInDirectionOfMouse(object->GetTransform()->position, set_location);
         
         if(auto_tile != sf::Vector2i(-1,-1)){
             coord_tile = auto_tile;
@@ -73,58 +89,13 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
     sf::Vector2i rounded_world = world->RoundWorld(world_tile.x, world_tile.y);
 
-
-    int item_in_hand = inventory->GetItemInSelectedSlot();
-    const ItemData* data = &ItemDictionary::ITEM_DATA[item_in_hand];
-    
-    
-    float picaxe_speed = 1;
-
-    if(data->type == ItemType::type_Picaxe){
-        picaxe_speed = ItemDictionary::PICAXE_DATA[data->code_in_type].speed;
-    }
-
     cursor_graphic->GetTransform()->position = sf::Vector2f(rounded_world.x, rounded_world.y);
-    focused_block = world->GetTile(coord_tile.x, coord_tile.y);
-
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
+    focused_block = world->GetTile(coord_tile.x, coord_tile.y, set_location);
+    
+    if(data->type == ItemType::type_Hammer || data->type == ItemType::type_Picaxe){
+        Mine(world_tile, (ItemCode)item_in_hand);
+    }
         
-        if(world_tile != focused_block_position){
-            focused_block_position = world_tile;
-
-            breaking_completeness = 0;
-            sound_increment = 0;
-        }
-
-        if(focused_block != -1){
-            float increment = 0.004f * Time::Dt() / (float)ItemDictionary::MAIN_BLOCK_DATA[focused_block].durability * picaxe_speed;
-            breaking_completeness += increment;
-            sound_increment += increment;
-
-            if(sound_increment > 0.3){
-                sound_increment = 0;
-                Sound::Play("hit", 30);
-            }
-        }
-
-        cursor_graphic->SetComplete(breaking_completeness);
-
-        if(breaking_completeness >= 1){
-            // block breaks...
-            Sound::Play("break", 10);
-            world->BreakTileWorld(world_tile.x, world_tile.y, SetLocation::MAIN, true);
-            focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
-        }
-    }
-    else{
-        cursor_graphic->SetComplete(0);
-    }
-
-        
-
-    if(item_in_hand == -1){
-        return;
-    }
     
     // for utility objects, check if footprint overlaps a tile
     if(data->type == ItemType::type_Utility){
@@ -201,6 +172,81 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
     }
 
+    previous_item_code = (ItemCode)item_in_hand;
+}
+
+void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item_code){
+    
+    if(previous_item_code != item_code){
+        cursor_graphic->SetComplete(0);
+        breaking_completeness = 0;
+        sound_increment = 0;
+    }
+
+
+    float mining_speed = 1;
+    const ItemData* data = &ItemDictionary::ITEM_DATA[item_code];
+
+    // get the tool 
+    if(data->type == ItemType::type_Picaxe){
+        mining_speed = ItemDictionary::PICAXE_DATA[data->code_in_type].speed;
+    }
+    if(data->type == ItemType::type_Hammer){
+        mining_speed = ItemDictionary::HAMMER_DATA[data->code_in_type].speed;
+    }
+
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
+        
+        if(world_tile != focused_block_position){
+            focused_block_position = world_tile;
+
+            breaking_completeness = 0;
+            sound_increment = 0;
+        }
+
+        if(focused_block != -1){
+
+            // multiply the tool speed by the durability of the block
+            float speed_of_specific_tile = (float)ItemDictionary::MAIN_BLOCK_DATA[focused_block].durability;
+            if(data->type == ItemType::type_Picaxe){
+                speed_of_specific_tile = (float)ItemDictionary::MAIN_BLOCK_DATA[focused_block].durability;
+            }
+            else if(data->type == ItemType::type_Hammer){
+                speed_of_specific_tile = (float)ItemDictionary::BACKGROUND_BLOCK_DATA[focused_block].durability;
+            }
+
+
+            float increment = mining_speed * 0.01f * Time::Dt() / speed_of_specific_tile;
+            breaking_completeness += increment;
+            sound_increment += increment;
+
+            if(sound_increment > 0.3){
+                sound_increment = 0;
+                Sound::Play("hit", 30);
+            }
+        }
+
+        cursor_graphic->SetComplete(breaking_completeness);
+
+        if(breaking_completeness >= 1){
+            // block breaks...
+            Sound::Play("break", 10);
+
+            // assume we have a picaxe
+            SetLocation set_location = SetLocation::MAIN;
+            if(data->type == ItemType::type_Hammer){
+                set_location = SetLocation::BACKGROUND;
+            }
+
+            world->BreakTileWorld(world_tile.x, world_tile.y, set_location, true);
+            focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
+        }
+    }
+    else{
+        cursor_graphic->SetComplete(0);
+        breaking_completeness = 0;
+        sound_increment = 0;
+    }
 }
 
 void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code){
@@ -209,22 +255,26 @@ void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, co
 
     if(world->ChunkInBounds(chunk.x, chunk.y)){
         
-        UtilityStation* station;
-        
+        UtilityStation* station = nullptr;
+        CraftingStation* crafting_station = nullptr;
+
         switch(ItemDictionary::ITEM_DATA[item_code].code_in_type){
 
 
-            case utility_Furnace:
-                station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<Chest>();
+            case utility_WorkBench: {
+                crafting_station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<CraftingStation>();
+                station = crafting_station;
                 break;
+            }
 
-             case utility_Chest:
-                station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<Chest>();
-                break;               
+            case utility_Chest: {
+                station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<Container>();
+                break;            
+            }   
         }
 
 
-
+    
 
         if(station == nullptr){
             return;
@@ -233,6 +283,12 @@ void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, co
         station->OnStart();
         
         station->SetItemType((ItemCode)item_code);
+
+        // it is a crafting station so we must provide a recipe group
+        if(crafting_station != nullptr){
+            crafting_station->SetRecipeGroup(rgroup_Workbench);
+        }
+
         station->GetTransform()->position = sf::Vector2f(rounded_world.x, rounded_world.y);
         inventory->DecrementSelectedSlot();
     }

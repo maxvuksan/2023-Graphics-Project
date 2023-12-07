@@ -25,11 +25,18 @@ bool Object::IsActive(){
 }
 
 void Object::SetActive(bool new_active){
-    if(active)
-    { 
-        this->OnSetActive(); 
-    } 
+    
+    if(new_active != active){
+        if(new_active)
+        { 
+            this->OnSetActive(); 
+        } 
+        else{
+            this->OnDisable();
+        }
+    }
     active = new_active; 
+
 }
 
 Object* Object::AddObjectToScene(Object* object, int render_layer){

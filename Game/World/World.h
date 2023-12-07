@@ -101,7 +101,7 @@ class World : public Object{
         WorldProfile world_profile;    
         TilemapProfile* tilemap_profile;
 
-        int load_distance = 3;
+        int load_distance = 2;
 
         bool world_needs_pathfinding_recalculating;
 

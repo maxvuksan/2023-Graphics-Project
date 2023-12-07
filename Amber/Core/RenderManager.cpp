@@ -6,9 +6,12 @@
 
 
 std::vector<sf::RenderTexture*> RenderManager::render_textures;
+//int RenderManager::camera_smoothing_edge_buffer = 1;
+
 sf::Text RenderManager::fps_text;
 int RenderManager::fps_refresh_delay_tracked;
 int RenderManager::fps_refresh_delay = 150;
+
 
 void RenderManager::Construct() {
     
@@ -16,8 +19,8 @@ void RenderManager::Construct() {
 
     for(int i = 0; i < render_textures.size(); i++){
         render_textures[i] = Memory::New<sf::RenderTexture>(__FUNCTION__);
-        render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
     }
+    OnResize();
 
     sf::Font* font = AssetManager::GetFont("Amber_Default");
     fps_text.setFont(*font);
@@ -28,9 +31,9 @@ void RenderManager::Construct() {
 
 void RenderManager::OnResize(){
     for(int i = 0; i < render_textures.size(); i++){
+        //render_textures[i]->create(Core::GetDisplayWidth() + camera_smoothing_edge_buffer * 2, Core::GetDisplayHeight() + camera_smoothing_edge_buffer * 2);
         render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
     }
-    std::cout << Core::GetDisplayWidth() << " " << Core::GetDisplayHeight() << "\n";
 }
 
 void RenderManager::ClearRenderTextures(){
@@ -46,13 +49,13 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // assign blur shader uniforms
     AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_texture_pixel_step", 
-        sf::Vector2f(1 / (float)Core::GetDisplayWidth(),
-                    1 / (float)Core::GetDisplayHeight()));
+        sf::Vector2f(1 / (float)render_textures[0]->getSize().x,
+                    1 / (float)render_textures[0]->getSize().y));
     AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_strength", Globals::TILEMAP_SHADOW_BLUR);
 
     AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_texture_pixel_step", 
-        sf::Vector2f(1 / (float)Core::GetDisplayWidth(),
-                    1 / (float)Core::GetDisplayHeight()));
+        sf::Vector2f(1 / (float)render_textures[0]->getSize().x,
+                    1 / (float)render_textures[0]->getSize().y));
     AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_strength", Globals::TILEMAP_SHADOW_BLUR);
 
 
@@ -64,7 +67,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // fetch the cameras background sprite, only draw if is valid
     if(background_sprite != nullptr){
-        background_sprite->setPosition(sf::Vector2f(Core::GetDisplayWidth() / 2.0f, Core::GetDisplayHeight() / 2.0f));
+        background_sprite->setPosition(sf::Vector2f(render_textures[0]->getSize().x / 2.0f, render_textures[0]->getSize().y / 2.0f));
         render_textures[SCENE]->draw(*background_sprite);
     }
 
@@ -77,7 +80,12 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // we have drawn our scene
     render_textures[SCENE]->display();
-    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+
+    sf::Sprite scene_sprite(sf::Sprite(render_textures[SCENE]->getTexture()));
+    // translate our by its sub integer values (e.g. 0.5) to ensure a smooth camera movement
+    //scene_sprite.setPosition(ceil(Scene::GetActiveCamera()->GetBoundedPosition().x) - Scene::GetActiveCamera()->GetBoundedPosition().x,
+    //                            ceil(Scene::GetActiveCamera()->GetBoundedPosition().y) - Scene::GetActiveCamera()->GetBoundedPosition().y);
+    render_textures[COMPOSITE]->draw(scene_sprite);
 
 
     // render debug graphics
