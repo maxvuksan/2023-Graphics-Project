@@ -3,6 +3,11 @@
 
 /*
     Configuration for an animation
+    @param texture_label the texture we are referencing for the animation
+    @param cellsize the horizontal distance between frames (note spritesheets must be oriented horizontally, it is assumed the y position never changes)
+    @param start the starting frame, position cellsize * start
+    @param end the ending frame, position cellsize * end
+    @param duration how long is each frame, provided as a single value, or vector, where vector[i] is duration of frame[i]
 */
 class Animation {
 

@@ -3,10 +3,11 @@
 #include "WorldSettings.h"
 #include "../../Amber/Framework.h"
 
+class World;
 class Chunk : public Object {
 
     public:
-        void Init(TilemapProfile* tilemap_profile, const sf::Color& background_colour);
+        void Init(World* world);
 
         int GetTile(int x, int y, SetLocation get_location = SetLocation::MAIN);
         void SetTile(int tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN);
@@ -57,18 +58,34 @@ class Chunk : public Object {
         ~Chunk();
 
         sf::Image& GetLightmap(){return light_map; }
+        sf::Texture& GetLightmapTexture(){return light_texture;}
+        sf::Image& GetSkylightImage(){return skylight_image;}
+        sf::Texture& GetSkylightTexture(){return skylight_texture;}
         void MarkLightmapDirty(){light_map_dirty = true;}
+        void MarkSkylightDirty(){skylight_map_dirty = true;}
+        std::vector<std::vector<byte>>& GetSkylightmap() {return skylight_map;}
+
+        void ClearLightmap();
+        void RefreshSkylight();
+        void CalculateSkyLight();
 
     private:
 
+
         std::vector<Object*> objects_bound_to_chunk;
         std::vector<Object*> ui_bound_to_chunk;
+
+        std::vector<std::vector<byte>> skylight_map; 
+        sf::Image skylight_image;
+        sf::Texture skylight_texture;
+        bool skylight_first_calculated = false;
+        bool skylight_map_dirty;
 
         sf::Image light_map;
         sf::Texture light_texture;
         bool light_map_dirty;
 
-        TilemapProfile* tilemap_profile;
+        World* world;
         Tilemap* foreground_tilemap;
         Tilemap* main_tilemap;
         Tilemap* background_tilemap;

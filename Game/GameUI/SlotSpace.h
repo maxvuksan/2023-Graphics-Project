@@ -36,6 +36,7 @@ class SlotSpace {
         // allow a slot set to be interacted with
         static void Include(SlotSet* slot){
             slots_in_simulation.push_back(slot);
+            slot->SetActive(true);
         }
 
         static void SetOpen(bool _open){

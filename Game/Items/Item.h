@@ -13,7 +13,7 @@ enum ItemCode{
     item_Main_StonePlate,
     item_Main_StonePlateCracked,
     
-    item_Main_SandStone,
+    item_Main_Clay,
     item_Main_SandStonePlate,
     
     item_Copper,
@@ -50,6 +50,8 @@ enum ItemCode{
     item_Fibre,
     item_BigLeaf,
     item_Book,
+
+    item_Torch,
 
     item_NUMBER_OF_ITEMS,
 };

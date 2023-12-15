@@ -14,6 +14,11 @@ void Inventory::Start() {
     hotbar_slot_set = GetScene()->AddUI<SlotSet>();
     backpack_slot_set = GetScene()->AddUI<SlotSet>();
 
+    inventory_crafting_slot_set = GetScene()->AddUI<SlotSet>();
+    inventory_crafting_slot_set->SetActive(false);
+    inventory_crafting_slot_set->DefineGrid(ItemDictionary::RECIPE_GROUP[rgroup_Inventory].width, ItemDictionary::RECIPE_GROUP[rgroup_Inventory].height, SlotType::RECIPE);
+    inventory_crafting_slot_set->DefineRecipeGrid(ItemDictionary::RECIPE_GROUP[rgroup_Inventory].recipes);
+
     hotbar_slot_set->DefineGrid(row_length, 1, SlotType::OPEN);
     backpack_slot_set->DefineGrid(row_length, row_count - 1, SlotType::CLOSED);
 
@@ -74,6 +79,7 @@ void Inventory::CatchEvent(sf::Event event) {
         case sf::Keyboard::Scan::E:
 
             SlotSpace::Clear();
+            SlotSpace::Include(inventory_crafting_slot_set);
             SlotSpace::SetOpen(!SlotSpace::Open());
 
             break;
@@ -229,6 +235,11 @@ void Inventory::RightClickOnSlot(){
 
 void Inventory::ShiftClickOnSlot(){
 
+    if(GetHoveredSlot()->type == SlotType::RECIPE){
+        ClickOnRecipeSlot();
+        return;
+    }
+
     Slot* hovered = GetHoveredSlot();
 
     // ignore empty shift clicks
@@ -258,11 +269,11 @@ void Inventory::ShiftClickOnSlot(){
         if(existing_slot != sf::Vector2i(-1,-1)){
             opposing_slotset->at(i)->GetSlot(existing_slot.x, existing_slot.y)->count += hovered->count;
             hovered->count = 0;
+            return;
         }
     }
 
     // find free slot
-    
     for(int i = 0; i < opposing_slotset->size(); i++){
         
         sf::Vector2i free_slot = FindNextFreeSlot(opposing_slotset->at(i));
@@ -271,8 +282,10 @@ void Inventory::ShiftClickOnSlot(){
             opposing_slotset->at(i)->GetSlot(free_slot.x, free_slot.y)->item_code = hovered->item_code;
             opposing_slotset->at(i)->GetSlot(free_slot.x, free_slot.y)->count += hovered->count;
             hovered->count = 0;
+            return;
         }
     }
+
 }
 
 void Inventory::ClickOnRecipeSlot(){
@@ -415,6 +428,8 @@ void Inventory::PickupItem(ItemCode item, int count) {
 
     continue_searching = true;
     while(continue_searching){
+
+        continue_searching = false;
 
         sf::Vector2i free_slot = FindNextFreeSlot(hotbar_slot_set);
         if (free_slot != sf::Vector2i(-1, -1)) {

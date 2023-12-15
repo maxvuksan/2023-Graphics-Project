@@ -159,7 +159,7 @@ void WorldGenerator::OrePass(){
 
             // spawns a random number of ores in a specific chunk
             float add_ore_to_chunk = rand() % 100;
-            while(add_ore_to_chunk < settings.ORE_PERCENT && ores_in_chunk < 4){
+            while(add_ore_to_chunk < settings.ORE_PERCENT && ores_in_chunk < 10){
 
                 // determining what block the vein should be
 
@@ -244,12 +244,12 @@ void WorldGenerator::TunnelPass(){
 
 void WorldGenerator::VegetationPass(){
 
-    for(int i = 0; i < 10000; i++){
+    for(int i = 0; i < 500 * world->world_profile.width * world->world_profile.height; i++){
         world->SetTile(ForegroundBlockCode::foreground_Leaves, 
             rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width),
             rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height), SetLocation::FOREGROUND, SetMode::ONLY_BLOCK);
     }
-    for(int i = 0; i < 10000; i++){
+    for(int i = 0; i < 500 * world->world_profile.width * world->world_profile.height; i++){
         world->SetTile(ForegroundBlockCode::foreground_Moss, 
             rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width),
             rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height), SetLocation::FOREGROUND, SetMode::ONLY_BLOCK);
@@ -271,6 +271,8 @@ void WorldGenerator::VegetationPass(){
         }
     }
 
+    //return; // IGNORE TREES FOR NOW
+
     // adding trees
     for(int x = 0; x < surface_y_vector.size(); x++){
         if(rand() % 100 < settings.TREE_PERCENT){
@@ -279,7 +281,7 @@ void WorldGenerator::VegetationPass(){
             Chunk* chunk = world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y);
 
             Object* tree = chunk->AddObjectToChunk<Tree>();
-            tree->GetTransform()->position = sf::Vector2f(world->CoordToWorld(x, surface_y_vector[x])) + sf::Vector2f(-96,32 + 32);
+            tree->GetTransform()->position = sf::Vector2f(world->CoordToWorld(x, surface_y_vector[x])) + sf::Vector2f(-116, 30);
         }
     }
     

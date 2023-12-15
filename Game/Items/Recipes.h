@@ -6,6 +6,9 @@
 // enum identifier for each recipe
 enum Recipes{
 
+    recipe_Torch,
+    recipe_Workbench,
+
     // picaxe
     recipe_Copper_Picaxe,
     recipe_Iron_Picaxe,
@@ -41,14 +44,15 @@ struct RecipeData{
 
 // a RecipeGroup represents a set of recipies a utility station could show, we could create groupings for each type crafting based utility station 
 struct RecipeGroupData{
-    int width; // slot rows
-    int height; // slot count
+    int height; // slot rows
+    int width; // slot count
     // note : width and height must match the provided vector dimensions
     std::vector<std::vector<Recipes>> recipes;
 };
 
 enum RecipeGroups{
 
+    rgroup_Inventory,
     rgroup_Workbench,
 
     rgroup_NUMBER_OF_RECIPE_GROUPS,

@@ -132,6 +132,11 @@ void Scene::CollectBoxCollider(std::vector<Object*>& array){
         std::vector<BoxCollider*> bx_colliders = obj->GetAllComponentsOf<BoxCollider>();
 
         for(int i = 0; i < bx_colliders.size(); i++){
+
+            if(!bx_colliders[i]->IsActive()){
+                continue;
+            }
+
             box_colliders.push_back(bx_colliders[i]);
         }
     }

@@ -32,9 +32,9 @@ struct WorldSettings{
 
     float SURFACE_GRASS_PERCENT = 40;
 
-    float TREE_PERCENT = 60; 
-    float ORE_PERCENT = 20;
+    float TREE_PERCENT = 0; 
+    float ORE_PERCENT = 40;
 
-    std::vector<MainBlockCode> SURFACE_ORE_POOL = { MainBlockCode::main_Stone };
+    std::vector<MainBlockCode> SURFACE_ORE_POOL = { MainBlockCode::main_Stone, MainBlockCode::main_Clay, MainBlockCode::main_Copper };
     std::vector<MainBlockCode> CAVERN_ORE_POOL = { MainBlockCode::main_Dirt, MainBlockCode::main_Copper, MainBlockCode::main_Iron, MainBlockCode::main_Gold };
 };

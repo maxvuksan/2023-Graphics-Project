@@ -2,8 +2,10 @@
 #include "../Object.h"
 #include "Collider.h"
 #include <cmath>
+#include "../../Utility/Calc.h"
 
 float PhysicsBody::max_movement = 7;
+int PhysicsBody::max_number_of_steps = 30; // allowed number of max_movement sub steps, ignores any after that point
 
 PhysicsBody::PhysicsBody() : velocity(0,0), gravity_on(true), gravity(1){}
 
@@ -29,47 +31,32 @@ void PhysicsBody::Move(sf::Vector2f movement){
         // finds first collider which is NOT a trigger...
         
             if(!col->IsTrigger()){
-                /* attempting step based movement 
-                if(false){//movement.x > max_movement || movement.y > max_movement){
-                    float subtract_x = 1;
-                    float subtract_y = 1;
 
-                    if(movement.x != 0){
-                        subtract_x = movement.x / abs(movement.x);
-                    }
-                    else if(movement.y != 0){
-                        subtract_y = movement.y / abs(movement.y);
-                    }
-    
-                    // preventing large movements from skipping colliders
-                    while(abs(movement.x) > 0 || abs(movement.y) > 0){
+                // move in increments to prevent low FPS physics problems (e.g. skipping colliders)
+                if(movement.x > max_movement || movement.y > max_movement){
 
-                        float x_mov = movement.x;
-                        if(abs(movement.x) > max_movement){
-                            x_mov = max_movement * subtract_x;
-                        }
+                    float angle = Calc::VectorToRadians(movement);
+                    sf::Vector2f norm_vector = Calc::RadiansToVector(angle);
+                    sf::Vector2f step_vector = sf::Vector2f(norm_vector.x * max_movement, norm_vector.y * max_movement);
 
-                        float y_mov = movement.y;
-                        if(abs(movement.y) > max_movement){
-                            y_mov = max_movement * subtract_y;
-                        }
+                    sf::Vector2f distance_so_far(0,0);
+ 
+                    for(int i = 0; i < max_number_of_steps; i++){
 
-                        col->Move(sf::Vector2f(x_mov, y_mov), this);
+                        col->Move(step_vector, this);
+                        
+                        distance_so_far += step_vector;
 
-                        movement.x -= max_movement * subtract_x;
-                        movement.y -= max_movement * subtract_y;
-
-                        if(movement.x * subtract_x < 0){
-                            movement.x = 0;
-                        }
-                        if(movement.y * subtract_y < 0){
-                            movement.y = 0;
+                        if(abs(distance_so_far.x) >= abs(movement.x) || abs(distance_so_far.y) >= abs(movement.y)){
+                            break;
                         }
                     }
-                }*/
-                
-                col->Move(movement, this);
-                return;
+                    return;
+                }
+                else{ // move in full
+                    col->Move(movement, this);
+                    return;
+                }
             
             }
 

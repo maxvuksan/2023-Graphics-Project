@@ -7,8 +7,11 @@ class PlayerController : public Component {
     public:
         
         void Start() override;
+
         void UpdateEventFocusBounded() override;
         void CatchEvent(sf::Event event) override;
+
+        void Jump();
 
         void Respawn();
 
@@ -25,7 +28,17 @@ class PlayerController : public Component {
         BoxCollider* right;
         BoxCollider* body_collider;
 
+        AnimationRenderer* animation;
+
 
         PhysicsBody* pb;
-        float jump_height = 0.15;
+
+        
+        float jump_buffer_tracked;
+        float cyote_time_buffer_tracked;
+        
+        static float jump_buffer;
+        static float cyote_time_buffer;
+
+        static float jump_height;
 };

@@ -14,6 +14,8 @@ class World : public Object{
     
     friend class CommandParser;
     friend class WorldGenerator;
+    friend class Chunk;
+    friend class TileBehaviourManager;
 
     public:
 

@@ -1,5 +1,6 @@
 #include "AnimationSet.h"
 #include <iostream>
+#include <string.h>
 
 void AnimationSet::Init(std::vector<Animation> animations, std::vector<const char*> labels){
 
@@ -10,20 +11,23 @@ void AnimationSet::Init(std::vector<Animation> animations, std::vector<const cha
 
     for(int i = 0; i < animations.size(); i++){
         states.insert(std::make_pair(labels[i], animations[i]));
+        //std::cout << "insert " << labels[i] << "\n";
     }
     default_state = labels[0];
 }
 
 Animation* AnimationSet::GetState(const char* label){
     
-    auto animation = states.find(label);
+    for(auto& result : states){
 
-    if(animation == states.end()){
-        std::cout << "ERROR : could not find an animation state " << label << ". AnimationSet::GetState()\n";
-        return nullptr;
+        if(strcmp(result.first, label) == 0){
+            return &result.second;
+        }
     }
 
-    return &animation->second;
+    std::cout << "ERROR : could not find an animation state " << label << ". AnimationSet::GetState()\n";
+    return nullptr;
+
 }
 
 Animation* AnimationSet::GetDefaultState(){

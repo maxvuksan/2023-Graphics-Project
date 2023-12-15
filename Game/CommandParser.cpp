@@ -60,7 +60,6 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
     else if(tokens[0] == "HELP"){
         return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE", Globals::DEBUG_COLOUR};
     }
-
     else if(tokens[0] == "GIVE"){
         if(tokens.size() <= 1){
             return {"'/GIVE' requires additonal arguments, '/GIVE item_code quantity=1", debug_error};

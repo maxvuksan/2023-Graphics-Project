@@ -31,6 +31,7 @@ class GameClient : public Client {
         void CatchPeerEvent(ENetEvent event) override;
         void InterpretPacket(ENetEvent& event);
 
+
         void OnDisconnect() override;
 
         Inventory* GetInventory(){return inventory;}

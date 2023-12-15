@@ -25,6 +25,7 @@ class PhysicsBody : public Component{
     private:
         bool gravity_on = true;
         static float max_movement;
+        static int max_number_of_steps;
 
         float gravity_factor = 0.0005;
         float gravity_max = 1;

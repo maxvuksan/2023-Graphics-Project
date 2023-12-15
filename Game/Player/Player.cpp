@@ -1,12 +1,14 @@
 #include "Player.h"
-#include "LightSource.h"
+#include "../LightSource.h"
 
 void Player::Start(){
 
-    auto sr = AddComponent<SpriteRenderer>();
-    sr->SetTexture("player", true);
-    sr->SetRenderLayer(2);
+    auto ar = AddComponent<AnimationRenderer>();
+
+    ar->SetAnimationSet("player");
+    ar->SetRenderLayer(2);
     
     AddComponent<LightSource>();
+
 }
 

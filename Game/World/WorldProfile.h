@@ -2,11 +2,14 @@
 
 struct WorldProfile{
 
-    int width = 5;
-    int height = 5;
+    int width = 50;
+    int height = 50;
 
     TilemapProfile tilemap_profile = {
         8,8,
         50,50
     };
+
+    unsigned int width_in_tiles; // calculated by world
+    unsigned int height_in_tiles; // calculated by world
 }; 

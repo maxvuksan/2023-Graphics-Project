@@ -8,12 +8,7 @@ class Object;
 class RenderManager{
 
     enum RenderPasses{
-        LIGHTING,
-        LIGHTING_OFFSCREEN,
-        LIGHTING_BLURRED,
-        LIGHTING_POINTS,
         SCENE,
-        SCENE_OFFSCREEN,
         COMPOSITE, // mixing lighting and scene
         NUMBER_OF_RENDER_PASSES // signifies the end
     };

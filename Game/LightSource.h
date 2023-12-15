@@ -1,4 +1,4 @@
-#include "../../Amber/Framework.h"
+#include "../Amber/Framework.h"
 #pragma once
 
 class LightSource : public Component { 
@@ -9,4 +9,7 @@ class LightSource : public Component {
 
         ~LightSource() override;
     
+        sf::Color colour = sf::Color(255,255,255);
+        float decay = 0.07f;
+        sf::Vector2f offset;
 };

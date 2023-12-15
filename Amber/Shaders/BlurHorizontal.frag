@@ -15,5 +15,5 @@ void main()
         sum += samp; 
     }
 
-    gl_FragColor = sum / (N);
+    gl_FragColor = sum / (N * 2);
 }

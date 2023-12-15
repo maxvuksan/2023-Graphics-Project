@@ -65,7 +65,7 @@ namespace ItemDictionary {
         {12, sf::Color(135,135,161), item_Main_StonePlate},
         {12, sf::Color(135,135,161), item_Main_StonePlateCracked},
 
-        {12, sf::Color(179,135,94), item_Main_SandStone},
+        {12, sf::Color(179,135,94), item_Main_Clay},
         {12, sf::Color(179,135,94), item_Main_SandStonePlate},
 
         {12, sf::Color(171,110,83), item_Copper},
@@ -76,7 +76,9 @@ namespace ItemDictionary {
     const BlockData FOREGROUND_BLOCK_DATA[foreground_NUMBER_OF_BLOCKS]{
 
         {0, sf::Color::Transparent, item_Fibre},
-        {0, sf::Color::Transparent, item_NO_DROP},
+        {0, sf::Color(73, 109, 8), item_NO_DROP},
+        {0, sf::Color(73, 109, 8), item_NO_DROP},
+        {0, sf::Color(73, 109, 8), item_NO_DROP},
         {0, sf::Color(73, 109, 8), item_NO_DROP},
     };
 
@@ -107,6 +109,12 @@ namespace ItemDictionary {
     };
 
     const RecipeData RECIPE_DATA[recipe_NUMBER_OF_RECIPES]{
+
+        // torch
+        { { item_Torch}, {{ item_Fibre, 1}} },
+        // workbench
+        { {item_Utility_WorkBench}, {{ item_Main_Stone, 10}}},
+
         // picaxe
         { {item_Copper_Picaxe}, {{item_Copper, 6}}  },
         { {item_Iron_Picaxe}, {{item_Iron, 6}}  },
@@ -124,6 +132,9 @@ namespace ItemDictionary {
     };
 
     const RecipeGroupData RECIPE_GROUP[rgroup_NUMBER_OF_RECIPE_GROUPS] = {
+
+        {2, 1, {{recipe_Torch, recipe_Workbench}}},
+        // workbench
         {3,3, {{recipe_Copper_Picaxe, recipe_Copper_Hammer, recipe_Copper_Sword}, {recipe_Iron_Picaxe, recipe_Iron_Hammer, recipe_Iron_Sword}, {recipe_Gold_Picaxe, recipe_Gold_Hammer, recipe_Gold_Sword}}}
     };
 
@@ -141,7 +152,7 @@ namespace ItemDictionary {
         { "Stone Plate", type_Main, main_Stone_Plate, isprite_StonePlate },
         { "Cracked Stone Plate", type_Main, isprite_StonePlateCracked },
 
-        { "Sandstone", type_Main, main_Sandstone, isprite_Dirt },
+        { "Clay", type_Main, main_Clay, isprite_Dirt },
         { "Sandstone Plate", type_Main, main_Sandstone_Plate, isprite_Dirt },
 
         { "Copper", type_Main, main_Copper, isprite_CopperBar },
@@ -175,9 +186,11 @@ namespace ItemDictionary {
         { "Iron Sword", type_Hammer, hammer_Iron, isprite_Iron_Sword},
         { "Gold Sword", type_Hammer, hammer_Gold, isprite_Gold_Sword },
 
-        { "Fibre", type_Resource, picaxe_Copper, isprite_Fibre},
-        { "Spade Leaf", type_Resource, picaxe_Copper, isprite_BigLeaf},
-        { "Book", type_Resource, picaxe_Copper, isprite_Book},
+        { "Fibre", type_Resource, 0, isprite_Fibre},
+        { "Spade Leaf", type_Resource, 0, isprite_BigLeaf},
+        { "Book", type_Resource, 0, isprite_Book},
+
+        {"Torch", type_Resource, 0, isprite_Torch},
     };
 
 

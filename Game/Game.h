@@ -6,7 +6,7 @@
 class Game : public Core{
 
     public:
-        Game(bool is_server = false) : Core(1800, 900, 600, 300, "My Game")
+        Game(bool is_server = false) : Core(2100, 1200, 700, 400, "My Game")
         {
             if(is_server){
                server.Run(6868); 
@@ -43,6 +43,12 @@ class Game : public Core{
 
             AssetManager::CreateAnimationSet("fly", { Animation("fly", 4, 0, 2, 25)}, {"default"});
 
+            AssetManager::CreateAnimationSet("player", {Animation("player", 16, 0, 2, 200), // Idle
+                                                        Animation("player", 16, 2, 6, 100), // Run
+                                                        Animation("player", 16, 6, 7, 100), // FallUp
+                                                        Animation("player", 16, 7, 8, 100),  // FallDown
+                                                        Animation("player", 16, 8, 9, 100)  // OnWall
+                                                        }, {"idle", "run", "fallup", "falldown", "onwall"});
             // Sounds ---------------------------------------------------------------------
 
             AssetManager::CreateSound("hit", "Sounds/FX/hit.wav");

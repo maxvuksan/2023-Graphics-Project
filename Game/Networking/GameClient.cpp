@@ -60,9 +60,9 @@ void GameClient::CreateObjects(){
     for(int i = 0; i < 40; i++){
        // Fly* fly = scene->AddObject<Fly>();
      //   fly->GetTransform()->position = sf::Vector2f(50,50);
-    }
-    //scene->AddObject<NoodleCreature>();
-*/
+    }*/
+
+    scene->AddObject<NoodleCreature>();
 }
 
 void GameClient::SendPlayerControl(){

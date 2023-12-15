@@ -7,9 +7,14 @@
 
 void PlayerWorldInteractions::Start(){
     
+    SetRenderLayer(7);
+
     cursor_graphic = object->GetScene()->AddUI<CursorGraphic>();
     selected_block = 0;
     auto_target_blocks = false;
+
+    ItemDictionary::SetItemSprite(tool_in_hand_sprite, ItemCode::item_Copper_Sword);
+    last_swing_value = 0;
 }
 
 void PlayerWorldInteractions::LinkWorld(World* world){
@@ -19,7 +24,10 @@ void PlayerWorldInteractions::LinkInventory(Inventory* inventory){
     this->inventory = inventory;
 }
 
+
 void PlayerWorldInteractions::Draw(sf::RenderTarget& surface){
+
+
     if(world == nullptr){
         std::cout << "ERROR: world variable is nullptr, please us PlayerWorldInteractions::LinkWorld(), PlayerWorldInteractions::Update()\n";
         return;
@@ -30,6 +38,51 @@ void PlayerWorldInteractions::Draw(sf::RenderTarget& surface){
     }
 
     CalculateMouse(surface);
+    ManageToolInHand(surface);
+}
+
+void PlayerWorldInteractions::ManageToolInHand(sf::RenderTarget& surface){
+
+
+    if(swinging_tool){
+        
+
+        swing_completion -= Time::Dt() * 0.002f;
+
+        if(!Calc::InRange(swing_completion, 0, 1)){
+            swinging_tool = false;
+        }
+
+    }
+
+    float angle_to_mouse = Calc::AngleBetween(Camera::WorldToScreenPosition(object->GetTransform()->position), sf::Vector2f(Mouse::DisplayPosition().x, Mouse::DisplayPosition().y));
+
+    sf::Vector2f tool_offset(cos(Calc::Radians(angle_to_mouse + new_swing_rotation)) * 10, sin(Calc::Radians(angle_to_mouse + new_swing_rotation)) * 10);
+
+    tool_in_hand_sprite.setPosition(Camera::WorldToScreenPosition(object->GetTransform()->position) + tool_offset);
+    tool_in_hand_sprite.setRotation(angle_to_mouse + old_swing_rotation);
+
+    surface.draw(tool_in_hand_sprite);
+}
+
+void PlayerWorldInteractions::SwingToolInHand(){
+    swinging_tool = true;
+    swing_completion = 1;
+
+    if(last_swing_value == 0){
+        last_swing_value = 1;
+        
+        new_swing_rotation = 90;
+        old_swing_rotation = 200;
+        overswing_multiplier = -20;
+    }
+    else{
+        last_swing_value = 0;
+
+        old_swing_rotation = -20;
+        new_swing_rotation = -90;
+        overswing_multiplier = 20;
+    }
 }
 
 void PlayerWorldInteractions::CatchEvent(sf::Event event){
@@ -41,6 +94,10 @@ void PlayerWorldInteractions::CatchEvent(sf::Event event){
             auto_target_blocks = !auto_target_blocks;
             cursor_graphic->SetAutoTargetBlocks(auto_target_blocks);
         }
+
+    }
+    if(event.type == sf::Event::MouseButtonPressed){
+        SwingToolInHand();
     }
 }
 

@@ -19,11 +19,17 @@ class AnimationRenderer : public Component{
         void SetAnimationSet(const char* label);
         void SetState(const char* label);
 
+        void SetFlip(bool state);
+        bool GetFlip();
+
     private:
 
         int index = 0;
         float timer = 0;
+        
+        int flip_factor;
 
+        const char* current_state;
 
         sf::Sprite sprite;
         AnimationSet* set;

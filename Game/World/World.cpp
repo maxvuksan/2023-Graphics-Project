@@ -4,6 +4,7 @@
 #include "../Items/Pickup.h"
 #include "../WorldScene.h"
 #include "LightingManager.h"
+#include "TileBehaviourManager.h"
 
 void World::LinkWorldScene(WorldScene* world_scene){
     this->world_scene = world_scene;
@@ -12,10 +13,17 @@ void World::LinkWorldScene(WorldScene* world_scene){
 
 void World::Create() {
 
+    world_needs_pathfinding_recalculating = true;
+    tilemap_profile = &world_profile.tilemap_profile;
+
+    world_profile.width_in_tiles = world_profile.width * tilemap_profile->width;
+    world_profile.height_in_tiles = world_profile.height * tilemap_profile->height;
+
+    GetScene()->AddObject<LightingManager>(50);
 
     LightingManager::LinkWorld(this);
+    TileBehaviourManager::LinkWorld(this);
 
-    tilemap_profile = &world_profile.tilemap_profile;
     // creating each tilemap...
 
     half_tilemap_width = floor(tilemap_profile->width * 0.5f);
@@ -30,12 +38,10 @@ void World::Create() {
     }
 
     minimap = GetScene()->AddUI<Minimap>();
-    minimap->GetMainPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
-    minimap->GetBackgroundPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
-    minimap->GetForegroundPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Transparent);
-    minimap->GetExploredPixelGrid()->Create(world_profile.width * tilemap_profile->width, world_profile.height * tilemap_profile->width, sf::Color::Black);
-
-    sf::Color wall_colour(Globals::BASE_SHADOW_COLOUR.r / 6, Globals::BASE_SHADOW_COLOUR.g / 6, Globals::BASE_SHADOW_COLOUR.b / 6, 210);
+    minimap->GetMainPixelGrid()->Create(world_profile.width_in_tiles, world_profile.height_in_tiles, sf::Color::Transparent);
+    minimap->GetBackgroundPixelGrid()->Create(world_profile.width_in_tiles, world_profile.height_in_tiles, sf::Color::Transparent);
+    minimap->GetForegroundPixelGrid()->Create(world_profile.width_in_tiles, world_profile.height_in_tiles, sf::Color::Transparent);
+    minimap->GetExploredPixelGrid()->Create(world_profile.width_in_tiles, world_profile.height_in_tiles, sf::Color::Black);
 
     for(int x = 0; x < world_profile.width; x++){
         for(int y = 0; y < world_profile.height; y++){
@@ -46,7 +52,7 @@ void World::Create() {
             // this allows disabled chunks to have little to no CPU involement, essentially being idle in RAM
             chunks[x][y] = Memory::New<Chunk>(__FUNCTION__);
             chunks[x][y]->LinkScene(world_scene);
-            chunks[x][y]->Init(tilemap_profile, wall_colour);
+            chunks[x][y]->Init(this);
             chunks[x][y]->SetActive(false); 
             chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilemap_profile->tile_width * tilemap_profile->width, y * tilemap_profile->tile_height * tilemap_profile->height);
         }
@@ -56,7 +62,6 @@ void World::Create() {
     WorldGenerator::Generate();
 
     CalculateMinimap();
-
 }
 
 
@@ -129,8 +134,6 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     }
 
     world_needs_pathfinding_recalculating = true;
-
-    LightingManager::PropogateLighting(sf::Vector2i(x,y));
 
     return true;
 }
@@ -237,7 +240,6 @@ bool World::BreakTileWorld(int world_x, int world_y, SetLocation set_location, b
     return SetTileWorld(-1, world_x, world_y, set_location, send_packet);
 }
 
-
 signed_byte World::GetTileWorld(int world_x, int world_y, SetLocation get_location){
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
     return GetTile(coord.x, coord.y, get_location);
@@ -286,7 +288,7 @@ bool World::ChunkInBounds(int chunk_x, int chunk_y){
     return true;
 }
 bool World::CoordInBounds(int x, int y){
-    if(x < 0 || x >= world_profile.width * tilemap_profile->width || y < 0 || y >= world_profile.height * tilemap_profile->height){
+    if(x < 0 || x >= world_profile.width_in_tiles || y < 0 || y >= world_profile.height_in_tiles){
         return false;
     }
     return true;
@@ -427,6 +429,11 @@ void World::Update(){
 
                     objects_additional->push_back(chunks[x][y]);
                     chunks[x][y]->SetActive(true);
+
+                    if(LightingManager::ShouldUpdateChunkLighting()){
+                        chunks[x][y]->ClearLightmap();
+                        chunks[x][y]->CalculateSkyLight();
+                    }
                     
                     continue;
                 }
@@ -446,12 +453,36 @@ void World::Update(){
         }
     }
 
-    LightingManager::Update();
 
+    LightingManager::DrawLightSources();
+    
+    sf::Sprite light_sprite;
+    light_sprite.setScale(sf::Vector2f(world_profile.tilemap_profile.tile_width, world_profile.tilemap_profile.tile_height));
+
+    // draw final lightmap
+    for(int x = Calc::Clamp(chunk_focus_is_in.x - load_distance, 0, world_profile.width); x < Calc::Clamp(chunk_focus_is_in.x + load_distance, 0, world_profile.width); x++){
+        for(int y = Calc::Clamp(chunk_focus_is_in.y - load_distance, 0, world_profile.height); y < Calc::Clamp(chunk_focus_is_in.y + load_distance, 0, world_profile.height); y++){
+
+            if(!chunks.at(x).at(y)->IsActive()){
+                continue;
+            }
+            light_sprite.setTexture(chunks.at(x).at(y)->GetLightmapTexture());
+            light_sprite.setPosition(Camera::WorldToScreenPosition(chunks.at(x).at(y)->GetTransform()->position));    
+            
+            LightingManager::GetLightTexture().draw(light_sprite);
+            light_sprite.setTexture(chunks.at(x).at(y)->GetSkylightTexture());
+            LightingManager::GetLightTexture().draw(light_sprite, sf::BlendMax);
+        }
+    }
+
+    LightingManager::ResetLightDelay();
+    TileBehaviourManager::PerformTileUpdatePass();
+    
     RevealMapAroundFocus();
 }
 
 void World::RevealMapAroundFocus(){
+
     sf::Vector2i pos = WorldToCoord(focus->position.x, focus->position.y);
 
     for(auto offset : GetOffsetsInRadius(Minimap::exploring_radius)){
@@ -469,7 +500,6 @@ void World::RevealMapAroundFocus(){
 }
 
 bool World::CoordIsConnectedToOtherTiles(int x, int y){
-
 
     sf::Vector2i offsets_to_check[] = {sf::Vector2i(0,0), sf::Vector2i(0,1), sf::Vector2i(1,0), sf::Vector2i(-1,0), sf::Vector2i(0,-1)};
 

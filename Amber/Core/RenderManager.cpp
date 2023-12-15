@@ -34,6 +34,15 @@ void RenderManager::OnResize(){
         //render_textures[i]->create(Core::GetDisplayWidth() + camera_smoothing_edge_buffer * 2, Core::GetDisplayHeight() + camera_smoothing_edge_buffer * 2);
         render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
     }
+
+    // assign blur shader uniforms
+    AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_texture_pixel_step", 
+        sf::Vector2f(1 / (float)render_textures[0]->getSize().x,
+                    1 / (float)render_textures[0]->getSize().y));
+
+    AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_texture_pixel_step", 
+        sf::Vector2f(1 / (float)render_textures[0]->getSize().x,
+                    1 / (float)render_textures[0]->getSize().y));
 }
 
 void RenderManager::ClearRenderTextures(){
@@ -47,20 +56,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     ClearRenderTextures();
 
-    // assign blur shader uniforms
-    AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_texture_pixel_step", 
-        sf::Vector2f(1 / (float)render_textures[0]->getSize().x,
-                    1 / (float)render_textures[0]->getSize().y));
-    AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_strength", Globals::TILEMAP_SHADOW_BLUR);
-
-    AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_texture_pixel_step", 
-        sf::Vector2f(1 / (float)render_textures[0]->getSize().x,
-                    1 / (float)render_textures[0]->getSize().y));
-    AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_strength", Globals::TILEMAP_SHADOW_BLUR);
-
-
     // clear scene texture
-    //render_textures[SCENE_OFFSCREEN]->clear(Scene::GetActiveCamera()->background_colour);
     render_textures[SCENE]->clear(Scene::GetActiveCamera()->background_colour);
 
     sf::Sprite* background_sprite = Scene::GetActiveCamera()->GetBackgroundSprite();
@@ -80,13 +76,8 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // we have drawn our scene
     render_textures[SCENE]->display();
-
     sf::Sprite scene_sprite(sf::Sprite(render_textures[SCENE]->getTexture()));
-    // translate our by its sub integer values (e.g. 0.5) to ensure a smooth camera movement
-    //scene_sprite.setPosition(ceil(Scene::GetActiveCamera()->GetBoundedPosition().x) - Scene::GetActiveCamera()->GetBoundedPosition().x,
-    //                            ceil(Scene::GetActiveCamera()->GetBoundedPosition().y) - Scene::GetActiveCamera()->GetBoundedPosition().y);
     render_textures[COMPOSITE]->draw(scene_sprite);
-
 
     // render debug graphics
     if(Core::DEBUG_MODE){
@@ -94,9 +85,11 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         RenderDebug(*render_textures[COMPOSITE], scene->GetThisObjectsAdditional());
     }
 
-    // reusing a render texture to draw ui_overlay_colour
-    render_textures[LIGHTING]->clear(Scene::GetActiveCamera()->ui_overlay_colour);
-    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), sf::BlendAlpha);
+    // reusing Scene render texture to draw ui_overlay_colour
+    render_textures[SCENE]->clear(Scene::GetActiveCamera()->ui_overlay_colour);
+    render_textures[SCENE]->display();
+
+    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()), sf::BlendAlpha);
 
     // draw all ui
     auto ui = scene->GetUI();
@@ -112,10 +105,9 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     // we have drawn everything in the "Display"
     render_textures[COMPOSITE]->display();
 
-
     // rescaling our final image to fit window
     sf::Sprite final_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
-    final_image.setScale(sf::Vector2f(Core::GetWindowWidth() / (float)Core::GetDisplayWidth(), Core::GetWindowHeight() / (float)Core::GetDisplayHeight()));
+    final_image.setScale(sf::Vector2f(Core::GetDisplayToWindowMultiplier().x, Core::GetDisplayToWindowMultiplier().y));
     
     surface.draw(final_image); 
 
@@ -144,31 +136,12 @@ void RenderManager::DrawSceneObjectArray(std::vector<Object*>* array, Scene* sce
 
     bool light_found = false;
 
-    // clear lighting texture for this layer
-    render_textures[LIGHTING]->clear(sf::Color::White);
-    //render_textures[LIGHTING_POINTS]->clear(Globals::BASE_SHADOW_COLOUR);
-
     for(auto obj : *array){
 
         if(!obj->IsActive()){
             continue;
         }
 
-        // if it has a tilemap, we must consider lighting conditions
-        Tilemap* tilemap = obj->GetComponent<Tilemap>();
-        if(tilemap != nullptr && tilemap->GetRenderLayer() == render_layer){
-            tilemap->DrawTilemapShadow(*render_textures[LIGHTING]);
-        }
-    /*
-        for(auto light : *scene->GetPointLights()){
-
-            // only draw light if it is on this layer
-            if(light->GetThisObject()->GetRenderLayer() == render_layer){ 
-                light->DrawLight(*render_textures[LIGHTING_POINTS]);
-                light_found = true;
-            }
-        }
-    */
         // draw objects and components
         for(auto comp : *obj->GetComponents()){
             
@@ -182,24 +155,6 @@ void RenderManager::DrawSceneObjectArray(std::vector<Object*>* array, Scene* sce
             obj->Draw(*render_textures[SCENE]);       
         }
     }
-
-    //if(!light_found){
-    //    render_textures[LIGHTING_POINTS]->clear(sf::Color::White);
-    //}
-
-    render_textures[LIGHTING]->display();
-    render_textures[SCENE_OFFSCREEN]->display();
-
-    render_textures[LIGHTING_OFFSCREEN]->draw(sf::Sprite(render_textures[LIGHTING]->getTexture()), AssetManager::GetShader("Amber_BlurHorizontal"));
-    render_textures[LIGHTING_OFFSCREEN]->display();
-
-    render_textures[LIGHTING_BLURRED]->draw(sf::Sprite(render_textures[LIGHTING_OFFSCREEN]->getTexture()), AssetManager::GetShader("Amber_BlurVertical"));
-    
-    render_textures[LIGHTING_BLURRED]->display();
-    //render_textures[LIGHTING_POINTS]->display(); 
-
-    render_textures[SCENE]->draw(sf::Sprite(render_textures[LIGHTING_BLURRED]->getTexture()), sf::BlendMultiply);
-
 }
 
 void RenderManager::RenderDebug(sf::RenderTarget& surface, std::vector<Object*>* array){

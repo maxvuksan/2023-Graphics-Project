@@ -10,7 +10,7 @@ enum MainBlockCode{
     main_Stone_Plate,
     main_Stone_Plate_Cracked,
 
-    main_Sandstone,
+    main_Clay,
     main_Sandstone_Plate,
 
     main_Copper,
@@ -25,6 +25,8 @@ enum ForegroundBlockCode{
     foreground_Leaves,
     foreground_Moss,
     foreground_Grass,
+    foreground_Vine,
+    foreground_VineEnd,
 
     foreground_NUMBER_OF_BLOCKS
 };
