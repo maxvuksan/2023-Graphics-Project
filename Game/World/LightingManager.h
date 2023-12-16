@@ -26,9 +26,8 @@ class LightingManager : public Object{
         static sf::RenderTexture& GetLightTexture(){return lighting_texture;}
 
 
-        static float sunlight_red_factor;
-        static float sunlight_green_factor;
-        static float sunlight_blue_factor;
+        static sf::Color sunlight_colour;
+        static bool show_lighting;
 
     private:
 

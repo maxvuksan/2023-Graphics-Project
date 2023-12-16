@@ -5,6 +5,7 @@
 #include <cstring>
 #include "ConsoleVisual.h"
 #include <sstream>
+#include "World/LightingManager.h"
 
 GameClient* CommandParser::client = nullptr;
 
@@ -57,8 +58,11 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         client->world->minimap->reveal_all = !client->world->minimap->reveal_all;
         return {""};
     }
+    else if(tokens[0] == "LIGHT"){
+        LightingManager::show_lighting = !LightingManager::show_lighting;
+    }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT", Globals::DEBUG_COLOUR};
     }
     else if(tokens[0] == "GIVE"){
         if(tokens.size() <= 1){

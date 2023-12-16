@@ -25,8 +25,7 @@ class Tilemap : public Component
         void ClearVertexArray();
 
         void Draw(sf::RenderTarget& surface) override;
-
-        void DrawTilemapShadow(sf::RenderTarget& surface);
+        void DrawSiloutte(sf::RenderTarget& surface);
 
         /*
             @param texture_label What the tile texture is saved as (in AssetManager)
@@ -51,9 +50,6 @@ class Tilemap : public Component
         void SetArea(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
         void SetAll(signed_byte tile_index);
 
-        // do the tiles have an effect on lighting
-        void SetInteractsLight(bool interacts);
-
         void SetShowOverlayColour(bool show_overlay_colour);
         void SetOverlayColour(sf::Color overlay_colour);
 
@@ -64,7 +60,8 @@ class Tilemap : public Component
         bool show_overlay_colour;
         sf::Color overlay_colour;
         
-        bool interacts_with_light;
+        bool ambient_occlusion;
+        static float ambient_occlusion_blur_strength;
 
         bool cast_shadows;
         bool in_shadow;

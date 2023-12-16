@@ -12,12 +12,6 @@ void Chunk::Init(World* world){
     foreground_tilemap = this->AddComponent<Tilemap>(0);
     background_tilemap = this->AddComponent<Tilemap>(-1);
 
-    main_tilemap->SetInteractsLight(false);
-    foreground_tilemap->SetInteractsLight(false);
-    background_tilemap->SetInteractsLight(false);
-    //background_tilemap->SetShowOverlayColour(true);
-    //background_tilemap->SetOverlayColour(background_colour);
-
     foreground_tilemap->Load("foreground_tiles", &world->world_profile.tilemap_profile);
     main_tilemap->Load("tiles", &world->world_profile.tilemap_profile);
     background_tilemap->Load("background_tiles", &world->world_profile.tilemap_profile);
@@ -40,13 +34,12 @@ void Chunk::Init(World* world){
 void Chunk::Draw(sf::RenderTarget& surface){
 
     if(light_map_dirty){
-        light_map_dirty = false;
-        
-        light_texture.loadFromImage(light_map);//(sf::Sprite(source_tex));
+        light_map_dirty = false;    
+        light_texture.loadFromImage(light_map);
     }
+
     if(skylight_map_dirty){
         skylight_map_dirty = false;
-
         skylight_texture.loadFromImage(skylight_image);
     }
 }
@@ -101,6 +94,7 @@ void Chunk::CalculateSkyLight(){
     skylight_first_calculated = true;
     
     sf::Vector2i offsets[4] = { sf::Vector2i(1,0), sf::Vector2i(-1, 0), sf::Vector2i(0, 1), sf::Vector2i(0, -1)};
+    
     for(unsigned int x = 0; x < world->world_profile.tilemap_profile.width; x++){
         for(unsigned int y = 0; y < world->world_profile.tilemap_profile.height; y++){
             

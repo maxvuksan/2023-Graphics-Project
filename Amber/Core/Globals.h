@@ -16,6 +16,9 @@ namespace Globals {
 
     const int FRAMERATE_LIMIT = 300;
 
+    const float PI = 3.1416;
+    const float HALF_PI = 1.5708;
+
     const sf::Color DEFAULT_BACKGROUND_COLOUR = sf::Color(140, 150, 163);   
     const sf::Color BASE_SHADOW_COLOUR = sf::Color(160 / 6, 140 / 6, 180 / 6 ); //sf::Color(150/2,130/2,170/2);
     const sf::Color BASE_SHADOW_COLOUR_DARK = sf::Color(BASE_SHADOW_COLOUR.r / 2, BASE_SHADOW_COLOUR.g / 2, BASE_SHADOW_COLOUR.b / 2); //sf::Color(150/2,130/2,170/2);

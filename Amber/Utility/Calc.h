@@ -5,7 +5,7 @@
 class Calc{
 
     public:
-        
+
         static float EaseOutBack(float x) {
 
             float c1 = 1.70158;

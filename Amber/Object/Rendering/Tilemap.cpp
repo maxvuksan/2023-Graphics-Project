@@ -6,6 +6,7 @@
 #include "../Camera.h"
 #include <math.h>
 
+
 void Tilemap::Start(){
     
     show_overlay_colour = false;
@@ -72,11 +73,7 @@ void Tilemap::Draw(sf::RenderTarget& surface){
     }
 }
 
-void Tilemap::DrawTilemapShadow(sf::RenderTarget& surface){
-
-    if(!interacts_with_light){
-        return;
-    }
+void Tilemap::DrawSiloutte(sf::RenderTarget& surface){
 
     tilemap_primitive.SetTexture(AssetManager::GetTexture("Amber_Black"));
     surface.draw(tilemap_primitive);
@@ -145,9 +142,6 @@ void Tilemap::SetAll(signed_byte tile_index){
     }
 }
 
-void Tilemap::SetInteractsLight(bool interacts_with_light){
-    this->interacts_with_light = interacts_with_light;
-}
 
 void Tilemap::SetShowOverlayColour(bool show_overlay_colour){
     this->show_overlay_colour = show_overlay_colour;

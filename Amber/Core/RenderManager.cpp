@@ -144,7 +144,7 @@ void RenderManager::DrawSceneObjectArray(std::vector<Object*>* array, Scene* sce
 
         // draw objects and components
         for(auto comp : *obj->GetComponents()){
-            
+
             if(!comp->IsActive() || comp->GetRenderLayer() != render_layer){
                 continue;
             }

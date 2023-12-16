@@ -5,7 +5,7 @@
 #include "../../Utility/Calc.h"
 
 float PhysicsBody::max_movement = 7;
-int PhysicsBody::max_number_of_steps = 30; // allowed number of max_movement sub steps, ignores any after that point
+int PhysicsBody::max_number_of_steps = 100; // allowed number of max_movement sub steps, ignores any after that point
 
 PhysicsBody::PhysicsBody() : velocity(0,0), gravity_on(true), gravity(1){}
 

@@ -432,7 +432,6 @@ void World::Update(){
 
                     if(LightingManager::ShouldUpdateChunkLighting()){
                         chunks[x][y]->ClearLightmap();
-                        chunks[x][y]->CalculateSkyLight();
                     }
                     
                     continue;
@@ -462,7 +461,8 @@ void World::Update(){
     // draw final lightmap
     for(int x = Calc::Clamp(chunk_focus_is_in.x - load_distance, 0, world_profile.width); x < Calc::Clamp(chunk_focus_is_in.x + load_distance, 0, world_profile.width); x++){
         for(int y = Calc::Clamp(chunk_focus_is_in.y - load_distance, 0, world_profile.height); y < Calc::Clamp(chunk_focus_is_in.y + load_distance, 0, world_profile.height); y++){
-
+            
+            light_sprite.setColor(sf::Color::White);
             if(!chunks.at(x).at(y)->IsActive()){
                 continue;
             }
@@ -471,6 +471,7 @@ void World::Update(){
             
             LightingManager::GetLightTexture().draw(light_sprite);
             light_sprite.setTexture(chunks.at(x).at(y)->GetSkylightTexture());
+            light_sprite.setColor(LightingManager::sunlight_colour);
             LightingManager::GetLightTexture().draw(light_sprite, sf::BlendMax);
         }
     }

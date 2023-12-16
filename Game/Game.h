@@ -6,7 +6,7 @@
 class Game : public Core{
 
     public:
-        Game(bool is_server = false) : Core(2100, 1200, 700, 400, "My Game")
+        Game(bool is_server = false) : Core(1400, 800, 700, 400, "My Game")
         {
             if(is_server){
                server.Run(6868); 

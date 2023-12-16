@@ -7,9 +7,9 @@
 World* LightingManager::world;
 std::vector<LightSource*> LightingManager::light_sources;
 
-float LightingManager::sunlight_red_factor = 1.0f;
-float LightingManager::sunlight_green_factor = 1.0f;
-float LightingManager::sunlight_blue_factor = 1.0f;
+bool LightingManager::show_lighting = true;
+
+sf::Color LightingManager::sunlight_colour(255,255,255);
 
 
 float LightingManager::lighting_update_delay = 50;
@@ -30,6 +30,10 @@ void LightingManager::Update(){
 }
 
 void LightingManager::Draw(sf::RenderTarget& surface){
+
+    if(!show_lighting){
+        return;
+    }
 
     lighting_texture.display();
 
@@ -81,11 +85,6 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
     if(!world->CoordInBounds(coordinate.x, coordinate.y)){
         return;
     }
-
-    /*
-        something is causing PROGRAM TIME OUT
-    
-    */
 
     struct LightTile {
         sf::Vector2i coord;
@@ -147,6 +146,7 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
             }
         }
 
+
         bool found_in_closed = false;
         for(int i = 0; i < closed.size(); i++){
             if(closed[i].coord == light_tile.coord){
@@ -168,23 +168,22 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
         if(!chunk->IsActive()){
             continue;
         }
-
+        
         // coordinate within said chunk
 
 
         signed_byte current_tile = chunk->GetTilemap(SetLocation::MAIN)->GetTile(light_tile.coord.x, light_tile.coord.y);
 
-        std::vector<std::vector<byte>>& sky_light = chunk->GetSkylightmap();
+        std::vector<std::vector<byte>>& skylight_map = chunk->GetSkylightmap();
     
-        if(sky_light[light_tile.coord.x][light_tile.coord.y] >= light_tile.value){
+
+        if(skylight_map[light_tile.coord.x][light_tile.coord.y] > light_tile.value){
             continue;
         }
-        else{
-            sky_light[light_tile.coord.x][light_tile.coord.y] = light_tile.value;
-            chunk->MarkSkylightDirty();
-        }
-        
 
+        skylight_map[light_tile.coord.x][light_tile.coord.y] = light_tile.value;
+        chunk->MarkSkylightDirty();
+    
         if(current_tile != -1){
             queue.push({light_tile.coord + sf::Vector2i(0, 1), light_tile.value - 100, light_tile.chunk_origin});
             queue.push({light_tile.coord + sf::Vector2i(1, 0), light_tile.value - 100, light_tile.chunk_origin});
@@ -192,10 +191,10 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
             queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.value - 100, light_tile.chunk_origin});
         }
         else{
-            queue.push({light_tile.coord + sf::Vector2i(0, 1), light_tile.value - 50, light_tile.chunk_origin});
-            queue.push({light_tile.coord + sf::Vector2i(1,0), light_tile.value - 50, light_tile.chunk_origin });
-            queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.value - 50, light_tile.chunk_origin});
-            queue.push({light_tile.coord + sf::Vector2i(-1,0), light_tile.value - 50, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(0, 1), light_tile.value - 15, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(1,0), light_tile.value - 15, light_tile.chunk_origin });
+            queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.value - 15, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(-1,0), light_tile.value - 15, light_tile.chunk_origin});
         }
 
         closed.push_back(light_tile);
