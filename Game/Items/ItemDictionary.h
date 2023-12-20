@@ -1,11 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "../../Amber/Core/AssetManager.h"
+#include "../../Amber/Utility/Sound.h"
 #include "Block.h"
 #include "Sprites.h"
 #include "Recipes.h"
 #include <math.h>
-
+#include "ItemSound.h"
 
 /*
 
@@ -28,6 +29,7 @@ struct ItemData{
     ItemType type;
     int code_in_type; // code within specific item type bracket
     SpriteInventory inventory_sprite = isprite_USE_MAIN_SPRITE;
+    ItemSound inventory_sound = sound_Rubble;
 };
 
 struct UtilityBlockData{
@@ -40,6 +42,9 @@ struct UtilityBlockData{
 
 namespace ItemDictionary {
 
+    const sf::Color torch_colour(255, 221, 199);
+    const float torch_propogate_decay = 0.03f;
+
     const int tile_size = 8;
     const int inventory_item_tile_size = 16;
     
@@ -47,13 +52,20 @@ namespace ItemDictionary {
     const int inventory_sprites_per_row = 12;
 
     const short TYPE_STACK_SIZES[type_NUMBER_OF_TYPES] = {
-        16,      //type_Main,
-        16,       //type_Foreground,
-        16,        //type_Background,
-        16,     //type_Utility,
+        999,      //type_Main,
+        999,       //type_Foreground,
+        999,        //type_Background,
+        99,     //type_Utility,
         1,      //type_Picaxe,
         1,      //type_Hammer,
-        16,
+        99,
+    };
+
+    // label of sound in AssetManager
+    const std::string INVENTORY_SOUNDS[sound_NUMBER_OF_PICKUP_SOUNDS] = {
+        "item_metal",
+        "item_rubble",
+        "item_soft"
     };
 
     const BlockData MAIN_BLOCK_DATA[main_NUMBER_OF_BLOCKS]{
@@ -78,6 +90,21 @@ namespace ItemDictionary {
         {0, sf::Color::Transparent, item_Fibre},
         {0, sf::Color(73, 109, 8), item_NO_DROP},
         {0, sf::Color(73, 109, 8), item_NO_DROP},
+
+        // floor scrap
+        {0, sf::Color(145, 71, 63), item_Mushroom},
+        {0, sf::Color(145, 71, 63), item_Main_Stone},
+
+        // torch
+        {0, sf::Color(252, 197, 195), item_Torch},
+        {0, sf::Color(252, 197, 195), item_Torch},
+        {0, sf::Color(252, 197, 195), item_Torch},
+
+        // roots
+        {0, sf::Color(145, 71, 63), item_Sticks},
+        {0, sf::Color(145, 71, 63), item_Sticks},
+
+        // vines
         {0, sf::Color(73, 109, 8), item_NO_DROP},
         {0, sf::Color(73, 109, 8), item_NO_DROP},
     };
@@ -99,7 +126,7 @@ namespace ItemDictionary {
     const PicaxeData PICAXE_DATA[picaxe_NUMBER_OF_PICAXES]{
         {1, 2.0f}, // Copper
         {1, 2.6f}, // Iron
-        {2, 13.1f} // Gold
+        {2, 100.1f} // Gold
     };
 
     const PicaxeData HAMMER_DATA[hammer_NUMBER_OF_HAMMERS]{
@@ -111,7 +138,7 @@ namespace ItemDictionary {
     const RecipeData RECIPE_DATA[recipe_NUMBER_OF_RECIPES]{
 
         // torch
-        { { item_Torch}, {{ item_Fibre, 1}} },
+        { { item_Torch, 3}, {{ item_Fibre, 1}} },
         // workbench
         { {item_Utility_WorkBench}, {{ item_Main_Stone, 10}}},
 
@@ -145,23 +172,23 @@ namespace ItemDictionary {
         {}, // item_NO_DROP
 
         // main
-        { "Dirt", type_Main, main_Dirt, isprite_Dirt},
-        { "Stone", type_Main, main_Stone, isprite_Stone},
+        { "Dirt", type_Main, main_Dirt, isprite_Dirt, sound_Rubble},
+        { "Stone", type_Main, main_Stone, isprite_Stone, sound_Rubble},
 
-        { "Stone Bricks", type_Main, main_Stone_Bricks, isprite_StoneBrick },
-        { "Stone Plate", type_Main, main_Stone_Plate, isprite_StonePlate },
-        { "Cracked Stone Plate", type_Main, isprite_StonePlateCracked },
+        { "Stone Bricks", type_Main, main_Stone_Bricks, isprite_StoneBrick, sound_Rubble },
+        { "Stone Plate", type_Main, main_Stone_Plate, isprite_StonePlate, sound_Rubble },
+        { "Cracked Stone Plate", type_Main, main_Stone_Plate_Cracked, isprite_StonePlateCracked, sound_Rubble },
 
-        { "Clay", type_Main, main_Clay, isprite_Dirt },
-        { "Sandstone Plate", type_Main, main_Sandstone_Plate, isprite_Dirt },
+        { "Clay", type_Main, main_Clay, isprite_Dirt, sound_Rubble },
+        { "Sandstone Plate", type_Main, main_Sandstone_Plate, isprite_Dirt, sound_Rubble },
 
-        { "Copper", type_Main, main_Copper, isprite_CopperBar },
-        { "Iron", type_Main, main_Iron, isprite_IronBar},
-        { "Gold", type_Main, main_Gold, isprite_GoldBar},
+        { "Copper", type_Main, main_Copper, isprite_CopperBar, sound_Metal },
+        { "Iron", type_Main, main_Iron, isprite_IronBar, sound_Metal},
+        { "Gold", type_Main, main_Gold, isprite_GoldBar, sound_Metal},
 
         // background
-        { "Dirt Background", type_Background, background_Dirt, isprite_StoneBrick_Wall },
-        { "Stone Background", type_Background, background_Stone, isprite_StoneBrick_Wall },
+        { "Dirt Background", type_Background, background_Dirt, isprite_StoneBrick_Wall, sound_Rubble},
+        { "Stone Background", type_Background, background_Stone, isprite_StoneBrick_Wall, sound_Rubble},
 
 
         // utility
@@ -172,25 +199,28 @@ namespace ItemDictionary {
         { "Chest", type_Utility, utility_Chest },
 
         // picaxe
-        { "Copper Picaxe", type_Picaxe, picaxe_Copper, isprite_Copper_Picaxe },
-        { "Iron Picaxe", type_Picaxe, picaxe_Iron, isprite_Iron_Picaxe},
-        { "Gold Picaxe", type_Picaxe, picaxe_Gold, isprite_Gold_Picaxe },
+        { "Copper Picaxe", type_Picaxe, picaxe_Copper, isprite_Copper_Picaxe, sound_Metal },
+        { "Iron Picaxe", type_Picaxe, picaxe_Iron, isprite_Iron_Picaxe, sound_Metal },
+        { "Gold Picaxe", type_Picaxe, picaxe_Gold, isprite_Gold_Picaxe, sound_Metal },
 
         // hammer
-        { "Copper Hammer", type_Hammer, hammer_Copper, isprite_Copper_Hammer },
-        { "Iron Hammer", type_Hammer, hammer_Iron, isprite_Iron_Hammer},
-        { "Gold Hammer", type_Hammer, hammer_Gold, isprite_Gold_Hammer },
+        { "Copper Hammer", type_Hammer, hammer_Copper, isprite_Copper_Hammer, sound_Metal },
+        { "Iron Hammer", type_Hammer, hammer_Iron, isprite_Iron_Hammer, sound_Metal },
+        { "Gold Hammer", type_Hammer, hammer_Gold, isprite_Gold_Hammer, sound_Metal },
 
         // sword
-        { "Copper Sword", type_Hammer, hammer_Copper, isprite_Copper_Sword },
-        { "Iron Sword", type_Hammer, hammer_Iron, isprite_Iron_Sword},
-        { "Gold Sword", type_Hammer, hammer_Gold, isprite_Gold_Sword },
+        { "Copper Sword", type_Hammer, hammer_Copper, isprite_Copper_Sword, sound_Metal },
+        { "Iron Sword", type_Hammer, hammer_Iron, isprite_Iron_Sword, sound_Metal },
+        { "Gold Sword", type_Hammer, hammer_Gold, isprite_Gold_Sword, sound_Metal },
 
-        { "Fibre", type_Resource, 0, isprite_Fibre},
-        { "Spade Leaf", type_Resource, 0, isprite_BigLeaf},
-        { "Book", type_Resource, 0, isprite_Book},
+        { "Fibre", type_Resource, 0, isprite_Fibre, sound_Soft},
+        { "Spade Leaf", type_Resource, 0, isprite_BigLeaf, sound_Soft},
+        { "Book", type_Resource, 0, isprite_Book, sound_Soft},
 
-        {"Torch", type_Resource, 0, isprite_Torch},
+        {"Torch", type_Foreground, foreground_Torch, isprite_Torch, sound_Soft},
+
+        {"Sticks", type_Resource, 0, isprite_Sticks, sound_Soft},
+        {"Mushroom", type_Resource, 0, isprite_Mushroom, sound_Soft},
     };
 
 
@@ -250,5 +280,10 @@ namespace ItemDictionary {
             sprite.setOrigin(sf::Vector2f(sprite.getTextureRect().width / 2.0f, sprite.getTextureRect().height / 2.0f));
         }
     }   
+
+    // players inventory sound of corrosponding item code
+    inline void PlayInventorySound(ItemCode item, float pitch_offset = 0){
+        Sound::Play(ItemDictionary::INVENTORY_SOUNDS[ItemDictionary::ITEM_DATA[item].inventory_sound].c_str(), 15.0f, 1.0f + pitch_offset);
+    }
 }
 

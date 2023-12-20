@@ -34,6 +34,8 @@ class InverseKinematicLimb : public Component{
         sf::Vector2f GetTarget() {return target;}
         sf::Vector2f GetOrigin() {return origin;}
 
+        // @returns true if the limb has a fixed target, false if within transition (From SetTargetOverTime)
+        bool GetIsAttached(){return attached_to_a_target;}
 
         void AddSubLimb(int start, int end, int thickness, int count, int length_per_segment);
 
@@ -50,6 +52,7 @@ class InverseKinematicLimb : public Component{
         sf::Vector2f next_target;
         float time_tracked;
         float time_total;
+        bool attached_to_a_target;
 
         std::vector<Segment> segments;
 

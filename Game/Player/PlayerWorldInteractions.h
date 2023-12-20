@@ -19,7 +19,6 @@ class PlayerWorldInteractions : public Component {
         void Mine(const sf::Vector2i& world_tile, ItemCode item_code);
         void PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code);
 
-
         void CatchEvent(sf::Event) override;
 
         void LinkWorld(World* world);
@@ -57,7 +56,7 @@ class PlayerWorldInteractions : public Component {
 
         Inventory* inventory;
         World* world;
-        sf::Vector2i mouse_world_pos; // where in world space is the mouse hovering over
+        sf::Vector2f mouse_world_pos; // where in world space is the mouse hovering over
 
         int selected_block;
 };

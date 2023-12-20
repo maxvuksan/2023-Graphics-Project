@@ -27,6 +27,9 @@ void Inventory::Start() {
     SlotSpace::DefineInventorySlotsets(hotbar_slot_set, backpack_slot_set);
     SlotSpace::SetOpen(false);
 
+    held_item_text.setFont(*AssetManager::GetFont("m3x6"));
+    held_item_text.setCharacterSize(16);
+
     holding_item = false;
 
    // PickupItem(ItemCode::item_Utility_WorkBench);
@@ -59,6 +62,14 @@ void Inventory::Draw(sf::RenderTarget& surface) {
         sf::Vector2f(-4, -4) +
         sf::Vector2f(Mouse::DisplayPosition().x, Mouse::DisplayPosition().y));
         surface.draw(held_item_sprite);
+
+        
+        if(held_item_count > 1){
+            held_item_text.setPosition(Slot::GetTextPosition(held_item_sprite.getPosition(), held_item_count));
+            held_item_text.setString(std::to_string(held_item_count));
+            
+            surface.draw(held_item_text);
+        }
     }
 }
 
@@ -154,14 +165,43 @@ void Inventory::CatchEvent(sf::Event event) {
       
         RightClickOnSlot();
         break;
+
+      case sf::Mouse::Button::Middle:
+
+        MiddleClickOnSlot();
+        break;
     }
   }
 }
+void Inventory::MiddleClickOnSlot(){
+    if(GetHoveredSlot()->type == SlotType::RECIPE){
+        ClickOnRecipeSlot();
+        return;
+    }
 
+    // swap with slot
+    if (!holding_item && GetHoveredSlot()->Occupied()) {
+
+        // take 1 from stack
+        int count_to_take = 1;
+        held_item = GetHoveredSlot()->item_code;
+        held_item_count = count_to_take;
+        holding_item = true;
+
+        // remove what we are taking from the stack
+        GetHoveredSlot()->count -= 1;
+
+        Sound::Play("noisy_blip");
+        ItemDictionary::PlayInventorySound(held_item);        
+        return;
+    }
+    // otherwise treat as left click
+    LeftClickOnSlot();
+}
 void Inventory::LeftClickOnSlot(){
     
     if(GetHoveredSlot()->type == SlotType::RECIPE){
-        ClickOnRecipeSlot();
+        ClickOnRecipeSlot(false);
         return;
     }
 
@@ -183,20 +223,34 @@ void Inventory::LeftClickOnSlot(){
 
             // items are the same, join stack
             if(was_in_hand == held_item){
-                GetHoveredSlot()->count += was_in_hand_count;
+                GetHoveredSlot()->count += was_in_hand_count + held_item_count;
                 holding_item = false;
+    
+                // preventing any stack joining from overflowing the item types stack limit
+                if(GetHoveredSlot()->count > ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[held_item].type]){
+                    int old_overflowed_amount = GetHoveredSlot()->count;
+                    GetHoveredSlot()->count = ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[held_item].type];
+
+                    held_item_count = old_overflowed_amount - GetHoveredSlot()->count;
+                    if(held_item_count > 0){
+                        holding_item = true;                    
+                    }
+                }
+                ItemDictionary::PlayInventorySound(held_item);
             }
             else{ // swap, they are different items
                 GetHoveredSlot()->item_code = was_in_hand;
                 GetHoveredSlot()->count = was_in_hand_count;    
-                            
+                ItemDictionary::PlayInventorySound(was_in_hand);          
             }
         }
+
 
     } 
     else if (holding_item) {
         GetHoveredSlot()->item_code = held_item;
         GetHoveredSlot()->count = held_item_count;
+        ItemDictionary::PlayInventorySound(held_item);
 
         holding_item = false;
     }
@@ -226,6 +280,7 @@ void Inventory::RightClickOnSlot(){
         GetHoveredSlot()->count -= count_to_take;
 
         Sound::Play("noisy_blip");
+        ItemDictionary::PlayInventorySound(held_item);       
         return;
     }
     // otherwise treat as left click
@@ -288,20 +343,47 @@ void Inventory::ShiftClickOnSlot(){
 
 }
 
-void Inventory::ClickOnRecipeSlot(){
-    if(holding_item){
-        return; // cannot purchase while holding item
-    }
+void Inventory::ClickOnRecipeSlot(bool move_to_holding){
 
     const RecipeData& recipe = SlotSpace::GetHovered().set_parent->GetRecipe(SlotSpace::GetHovered().x, SlotSpace::GetHovered().y);
 
-    if(HasIngredientsForRecipe(recipe)){
+    if(holding_item && held_item != recipe.result.item_code){
+        return; // cannot purchase while holding item of different type
+    }
 
-        holding_item = true;
-        held_item = recipe.result.item_code;
-        held_item_count = recipe.result.count;
 
-        RemoveIngredientsForRecipe(recipe);
+    // purchases until a full stack or until out of resources
+    bool purchase_many = false;
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)){
+        purchase_many = true;
+    }
+
+    int count_crafted = held_item_count;
+    bool crafted = false;
+
+    while(count_crafted + recipe.result.count <= ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[recipe.result.item_code].type]){
+
+        if(HasIngredientsForRecipe(recipe)){
+
+            holding_item = true;
+            held_item = recipe.result.item_code;
+            count_crafted += recipe.result.count;
+            held_item_count = count_crafted;
+            crafted = true;
+
+            RemoveIngredientsForRecipe(recipe);
+        }
+        else{
+            break;
+        }
+
+        // limit crafting to one iteration in some circumstances
+        if(!purchase_many){
+            break;
+        }
+    }
+    if(crafted){
+        ItemDictionary::PlayInventorySound(held_item);   
     }
 }
 

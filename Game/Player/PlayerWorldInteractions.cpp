@@ -111,12 +111,13 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     _mouse_pos.x -= round(player_center.x);
     _mouse_pos.y -= round(player_center.y);
 
-    mouse_world_pos = sf::Vector2i(round(object->GetTransform()->position.x) + _mouse_pos.x, 
-                             round(object->GetTransform()->position.y) + _mouse_pos.y );
+    mouse_world_pos = sf::Vector2f(object->GetTransform()->position.x + _mouse_pos.x, object->GetTransform()->position.y + _mouse_pos.y );
 
 
-    sf::Vector2i world_tile = mouse_world_pos;
+    sf::Vector2f world_tile = mouse_world_pos;
     sf::Vector2i coord_tile = world->WorldToCoord(mouse_world_pos.x, mouse_world_pos.y);
+
+    cursor_graphic->GetTransform()->position = sf::Vector2f(mouse_world_pos.x, mouse_world_pos.y);
 
 
     int item_in_hand = inventory->GetItemInSelectedSlot();
@@ -145,12 +146,13 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     }
 
     sf::Vector2i rounded_world = world->RoundWorld(world_tile.x, world_tile.y);
+    cursor_graphic->SetBreakingPosition(sf::Vector2f(rounded_world.x, rounded_world.y));
 
-    cursor_graphic->GetTransform()->position = sf::Vector2f(rounded_world.x, rounded_world.y);
+
     focused_block = world->GetTile(coord_tile.x, coord_tile.y, set_location);
     
     if(data->type == ItemType::type_Hammer || data->type == ItemType::type_Picaxe){
-        Mine(world_tile, (ItemCode)item_in_hand);
+        Mine(rounded_world, (ItemCode)item_in_hand);
     }
         
     
@@ -198,22 +200,26 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
         if(world->CoordIsConnectedToOtherTiles(coord_tile.x, coord_tile.y)){
 
             if(data->type == ItemType::type_Main){
-
-                if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::MAIN, SetMode::OVERRIDE, true)){
+                
+                if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::MAIN, SetMode::OVERRIDE, true, true)){
                     inventory->DecrementSelectedSlot();
                 }
             }
             if(data->type == ItemType::type_Foreground){
 
-                if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true)){
-                    inventory->DecrementSelectedSlot();
+                if(world->GetTile(coord_tile.x, coord_tile.y, SetLocation::FOREGROUND) == -1){
+                    if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, true)){
+                        inventory->DecrementSelectedSlot();
+                    }
                 }
 
             }
             if(data->type == ItemType::type_Background){
                 
-                if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::BACKGROUND,SetMode::OVERRIDE, true)){
-                    inventory->DecrementSelectedSlot();
+                if(world->GetTile(coord_tile.x, coord_tile.y, SetLocation::BACKGROUND) == -1){
+                    if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::BACKGROUND, SetMode::OVERRIDE, true, true)){
+                        inventory->DecrementSelectedSlot();
+                    }
                 }
             }
         }

@@ -12,10 +12,11 @@ bool LightingManager::show_lighting = true;
 sf::Color LightingManager::sunlight_colour(255,255,255);
 
 
-float LightingManager::lighting_update_delay = 50;
-float LightingManager::light_update_delay_tracked = lighting_update_delay;
+float LightingManager::light_update_delay_tracked = Settings::LIGHT_REFRESH_RATE;
 sf::RenderTexture LightingManager::lighting_texture;
 sf::RenderTexture LightingManager::back_lighting_texture;
+
+std::vector<Chunk*> LightingManager::light_propogation_explored_chunks;
 
 void LightingManager::LinkWorld(World* _world){
     world = _world;
@@ -53,14 +54,14 @@ void LightingManager::Draw(sf::RenderTarget& surface){
 }
 
 bool LightingManager::ShouldUpdateChunkLighting(){ 
-    if(light_update_delay_tracked > lighting_update_delay){
+    if(light_update_delay_tracked > Settings::LIGHT_REFRESH_RATE){
         return true;
     }
     return false;
 }
 
 void LightingManager::DrawLightSources(){
-    if(light_update_delay_tracked > lighting_update_delay){
+    if(light_update_delay_tracked > Settings::LIGHT_REFRESH_RATE){
 
         sf::Vector2f pos;
         for(int i = 0; i < light_sources.size(); i++){
@@ -68,12 +69,11 @@ void LightingManager::DrawLightSources(){
             PropogateLighting(world->WorldToCoord(pos.x, pos.y), light_sources[i]->colour, light_sources[i]->decay);
         }
 
-        
     }
 }
 
 void LightingManager::ResetLightDelay(){
-    if(light_update_delay_tracked > lighting_update_delay){
+    if(light_update_delay_tracked > Settings::LIGHT_REFRESH_RATE){
         light_update_delay_tracked = 0;
     }
 }
@@ -81,7 +81,8 @@ void LightingManager::ResetLightDelay(){
 
 void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skylight_value){
 
-
+    return;
+/*
     if(!world->CoordInBounds(coordinate.x, coordinate.y)){
         return;
     }
@@ -95,9 +96,16 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
     std::queue<LightTile> queue;
     std::vector<LightTile> closed;
 
+
+    std::vector<Chunk*> explored_chunks;
+
     std::vector<std::vector<Chunk*>>* chunks = world->GetChunks();
-    
     sf::Vector2i chunk_coord = world->ChunkFromCoord(coordinate.x, coordinate.y);
+
+
+    for(int i = 0; i < world->GetWorldProfile()->tilemap_profile.width; i++){
+        chunks->at(chunk_coord.x)[chunk_coord.y]->lighting_closed_grid[i].resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+    }
 
     queue.push({world->OffsetFromCoord(coordinate.x, coordinate.y, chunk_coord.x, chunk_coord.y), skylight_value, sf::Vector2i(chunk_coord.x, chunk_coord.y)});
     
@@ -111,20 +119,49 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
             continue;
         }
 
-
+        Chunk* chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
+        
         if(light_tile.coord.x == world->GetWorldProfile()->tilemap_profile.width){
             light_tile.coord.x = 0;
             light_tile.chunk_origin.x++;
-    
+
+            chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
+            if(std::find(explored_chunks.begin(), explored_chunks.end(), chunk) == explored_chunks.end()){
+                explored_chunks.push_back(chunk);
+                for(int i = 0; i < world->GetWorldProfile()->tilemap_profile.width; i++){
+                    chunk->lighting_closed_grid[i].resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+                }
+            }
+
             if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+                continue;
+            }
+            if(!chunk->IsActive()){
                 continue;
             }
         }
         else if(light_tile.coord.x == -1){
+            
+            
             light_tile.coord.x = world->GetWorldProfile()->tilemap_profile.width - 1;
             light_tile.chunk_origin.x--;
 
+            chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
+            if(std::find(explored_chunks.begin(), explored_chunks.end(), chunk) == explored_chunks.end()){
+                explored_chunks.push_back(chunk);
+                for(int i = 0; i < world->GetWorldProfile()->tilemap_profile.width; i++){
+                    chunk->lighting_closed_grid[i].resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+                }
+            }
+
+            for(int i = 0; i < world->GetWorldProfile()->tilemap_profile.width; i++){
+                chunk->lighting_closed_grid[i].resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+            }
+
             if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+                continue;
+            }
+            if(!chunk->IsActive()){
                 continue;
             }
         }
@@ -133,19 +170,45 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
             light_tile.coord.y = 0;
             light_tile.chunk_origin.y++;
 
+            chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
+            if(std::find(explored_chunks.begin(), explored_chunks.end(), chunk) == explored_chunks.end()){
+                explored_chunks.push_back(chunk);
+                for(int i = 0; i < world->GetWorldProfile()->tilemap_profile.width; i++){
+                    chunk->lighting_closed_grid[i].resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+                }
+            }
+
             if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+                continue;
+            }
+            if(!chunk->IsActive()){
                 continue;
             }
         }
         else if(light_tile.coord.y == -1){
             light_tile.coord.y = world->GetWorldProfile()->tilemap_profile.height - 1;
             light_tile.chunk_origin.y--;
-            
+
+            chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
+            if(std::find(explored_chunks.begin(), explored_chunks.end(), chunk) == explored_chunks.end()){
+                explored_chunks.push_back(chunk);
+                for(int i = 0; i < world->GetWorldProfile()->tilemap_profile.width; i++){
+                    chunk->lighting_closed_grid[i].resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+                }
+            }
+
             if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+                continue;
+            }
+            if(!chunk->IsActive()){
                 continue;
             }
         }
 
+        // break if a closed tile has a greater light value
+        if(chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] >= light_tile.value){
+            continue;
+        }
 
         bool found_in_closed = false;
         for(int i = 0; i < closed.size(); i++){
@@ -162,13 +225,6 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
         if(found_in_closed){
             continue;
         }
-
-        Chunk* chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
-        
-        if(!chunk->IsActive()){
-            continue;
-        }
-        
         // coordinate within said chunk
 
 
@@ -176,7 +232,6 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
 
         std::vector<std::vector<byte>>& skylight_map = chunk->GetSkylightmap();
     
-
         if(skylight_map[light_tile.coord.x][light_tile.coord.y] > light_tile.value){
             continue;
         }
@@ -197,33 +252,63 @@ void LightingManager::PropogateSkyLighting(sf::Vector2i coordinate, byte skyligh
             queue.push({light_tile.coord + sf::Vector2i(-1,0), light_tile.value - 15, light_tile.chunk_origin});
         }
 
-        closed.push_back(light_tile);
+        
+        //closed.push_back(light_tile);
+    }
+    
+    */
+}
+
+bool LightingManager::CanPropogateToNewChunk(sf::Vector2i chunk_pos){
+    if(!world->ChunkInBounds(chunk_pos.x, chunk_pos.y)){
+        return false;
+    }
+    if(!world->GetChunks()->at(chunk_pos.x).at(chunk_pos.y)->IsActive()){
+        return false;
+    }
+    return true;
+}
+
+void LightingManager::ResetClosedTileVectorForChunk(sf::Vector2i chunk_pos){
+    if(std::find(light_propogation_explored_chunks.begin(), light_propogation_explored_chunks.end(), world->GetChunks()->at(chunk_pos.x).at(chunk_pos.y)) == light_propogation_explored_chunks.end()){
+        light_propogation_explored_chunks.push_back(world->GetChunks()->at(chunk_pos.x).at(chunk_pos.y));
+        
+        for(int x = 0; x < world->GetWorldProfile()->tilemap_profile.width; x++){
+            world->GetChunks()->at(chunk_pos.x).at(chunk_pos.y)->lighting_closed_grid.at(x).resize(world->GetWorldProfile()->tilemap_profile.height, 0);
+        }
     }
 }
 
 
 void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color& _colour, float decay){
 
+    //Time::StartRecord();
 
     struct LightTile {
         sf::Vector2i coord;
         float intensity; 
         sf::Vector2i chunk_origin;
     };
-
-    float diagonal_decay = decay * 1.6f;
     
-    std::vector<LightTile> closed;
     std::queue<LightTile> queue;
-
     std::vector<std::vector<Chunk*>>* chunks = world->GetChunks();
-    
     sf::Vector2i chunk_coord = world->ChunkFromCoord(coordinate.x, coordinate.y);
-    queue.push({world->OffsetFromCoord(coordinate.x, coordinate.y, chunk_coord.x, chunk_coord.y), 1.0f, sf::Vector2i(chunk_coord.x, chunk_coord.y)});
+    coordinate = world->OffsetFromCoord(coordinate.x, coordinate.y, chunk_coord.x, chunk_coord.y);
+
+    LightingManager::light_propogation_explored_chunks.clear();
+
+    if(!CanPropogateToNewChunk(chunk_coord)){
+        return;
+    }
+    ResetClosedTileVectorForChunk(chunk_coord);
+    
+    queue.push({coordinate, 1.0f, sf::Vector2i(chunk_coord.x, chunk_coord.y)});
 
     if(!world->ChunkInBounds(chunk_coord.x, chunk_coord.y)){
         return;
     }
+
+    Chunk* chunk;
 
     while(!queue.empty()){
 
@@ -237,63 +322,47 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
         if(light_tile.coord.x == world->GetWorldProfile()->tilemap_profile.width){
             light_tile.coord.x = 0;
             light_tile.chunk_origin.x++;
-    
-            if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+
+            if(!CanPropogateToNewChunk(light_tile.chunk_origin)){
                 continue;
             }
+            ResetClosedTileVectorForChunk(light_tile.chunk_origin);
         }
         else if(light_tile.coord.x == -1){
             light_tile.coord.x = world->GetWorldProfile()->tilemap_profile.width - 1;
             light_tile.chunk_origin.x--;
 
-            if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+            if(!CanPropogateToNewChunk(light_tile.chunk_origin)){
                 continue;
             }
+            ResetClosedTileVectorForChunk(light_tile.chunk_origin);
+
         }
 
         if(light_tile.coord.y == world->GetWorldProfile()->tilemap_profile.height){
             light_tile.coord.y = 0;
             light_tile.chunk_origin.y++;
 
-            if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+            if(!CanPropogateToNewChunk(light_tile.chunk_origin)){
                 continue;
             }
+            ResetClosedTileVectorForChunk(light_tile.chunk_origin);
         }
         else if(light_tile.coord.y == -1){
             light_tile.coord.y = world->GetWorldProfile()->tilemap_profile.height - 1;
             light_tile.chunk_origin.y--;
-            
-            if(!world->ChunkInBounds(light_tile.chunk_origin.x, light_tile.chunk_origin.y)){
+
+            if(!CanPropogateToNewChunk(light_tile.chunk_origin)){
                 continue;
             }
+            ResetClosedTileVectorForChunk(light_tile.chunk_origin);
         }
 
-        if(!world->CoordInBounds(light_tile.coord.x, light_tile.coord.y)){
-            continue;
-        }
 
-    
-        bool found_in_closed = false;
-        for(int i = 0; i < closed.size(); i++){
+        chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
 
-            if(closed[i].coord == light_tile.coord){
-                if(closed[i].chunk_origin == light_tile.chunk_origin){
-
-                    if(light_tile.intensity <= closed[i].intensity){                    
-                        found_in_closed = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if(found_in_closed){
-            continue;
-        }
-
-        Chunk* chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
-
-        if(!chunk->IsActive()){
-            continue;
+        if(chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] >= light_tile.intensity){
+            //continue;
         }
 
 
@@ -314,10 +383,10 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
 
 
         if(current_tile != -1){
-            queue.push({light_tile.coord + sf::Vector2i(0, 1), light_tile.intensity * 0.4f, light_tile.chunk_origin});
-            queue.push({light_tile.coord + sf::Vector2i(1, 0), light_tile.intensity * 0.4f, light_tile.chunk_origin});
-            queue.push({light_tile.coord + sf::Vector2i(-1, 0), light_tile.intensity * 0.4f, light_tile.chunk_origin});
-            queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.intensity * 0.4f, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(0, 1), light_tile.intensity * 0.4f - decay, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(1, 0), light_tile.intensity * 0.4f - decay, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(-1, 0), light_tile.intensity * 0.4f - decay, light_tile.chunk_origin});
+            queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.intensity * 0.4f - decay, light_tile.chunk_origin});
 
         }
         else{
@@ -327,9 +396,10 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
             queue.push({light_tile.coord + sf::Vector2i(1,0), light_tile.intensity - decay, light_tile.chunk_origin });
         }
 
-        closed.push_back(light_tile);
-
+        chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] = light_tile.intensity;
     }
+
+    //Time::EndRecord();
 }
 
 void LightingManager::AddLightSource(LightSource* light_source){

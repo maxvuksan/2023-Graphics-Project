@@ -19,25 +19,32 @@ class Game : public Core{
 
         void Start() override{
 
+            // Fonts ---------------------------------------------------------------------
+
+            AssetManager::CreateFontObj("m3x6", "m3x6.ttf");
+
             // Textures ------------------------------------------------------------------
 
-            AssetManager::CreateTexture("cursor_breaking", "breaking.png");
-            AssetManager::CreateTexture("player", "player.png");
-            AssetManager::CreateTexture("furnace", "furnace.png");
+            AssetManager::CreateTexture("player", "Images/player.png");
+            AssetManager::CreateTexture("furnace", "Images/furnace.png");
 
-            AssetManager::CreateTexture("slot", "slot_sprite.png");
-            AssetManager::CreateTexture("inventory_sprites", "inventory_sprites.png");
+            AssetManager::CreateTexture("slot", "Images/slot_sprite.png");
+            AssetManager::CreateTexture("inventory_sprites", "Images/inventory_sprites.png");
 
-            AssetManager::CreateTexture("tiles", "tiles.png");
-            AssetManager::CreateTexture("utility_tiles", "utility_objects.png");
-            AssetManager::CreateTexture("foreground_tiles", "sprite_overlays.png");       
-            AssetManager::CreateTexture("background_tiles", "tiles_background.png");
+            // tiles
+            AssetManager::CreateTexture("tiles", "Images/tiles.png");
+            AssetManager::CreateTexture("utility_tiles", "Images/utility_objects.png");
+            AssetManager::CreateTexture("foreground_tiles", "Images/sprite_overlays.png");       
+            AssetManager::CreateTexture("background_tiles", "Images/tiles_background.png");
 
-            AssetManager::CreateTexture("tree", "tree.png");
-            AssetManager::CreateTexture("background", "background_idea.png");
+            AssetManager::CreateTexture("tree", "Images/tree.png");
+            AssetManager::CreateTexture("background", "Images/background_idea.png");
 
-            AssetManager::CreateTexture("fly", "fly.png");
-            AssetManager::CreateTexture("noodle_head", "noodle_head.png");
+            AssetManager::CreateTexture("fly", "Images/fly.png");
+            AssetManager::CreateTexture("noodle_head", "Images/noodle_head.png");
+
+            AssetManager::CreateTexture("cursor", "Images/crosshair.png");
+            AssetManager::CreateTexture("cursor_breaking", "Images/breaking.png");
 
             // Animations -----------------------------------------------------------------
 
@@ -54,6 +61,11 @@ class Game : public Core{
             AssetManager::CreateSound("hit", "Sounds/FX/hit.wav");
             AssetManager::CreateSound("break", "Sounds/FX/break.wav");
             AssetManager::CreateSound("noisy_blip", "Sounds/FX/noisy_blip.wav");
+
+            AssetManager::CreateSound("item_metal", "Sounds/FX/Inventory/item_Metal.wav");
+            AssetManager::CreateSound("item_rubble", "Sounds/FX/Inventory/item_Rubble.wav");
+            AssetManager::CreateSound("item_soft", "Sounds/FX/Inventory/item_Soft.wav");
+      
 
             // Scenes ---------------------------------------------------------------------
 

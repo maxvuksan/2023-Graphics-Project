@@ -7,6 +7,9 @@
 #include "Chunk.h"
 #include "WorldProfile.h"
 
+
+
+
 class WorldScene;
 class GameClient;
 class WorldGenerator;
@@ -34,35 +37,38 @@ class World : public Object{
             converts a world position to the appropriate chunks SetTile call
             @returns true if the tile could be set, false otherwise
         */
-        bool SetTileWorld(signed_byte tile_index, int world_x, int world_y, SetLocation set_location = SetLocation::MAIN, bool send_packet = false);
-        bool SetTile(signed_byte tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN, SetMode set_mode = SetMode::OVERRIDE, bool send_packet = false);
+        bool SetTileWorld(signed_byte tile_index, float world_x, float world_y, SetLocation set_location = SetLocation::MAIN, bool send_packet = false);
+        bool SetTile(signed_byte tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN, SetMode set_mode = SetMode::OVERRIDE, bool send_packet = false, bool propogate_to_other_tiles = false, bool create_pickup = false);
+        void CreatePickup(ItemCode item_to_drop, float world_x, float world_y);
         void DrawTileToMinimap(signed_byte tile_index, int x, int y, SetLocation set_location);
         void RevealMapAroundFocus(); 
 
         // @returns true if the position provided has adjacent tiles (on either main tilemap or background tilemap), aids checking if a position is valid for placement
         bool CoordIsConnectedToOtherTiles(int x, int y);
 
+        // DEPRECATED! use SetTile with the create pickup flag = true
         // same as SetTileWorld to -1, but also spawns pickup if needed.
-        bool BreakTileWorld(int world_x, int world_y, SetLocation set_location = SetLocation::MAIN, bool send_packet = false);
+        bool BreakTileWorld(float world_x, float world_y, SetLocation set_location = SetLocation::MAIN, bool send_packet = false);
 
         // @returns the tile_index at a specific world position
-        signed_byte GetTileWorld(int world_x, int world_y, SetLocation set_location = SetLocation::MAIN);
+        signed_byte GetTileWorld(float world_x, float world_y, SetLocation set_location = SetLocation::MAIN);
         // @returns the tile_index at a specific coordinate
         signed_byte GetTile(int x, int y, SetLocation set_location = SetLocation::MAIN);
+        // @returns a struct containing the byte for each layer
+        EntireTile GetEntireTile(int x, int y);
         // @returns starting at world_position, returns the nearest tile coordinate in the mouses direction
         sf::Vector2i GetNearestTileInDirectionOfMouse(sf::Vector2f world_position, SetLocation set_location = SetLocation::MAIN);
-
 
         // @returns true if a chunk coordinate is valid
         bool ChunkInBounds(int chunk_x, int chunk_y);
         // @returns true if a coordinate is valid
         bool CoordInBounds(int x, int y);
         // @returns a world position rounded by increments of the tilesize
-        sf::Vector2i RoundWorld(int world_x, int world_y);
+        sf::Vector2i RoundWorld(float world_x, float world_y);
         // @returns the coordinate position of a world position
-        sf::Vector2i WorldToCoord(int world_x, int world_y);
+        sf::Vector2i WorldToCoord(float world_x, float world_y);
         // @returns the world position of a coordinate
-        sf::Vector2i CoordToWorld(int x, int y);
+        sf::Vector2f CoordToWorld(int x, int y);
         // @returns the chunk the provided position falls in
         sf::Vector2i ChunkFromCoord(int x, int y);
         // @returns the tilemap position of a coordinate, relative to the provided chunk

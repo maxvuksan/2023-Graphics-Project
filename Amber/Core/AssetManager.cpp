@@ -44,6 +44,7 @@ sf::Font* AssetManager::CreateFontObj(const char* label, const std::string file_
 
     fonts.insert(std::make_pair(label, sf::Font())); 
     fonts[label].loadFromFile(file_location);
+    fonts[label].setSmooth(false);
 
     return &fonts[label];
 }

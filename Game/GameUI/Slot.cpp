@@ -1,7 +1,7 @@
 #include "Slot.h"
 #include "../../Amber/Utility/Mouse.h"
 
-int Slot::cellsize = 22; 
+int Slot::cellsize = 24; 
 int Slot::spacing = 1; 
 
 sf::Text Slot::item_count_text;
@@ -18,8 +18,8 @@ void Slot::Construct(){
 
 
     sf::Texture* tiles_texture = AssetManager::GetTexture("tiles");
-    sf::Font* font = AssetManager::GetFont("Amber_Default");
-
+    sf::Font* font = AssetManager::GetFont("m3x6");
+    
     if(tiles_texture == nullptr){
         std::cout << "ERROR : tiles_texture is nullptr, Slot::Construct\n";
         return;
@@ -32,9 +32,7 @@ void Slot::Construct(){
 
     item_sprite.setTexture(*tiles_texture);
     item_count_text.setFont(*font);
-    item_count_text.setOutlineColor(sf::Color(50,28, 49));
-    item_count_text.setOutlineThickness(1);
-    item_count_text.setCharacterSize(8);
+    item_count_text.setCharacterSize(16);
 }
 
 bool Slot::Hovered(sf::Vector2f position){
@@ -71,10 +69,17 @@ void Slot::DrawSlot(sf::RenderTarget& surface, sf::Vector2f position){
     surface.draw(item_sprite);
 
     if(count > 1){
-        item_count_text.setPosition(item_sprite.getPosition() + sf::Vector2f(0, -8));
+        item_count_text.setPosition(GetTextPosition(item_sprite.getPosition(), count));
         item_count_text.setString(std::to_string(count));
         surface.draw(item_count_text);
     }
+}
 
+sf::Vector2f Slot::GetTextPosition(const sf::Vector2f& item_sprite_position, int count){
 
+    sf::Vector2f pos = item_sprite_position + sf::Vector2f(6, -8);
+    if(count >= 10){
+        pos += sf::Vector2f(-4,0);
+    }
+    return pos;
 }

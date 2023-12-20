@@ -37,6 +37,9 @@ enum SpriteInventory{
 
     isprite_Torch,
 
+    isprite_Mushroom,
+    isprite_Sticks,
+
     isprite_USE_MAIN_SPRITE // use the sprite seen in the world
 };
 

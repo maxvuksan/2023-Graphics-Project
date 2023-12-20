@@ -25,8 +25,20 @@ enum ForegroundBlockCode{
     foreground_Leaves,
     foreground_Moss,
     foreground_Grass,
+
+    foreground_Mushroom,
+    foreground_Pebbles,
+
+    foreground_Torch,
+    foreground_TorchLeft,
+    foreground_TorchRight,
+
+    foreground_Roots,
+    foreground_RootsEnd,
+    
     foreground_Vine,
     foreground_VineEnd,
+    
 
     foreground_NUMBER_OF_BLOCKS
 };

@@ -62,7 +62,6 @@ void GameClient::CreateObjects(){
      //   fly->GetTransform()->position = sf::Vector2f(50,50);
     }*/
 
-    scene->AddObject<NoodleCreature>();
 }
 
 void GameClient::SendPlayerControl(){

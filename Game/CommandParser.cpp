@@ -6,6 +6,7 @@
 #include "ConsoleVisual.h"
 #include <sstream>
 #include "World/LightingManager.h"
+#include "Pathfinding/NoodleCreature.h"
 
 GameClient* CommandParser::client = nullptr;
 
@@ -61,8 +62,15 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
     else if(tokens[0] == "LIGHT"){
         LightingManager::show_lighting = !LightingManager::show_lighting;
     }
+    else if(tokens[0] == "SUMMON"){
+        auto noodle = client->scene->AddObject<NoodleCreature>();
+        noodle->LinkWorld(client->world);
+
+        noodle->GetTransform()->position = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
+
+    }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /SUMMON", Globals::DEBUG_COLOUR};
     }
     else if(tokens[0] == "GIVE"){
         if(tokens.size() <= 1){

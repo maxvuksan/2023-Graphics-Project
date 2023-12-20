@@ -146,6 +146,7 @@ class SlotSpace {
         }
 
     private:
+
         // is the inventory open?
         static bool open;
         static bool update_called;

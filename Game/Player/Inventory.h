@@ -15,7 +15,8 @@ class Inventory : public Object {
         void LeftClickOnSlot();
         void RightClickOnSlot();
         void ShiftClickOnSlot();
-        void ClickOnRecipeSlot();
+        void MiddleClickOnSlot();
+        void ClickOnRecipeSlot(bool move_to_holding = true);
 
         // @returns true if a recipes ingredients are found in the players hotbar and/or backpack 
         bool HasIngredientsForRecipe(const RecipeData& recipe);
@@ -81,9 +82,11 @@ class Inventory : public Object {
         sf::RectangleShape rectangle_shape_inside;
 
         sf::Vector2i hovered_slot;
+        
         bool holding_item; // we have lifted an item out of a slot
         ItemCode held_item;
         unsigned short held_item_count;
+        sf::Text held_item_text;
         sf::Sprite held_item_sprite;
 
         int selected_slot;

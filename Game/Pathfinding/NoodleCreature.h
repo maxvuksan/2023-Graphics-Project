@@ -1,15 +1,22 @@
 #include "../../Amber/Framework.h"
 
+class World;
 class InverseKinematicLimb;
 class NoodleCreature : public Object {
 
     public:
         
+        void LinkWorld(World* world);
+
         void Start() override;
 
-        void Update() override;
+        void Draw(sf::RenderTarget& surface) override;
+
+        sf::Vector2i RandomCoordinateNearTarget(sf::Vector2f& target_position);
+        bool GrabCoordinateIsValid(sf::Vector2i& grab_coordinate);
 
     private: 
+        World* world;
         PhysicsBody* physics;
 
         std::vector<InverseKinematicLimb*> limbs;

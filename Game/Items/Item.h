@@ -52,6 +52,10 @@ enum ItemCode{
     item_Book,
 
     item_Torch,
+    
+    item_Sticks,
+    item_Mushroom,
+    
 
     item_NUMBER_OF_ITEMS,
 };

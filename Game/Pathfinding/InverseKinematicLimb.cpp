@@ -101,6 +101,10 @@ void InverseKinematicLimb::Draw(sf::RenderTarget& surface){
         }
 
         target = Calc::Lerp(next_target, original_target, time_tracked / time_total);
+        attached_to_a_target = false;
+    }
+    else{
+        attached_to_a_target = true;
     }
 
 

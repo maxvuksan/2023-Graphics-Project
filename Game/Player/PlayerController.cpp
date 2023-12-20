@@ -2,9 +2,16 @@
 #include "../World/World.h"
 #include "../Items/ItemDictionary.h"
 
+float PlayerController::speed = 0.07;
 float PlayerController::jump_height = 0.175;
 float PlayerController::jump_buffer = 100;
 float PlayerController::cyote_time_buffer = 100;
+float PlayerController::cyote_time_wall = 100;
+float PlayerController::climb_speed = 0.03;
+float PlayerController::grab_delay = 200;
+float PlayerController::wall_kickoff_force = 0.10;
+float PlayerController::wall_jump_control_blend = 300;
+float PlayerController::wall_kickoff_height = 0.15;
 
 void PlayerController::Start(){
     
@@ -39,28 +46,34 @@ void PlayerController::Start(){
 
     jump_buffer_tracked = 0;
     cyote_time_buffer_tracked = 0;
+    cyote_time_left_wall_tracked = 0;
+    cyote_time_right_wall_tracked = 0;
+    wall_jump_control_blend_tracked = 0;
+    grab_delay_tracked = 0;
+    forced_velocity_x = 0;
+    controlled_velocity_x = 0;
 
 }
 
 
 void PlayerController::UpdateEventFocusBounded(){
 
-    float speed = 0.05;
+    float _speed = speed;
 
     // Movement...
 
     if(in_fly_mode){
 
         // double speed in fly mode
-        speed *= 2;
+        _speed *= 2;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
-            pb->velocity.y = -speed;
+            pb->velocity.y = -_speed;
         }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
-            pb->velocity.y = speed;
+            pb->velocity.y = _speed;
         }
         else{
             pb->velocity.y = 0;       
@@ -70,53 +83,104 @@ void PlayerController::UpdateEventFocusBounded(){
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
-        pb->velocity.x = -speed;
-        animation->SetFlip(true);
-        animation->SetState("run");
+        if(!grabbing_wall || grabbing_wall_right){
+            grabbing_wall = false;
+            grabbing_wall_right = false;
+            
+            controlled_velocity_x = -_speed;
+            animation->SetFlip(true);
+            animation->SetState("run");
+        }
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
-        pb->velocity.x = speed;
-        animation->SetFlip(false);
-        animation->SetState("run");
+        if(!grabbing_wall || grabbing_wall_left){
+            grabbing_wall = false;
+            grabbing_wall_left = false;
+            
+
+            controlled_velocity_x = _speed;
+            animation->SetFlip(false);
+            animation->SetState("run");
+        }
     }
     else{
-        pb->velocity.x = 0;      
+        controlled_velocity_x = 0;      
         animation->SetState("idle"); 
+    }
+
+    pb->velocity.x = Calc::Lerp(controlled_velocity_x, forced_velocity_x, wall_jump_control_blend_tracked / wall_jump_control_blend);
+
+    if(grabbing_wall){
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+        {
+            pb->velocity.y = climb_speed;
+        }
+        else{
+            pb->velocity.y = 0;
+            pb->gravity = 0;
+        }
+    }
+    else{
+        pb->gravity = 1;
     }
 
     if(!ground->Triggered()){
 
-        if(left->Triggered()){
-            animation->SetState("onwall");
-            animation->SetFlip(true);
-        }
-        else if(right->Triggered()){
-            animation->SetState("onwall");
-            animation->SetFlip(false);
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) && grab_delay_tracked <= 0){
+            grabbing_wall = true;
         }
         else {
-            if(pb->velocity.y < 0){
-                animation->SetState("fallup"); 
+            grabbing_wall = false;
+            grabbing_wall_left = false;
+            grabbing_wall_right = false;
+        }
+
+        if(pb->velocity.y < 0){
+            animation->SetState("fallup"); 
+        }
+        else {
+            animation->SetState("falldown"); 
+        }
+
+        if(left->Triggered()){
+            cyote_time_left_wall_tracked = cyote_time_wall;
+
+            if(grabbing_wall){
+                animation->SetState("onwall");
+                animation->SetFlip(true);
+                grabbing_wall_left = true;
             }
-            else {
-                animation->SetState("falldown"); 
+
+        }
+        else if(right->Triggered()){
+            cyote_time_right_wall_tracked = cyote_time_wall;
+
+            if(grabbing_wall && !grabbing_wall_left){
+                animation->SetState("onwall");
+                animation->SetFlip(false);
+                grabbing_wall_right = true;
             }
         }
+        else{
+            grabbing_wall = false;
+            grabbing_wall_right = false;
+            grabbing_wall_left = false;
+        }
+
 
     }
     else{ // is grounded
         cyote_time_buffer_tracked = cyote_time_buffer;
     }
 
+    if(grab_delay_tracked > 0){
+        grab_delay_tracked -= Time::Dt();
+    }
 
 
     if(jump_buffer_tracked > 0){
-
-        if(cyote_time_buffer_tracked > 0){
-            Jump();
-            jump_buffer_tracked = 0;
-        }
+        SuggestJump();
     }
 
     if(jump_buffer_tracked >= 0){
@@ -124,6 +188,16 @@ void PlayerController::UpdateEventFocusBounded(){
     }
     if(cyote_time_buffer_tracked >= 0){
         cyote_time_buffer_tracked -= Time::Dt();
+    }
+    if(cyote_time_left_wall_tracked >= 0){
+        cyote_time_left_wall_tracked -= Time::Dt();
+    }
+    if(cyote_time_right_wall_tracked >= 0){
+        cyote_time_right_wall_tracked -= Time::Dt();
+    }
+    if(wall_jump_control_blend_tracked > 0){
+        wall_jump_control_blend_tracked -= Time::Dt();
+        wall_jump_control_blend_tracked = Calc::Clamp(wall_jump_control_blend_tracked, 0, 9999);
     }
 }
 
@@ -139,17 +213,10 @@ void PlayerController::CatchEvent(sf::Event event){
                     break;
                 }
 
-                // only allow jumping when we have ground below
-                if(cyote_time_buffer_tracked > 0){
-                    Jump();
-                }
-                else{
-                    // hold onto jump
-                    jump_buffer_tracked = jump_buffer;
-                }
+                // hold onto jump
+                jump_buffer_tracked = jump_buffer;
+                SuggestJump();
 
-
-               
                 break;
             }       
         }
@@ -157,25 +224,51 @@ void PlayerController::CatchEvent(sf::Event event){
     }       
 }
 
+void PlayerController::SuggestJump(){
+    if(cyote_time_buffer_tracked > 0){
+        Jump();
+        jump_buffer_tracked = 0;
+    }
+    else if(cyote_time_left_wall_tracked > 0){
+        LeftWallJump();
+        jump_buffer_tracked = 0;
+    }
+    else if(cyote_time_right_wall_tracked > 0){
+        RightWallJump();
+        jump_buffer_tracked = 0;
+    }
+}
+
 void PlayerController::Jump(){
 
     pb->velocity.y = -jump_height;
+}
 
-    /* WALL JUMP----
-    else if(left->Triggered()){
+void PlayerController::LeftWallJump(){
 
-        float half_jump = jump_height / 2.0f;
-        pb->velocity.y = -half_jump;
-        pb->velocity.x = half_jump; 
-    }
-    else if(right->Triggered()){
+    pb->velocity.y = -wall_kickoff_height;
+    forced_velocity_x = wall_kickoff_force; 
 
-        float half_jump = jump_height / 2.0f;
-        pb->velocity.y = -half_jump;
-        pb->velocity.x = -half_jump; 
-    }
-    */
+    wall_jump_control_blend_tracked = wall_jump_control_blend;
 
+    grabbing_wall = false;
+    grabbing_wall_left = false;
+    grabbing_wall_right = false;
+    grab_delay_tracked = grab_delay;
+}
+
+void PlayerController::RightWallJump(){
+
+    pb->velocity.y = -wall_kickoff_height;
+    forced_velocity_x = -wall_kickoff_force; 
+
+    wall_jump_control_blend_tracked = wall_jump_control_blend;
+
+    
+    grabbing_wall = false;
+    grabbing_wall_right = false;
+    grabbing_wall_left = false;
+    grab_delay_tracked = grab_delay;
 }
 
 void PlayerController::Respawn(){

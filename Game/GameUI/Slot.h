@@ -22,6 +22,7 @@ class Slot {
     public:
 
         Slot(SlotType type = SlotType::OPEN, SlotSprite sprite = SlotSprite::DEFAULT) : sprite(sprite), count(0), type(type), item_code(item_NO_DROP){};
+        static sf::Vector2f GetTextPosition(const sf::Vector2f& item_sprite_position, int count);
 
         static int spacing; 
         static int cellsize;

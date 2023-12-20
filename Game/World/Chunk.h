@@ -3,14 +3,21 @@
 #include "WorldSettings.h"
 #include "../../Amber/Framework.h"
 
+struct EntireTile{
+    signed_byte main;
+    signed_byte background;
+    signed_byte foreground;
+};
+
 class World;
 class Chunk : public Object {
 
     public:
         void Init(World* world);
 
-        int GetTile(int x, int y, SetLocation get_location = SetLocation::MAIN);
-        void SetTile(int tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN);
+        signed_byte GetTile(int x, int y, SetLocation get_location = SetLocation::MAIN);
+        EntireTile GetEntireTile(int x, int y);
+        void SetTile(signed_byte tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN);
 
         void ClearColliders();
         void ResetCollidersIfChanged();
@@ -20,6 +27,7 @@ class Chunk : public Object {
         virtual void OnDisable() override;
 
         void Draw(sf::RenderTarget& surface);
+        void PropogateTorches();
 
         Tilemap* GetTilemap(SetLocation set_location);
 
@@ -65,15 +73,22 @@ class Chunk : public Object {
         void MarkSkylightDirty(){skylight_map_dirty = true;}
         std::vector<std::vector<byte>>& GetSkylightmap() {return skylight_map;}
 
+        void RemoveTorchPosition(int  coord_x, int coord_y);
+        void AddTorchPosition(int coord_x, int coord_y);
+
         void ClearLightmap();
         void RefreshSkylight();
         void CalculateSkyLight();
+
+
+        std::vector<std::vector<float>> lighting_closed_grid;
 
     private:
 
 
         std::vector<Object*> objects_bound_to_chunk;
         std::vector<Object*> ui_bound_to_chunk;
+        std::vector<sf::Vector2i> torch_positions;
 
         std::vector<std::vector<byte>> skylight_map; 
         sf::Image skylight_image;

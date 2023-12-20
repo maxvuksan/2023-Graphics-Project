@@ -68,3 +68,4 @@ void PhysicsBody::Move(sf::Vector2f movement){
 void PhysicsBody::SetGravityState(bool state){
     gravity_on = state;
 }
+

@@ -44,6 +44,18 @@ void Chunk::Draw(sf::RenderTarget& surface){
     }
 }
 
+void Chunk::RemoveTorchPosition(int coord_x, int coord_y){
+    for(int i = 0; i < torch_positions.size(); i++){
+        if(torch_positions[i] == sf::Vector2i(coord_x, coord_y)){
+            torch_positions.erase(torch_positions.begin() + i);
+        }
+    }
+}
+
+void Chunk::AddTorchPosition(int  coord_x, int coord_y){
+    torch_positions.push_back(sf::Vector2i(coord_x, coord_y));
+}
+
 Tilemap* Chunk::GetTilemap(SetLocation set_location){
 
     if(set_location == SetLocation::MAIN){
@@ -57,7 +69,7 @@ Tilemap* Chunk::GetTilemap(SetLocation set_location){
     }
 }
 
-int Chunk::GetTile(int x, int y, SetLocation get_location){
+signed_byte Chunk::GetTile(int x, int y, SetLocation get_location){
     
     if(get_location == SetLocation::MAIN){
         return main_tilemap->GetTile(x, y);
@@ -69,8 +81,15 @@ int Chunk::GetTile(int x, int y, SetLocation get_location){
         return foreground_tilemap->GetTile(x, y);
     }
 }
+EntireTile Chunk::GetEntireTile(int x, int y){
+    return {main_tilemap->GetTile(x, y), 
+            background_tilemap->GetTile(x, y),
+            foreground_tilemap->GetTile(x, y)};
+}
 
-void Chunk::SetTile(int tile_index, int x, int y, SetLocation set_location){
+
+
+void Chunk::SetTile(signed_byte tile_index, int x, int y, SetLocation set_location){
 
     if(set_location == SetLocation::MAIN){
         main_tilemap->SetTileSafe(tile_index, x, y);
@@ -117,6 +136,15 @@ void Chunk::CalculateSkyLight(){
     }    
 }
 
+void Chunk::PropogateTorches(){
+    
+    sf::Vector2i coord = world->WorldToCoord(GetTransform()->position.x, GetTransform()->position.y);
+
+    for(int i = 0; i < torch_positions.size(); i++){
+        LightingManager::PropogateLighting(coord + torch_positions[i], ItemDictionary::torch_colour, ItemDictionary::torch_propogate_decay);
+    }
+}
+
 void Chunk::RefreshSkylight(){
     skylight_image.create(world->world_profile.tilemap_profile.width, world->world_profile.tilemap_profile.height, sf::Color(0, 0, 0));
 
@@ -135,6 +163,11 @@ void Chunk::RefreshSkylight(){
 
 void Chunk::OnSetActive(){
     
+    lighting_closed_grid.resize(world->tilemap_profile->width);
+    for(int i = 0; i < lighting_closed_grid.size(); i++){
+        lighting_closed_grid[i].resize(world->tilemap_profile->height, 0);
+    }
+
     RefreshSkylight();
     ClearLightmap();
     
@@ -146,6 +179,9 @@ void Chunk::OnSetActive(){
 }
 
 void Chunk::OnDisable(){
+
+    lighting_closed_grid.clear();
+
     light_map.create(1,1);
     light_texture.create(1,1);
     skylight_image.create(1,1);
