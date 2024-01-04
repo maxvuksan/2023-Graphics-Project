@@ -6,6 +6,7 @@
 #include "WorldGenerator.h"
 #include "Chunk.h"
 #include "WorldProfile.h"
+#include "TimeManager.h"
 
 
 
@@ -94,6 +95,13 @@ class World : public Object{
         bool GetWorldNeedsPathfindingRecalculating(){return world_needs_pathfinding_recalculating; }
         void SetWorldNeedsPathfindingRecalculating(bool state);
 
+        // @returns minimum coordinate of active chunks
+        sf::Vector2i GetActiveChunksMin(){return active_chunks_min;}
+        // @returns maximum coordinates of active chunks
+        sf::Vector2i GetActiveChunksMax(){return active_chunks_max;}
+
+        // @returns the coordinate of the world spawnpoint
+        sf::Vector2i GetSpawnCoordinate(){return world_spawn_coord;}
     private:
         GameClient* client;
         Transform* focus;
@@ -101,15 +109,18 @@ class World : public Object{
 
         // storing tiles within specified radii, calculating via CalculateOFfsetsInRadius()
         std::unordered_map<int, std::vector<sf::Vector2i>> radius_offsets;
-
         std::vector<std::vector<Chunk*>> chunks;
         
+        sf::Vector2i world_spawn_coord;
+
         Minimap* minimap;
         WorldGenerator* generator;
         WorldProfile world_profile;    
         TilemapProfile* tilemap_profile;
 
         int load_distance = 2;
+        sf::Vector2i active_chunks_min; 
+        sf::Vector2i active_chunks_max; 
 
         bool world_needs_pathfinding_recalculating;
 

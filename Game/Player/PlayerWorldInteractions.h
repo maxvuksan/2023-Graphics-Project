@@ -18,6 +18,7 @@ class PlayerWorldInteractions : public Component {
 
         void Mine(const sf::Vector2i& world_tile, ItemCode item_code);
         void PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code);
+        bool UtilityHasNoUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint);
 
         void CatchEvent(sf::Event) override;
 

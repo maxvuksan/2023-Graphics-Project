@@ -5,6 +5,7 @@
 #include <string.h>
 #include <SFML/OpenGL.hpp>
 
+std::unordered_map<const char*, Effect> AssetManager::post_processing_effects; 
 std::unordered_map<const char*, sf::Texture> AssetManager::textures; 
 std::unordered_map<const char*, Scene*> AssetManager::scenes; /*scenes are stored as pointers to allow for inherited scenes*/
 std::unordered_map<const char*, sf::Shader*> AssetManager::shaders;
@@ -15,12 +16,21 @@ std::unordered_map<const char*, sf::Font> AssetManager::fonts;
 void AssetManager::Construct()
 {
 
+    // fonts ----------------------------------------------------------------
+    
     CreateFontObj("Amber_Default", "Amber/Fonts/dogica.ttf");
     
+    // shaders --------------------------------------------------------------
+
     CreateShader("Amber_BlurHorizontal", "Amber/Shaders/BlurHorizontal.frag");
     CreateShader("Amber_BlurVertical", "Amber/Shaders/BlurVertical.frag");
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
     CreateShader("Amber_ColourOverlay", "Amber/Shaders/ColourOverlay.frag");
+    CreateShader("Amber_Banding", "Amber/Shaders/Banding.frag");
+
+    GetShader("Amber_Banding")->setUniform("u_band_count", 1.0f);
+
+    // textures -------------------------------------------------------------
 
     // creating a shadow texture, to swap to when rendering shadows off a textured vertex buffer 
     sf::RenderTexture shadow_texture;
@@ -28,15 +38,31 @@ void AssetManager::Construct()
     shadow_texture.clear(Globals::BASE_SHADOW_COLOUR);
     CreateTexture("Amber_Shadow", shadow_texture, true);
 
-    shadow_texture.clear(Globals::BASE_SHADOW_COLOUR_DARK);
-    CreateTexture("Amber_ShadowDark", shadow_texture, true);
-
     // + white texture to override shadows when needed
     shadow_texture.clear(sf::Color(255,255,255));
     CreateTexture("Amber_White", shadow_texture, true);
 
     shadow_texture.clear(sf::Color(0,0,0));
     CreateTexture("Amber_Black", shadow_texture, true);
+}
+
+Effect* AssetManager::CreatePostProcessingEffect(const char* label, const std::string fragment_file_location){
+        
+    return nullptr;
+}
+
+Effect* AssetManager::GetPostProcessingEffect(const char* label){
+
+    for(auto& result : post_processing_effects){
+
+        if(strcmp(result.first, label) == 0){
+            return &result.second;
+        }
+    }
+
+    std::cout << "ERROR : A post processing effect with the label '" << label << "' could not be found\n";
+    return nullptr;
+
 }
 
 sf::Font* AssetManager::CreateFontObj(const char* label, const std::string file_location){

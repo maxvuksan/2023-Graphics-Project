@@ -6,6 +6,7 @@
 #include "../Player/PlayerWorldInteractions.h"
 #include "../Pathfinding/Fly.h"
 #include "../Pathfinding/NoodleCreature.h"
+#include "../Player/HealthBar.h"
 
 sf::Vector2f GameClient::player_pos;
 
@@ -40,12 +41,13 @@ void GameClient::CreateObjects(){
     // creating player and adding all player based components
     player = scene->AddObject<Player>();
     player_controller = player->AddComponent<PlayerController>();
+    player_controller->LinkWorld(world);
+    player_controller->Respawn();
+
     player_world_interactions = player->AddComponent<PlayerWorldInteractions>();
     player_world_interactions->LinkWorld(world);
     inventory = scene->AddUI<Inventory>();
     player_world_interactions->LinkInventory(inventory);
-      
-
 
     scene->GetActiveCamera()->SetBackgroundTexture("background");
 

@@ -13,6 +13,8 @@ void Player::Start(){
     auto light = AddComponent<LightSource>();
     light->decay = 0.03;
 
+    AddComponent<PixelParticleSource>();
+
 }
 
 void Player::Update(){

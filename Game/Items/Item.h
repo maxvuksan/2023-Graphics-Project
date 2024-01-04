@@ -15,7 +15,19 @@ enum ItemCode{
     
     item_Main_Clay,
     item_Main_SandStonePlate,
-    
+
+    item_Main_AncientStonePlate,
+    item_Main_AncientStonePlateCracked,
+    item_Main_AncientStonePlateShaped,
+    item_Main_AncientStonePlateChiseled,
+    item_Main_AncientStoneBricks,
+
+    item_Main_WoodPlanks,
+
+    item_Main_CopperOre,
+    item_Main_IronOre,
+    item_Main_GoldOre,
+
     item_Copper,
     item_Iron,
     item_Gold,
@@ -23,6 +35,10 @@ enum ItemCode{
     // background
     item_Background_Dirt,
     item_Background_Stone,
+    item_Background_WoodPlanks,
+    item_Background_StoneBricks,
+    item_Background_StonePlate,
+    item_Background_StonePlateCracked,
 
     // utility
     item_Utility_CraftingStool,
@@ -30,6 +46,8 @@ enum ItemCode{
     item_Utility_Furnace,
     item_Utility_HeavyFurnace,
     item_Utility_Chest,
+    item_Utility_Anvil,
+    item_Utility_Cookpot,
 
     // picaxe
     item_Copper_Picaxe,
@@ -54,7 +72,10 @@ enum ItemCode{
     item_Torch,
     
     item_Sticks,
+
     item_Mushroom,
+    item_Berries,
+    item_BerryHandful,
     
 
     item_NUMBER_OF_ITEMS,
@@ -73,6 +94,7 @@ enum ItemType{
     type_Picaxe,
     type_Hammer,
     type_Resource,
+    type_Food,
 
     //type_Consumable,
     //type_RangedWeapon,

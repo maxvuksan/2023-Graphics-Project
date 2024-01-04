@@ -2,11 +2,14 @@
 #include "../../Amber/Framework.h"
 
 class World;
+class HealthBar;
 class PlayerController : public Component {
 
     public:
         
         void Start() override;
+        void LinkHealthBar(HealthBar* health_bar);
+        void LinkWorld(World* world);
 
         void UpdateEventFocusBounded() override;
         void CatchEvent(sf::Event event) override;
@@ -16,12 +19,21 @@ class PlayerController : public Component {
         void LeftWallJump();
         void RightWallJump();
 
+        void Die();
         void Respawn();
 
         void SetFlyMode(bool state);
         bool GetFlyMode();
 
+        void TakeDamage(int damage);
+
     private:
+    
+        void ApplyFallDamage();
+        void SetHeightWhenGrounded();
+
+        HealthBar* health_bar;
+        World* world;
 
         bool in_fly_mode;
 
@@ -44,9 +56,13 @@ class PlayerController : public Component {
         float grab_delay_tracked;
         float wall_jump_control_blend_tracked;
 
-        // blend between 
+        // blend between on wall jumps
         float controlled_velocity_x; 
         float forced_velocity_x;
+
+        static int fall_damage_free_threshold; // how many blocks can the player fall before fall damage starts being applied?
+        static float fall_damage_velocity_threshold; // what speed does fall damage begin
+        float height_when_grounded;
 
         static float speed;
         static float climb_speed;

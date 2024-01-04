@@ -7,6 +7,8 @@
 #include <sstream>
 #include "World/LightingManager.h"
 #include "Pathfinding/NoodleCreature.h"
+#include "Settings.h"
+#include "World/TimeManager.h"
 
 GameClient* CommandParser::client = nullptr;
 
@@ -61,25 +63,30 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
     }
     else if(tokens[0] == "LIGHT"){
         LightingManager::show_lighting = !LightingManager::show_lighting;
+        return {""};
     }
     else if(tokens[0] == "SUMMON"){
         auto noodle = client->scene->AddObject<NoodleCreature>();
         noodle->LinkWorld(client->world);
 
         noodle->GetTransform()->position = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
-
+        return {""};
+    }
+    else if(tokens[0] == "OCCLUSION"){
+        Settings::AMBIENT_OCCLUSION = !Settings::AMBIENT_OCCLUSION;
+        return {""};
     }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /SUMMON", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /SUMMON, /OCCLUSION, /HIT, /HEAL, /TIME", Globals::DEBUG_COLOUR};
     }
     else if(tokens[0] == "GIVE"){
         if(tokens.size() <= 1){
-            return {"'/GIVE' requires additonal arguments, '/GIVE item_code quantity=1", debug_error};
+            return {"'/GIVE' requires additonal arguments, '/GIVE item_code quantity=1", debug_error}; 
         }
 
         int item_code = std::stoi(tokens[1]);
 
-        if(item_code < 0 || item_code > item_NUMBER_OF_ITEMS){
+        if(item_code < 0 || item_code >= item_NUMBER_OF_ITEMS){
             return {"The item_code provided is invalid", debug_error};
         }
 
@@ -95,6 +102,35 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         }
         client->inventory->PickupItem((ItemCode)item_code, count);
         return {"Given ItemCode::" + std::to_string(item_code), debug_grey};
+    }
+    else if(tokens[0] == "HIT"){
+
+        if(tokens.size() <= 1){
+            return {"'/HIT' requires additional arguments '/HIT damage_to_take'", debug_error};
+        }
+
+        int damage = std::stoi(tokens[1]);
+        client->player_controller->TakeDamage(damage);
+        return {""};
+    }
+    else if(tokens[0] == "HEAL"){
+        client->player_controller->TakeDamage(-9999);
+        return {""};
+    }
+    else if(tokens[0] == "TIME"){
+        if(tokens.size() <= 1){
+            return {"'/TIME' requires additonal arguments, '/TIME new_time", debug_error}; 
+        }
+
+        int new_time = std::stoi(tokens[1]);
+
+        if(new_time < 0 || new_time > TimeManager::GetTotalTimeInDay()){
+            return {"The new_time provided is invalid, provide between 0 -> " + TimeManager::GetTotalTimeInDay(), debug_error};
+        }
+
+        TimeManager::SetTimeOfDay(new_time);
+        return {""};
+
     }
 
     return {"'/" + cmd_raw + "' is not a command, see /HELP", debug_error};

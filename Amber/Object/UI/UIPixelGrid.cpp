@@ -1,16 +1,13 @@
 #include "UIPixelGrid.h"
 #include <iostream>
-UIPixelGrid::UIPixelGrid(): created(false), changed(false){}
+UIPixelGrid::UIPixelGrid(): created(false), changed(false), blend_mode(sf::BlendNone){}
 
 void UIPixelGrid::Draw(sf::RenderTarget& surface){
     if(!created){
         return;
     }
 
-    if(changed){
-        texture.loadFromImage(image);
-        changed = false;
-    }
+    RefreshTexture();
 
     sf::Sprite sprite;
 
@@ -26,6 +23,17 @@ void UIPixelGrid::SetPixel(int x, int y, sf::Color colour){
     changed = true;
 }
 
+sf::Color UIPixelGrid::GetPixel(int x, int y){
+
+    return image.getPixel(x, y);
+}
+
+void UIPixelGrid::RefreshTexture(){
+    if(changed){
+        texture.loadFromImage(image);
+        changed = false;
+    }
+}
 
 void UIPixelGrid::Create(int _width, int _height, sf::Color fill_colour){
 

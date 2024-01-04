@@ -7,7 +7,6 @@
 #include <iostream>
 #include "../Utility/Memory.h"
 
-class PointLight;
 class Tilemap;
 class Core;
 class BoxCollider;
@@ -136,10 +135,6 @@ class Scene {
         void CollectBoxCollider(std::vector<Object*>& array);
         std::vector<BoxCollider*>* GetBoxColliders(){return &box_colliders;}
 
-        //checks if a point light exists in each object
-        void CollectPointLight(std::vector<Object*>& array);
-        std::vector<PointLight*>* GetPointLights(){return &point_lights;}
-
         // checks if a tilemap exists in each object
         void CollectTilemap(std::vector<Object*>& array);
         std::vector<Tilemap*>* GetTilemaps(){return &tilemaps;}
@@ -173,7 +168,6 @@ class Scene {
         std::vector<Object*> objects_additional;
         std::vector<Object*> ui_additional;
            
-        std::vector<PointLight*> point_lights;
         std::vector<Tilemap*> tilemaps;
         std::vector<BoxCollider*> box_colliders;
 

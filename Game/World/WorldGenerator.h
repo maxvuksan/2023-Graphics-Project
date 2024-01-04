@@ -10,6 +10,8 @@ class World;
 */
 class WorldGenerator{
 
+    friend class CommandParser;
+
     public:
         // bind the world we want to target
         static void Bind(World* world);
@@ -21,15 +23,19 @@ class WorldGenerator{
         static void SculptingPass();
         static void Sculpt(int chunk_x, int chunk_y);
 
+        // creates the stone layer for the cavern
+        static void CoverCavernLayerInStone();
+        static void CarveCaves();
+
         // creating caves with direction
         static void Tunnel(int x, int y, int radius_min, int radius_max, float angle, int branch_count);
 
-        static float RandomTunnelDirection();
+        static float RandomTunnelDirection(bool can_be_straight = true);
         // @ returns a random choice between the two given floats
         static float EqualChancePick(float x, float y);
 
-        // iterates over the scultped terrain, performing operations on the top most tiles (surface tiles) (e.g. placing trees)
-        static void EstablishSurface();
+        // iterates over the scultped terrain determining where the top most tiles are
+        static void IdentifySurface();
         static void TunnelPass();
         static void VegetationPass();
         // placing ores 

@@ -20,12 +20,14 @@ namespace Globals {
     const float HALF_PI = 1.5708;
 
     const sf::Color DEFAULT_BACKGROUND_COLOUR = sf::Color(140, 150, 163);   
-    const sf::Color BASE_SHADOW_COLOUR = sf::Color(160 / 6, 140 / 6, 180 / 6 ); //sf::Color(150/2,130/2,170/2);
-    const sf::Color BASE_SHADOW_COLOUR_DARK = sf::Color(BASE_SHADOW_COLOUR.r / 2, BASE_SHADOW_COLOUR.g / 2, BASE_SHADOW_COLOUR.b / 2); //sf::Color(150/2,130/2,170/2);
+    const sf::Color BASE_SHADOW_COLOUR = sf::Color(51, 29, 35); //sf::Color(150/2,130/2,170/2);
 
     const sf::Color DEBUG_COLOUR = sf::Color(87, 235, 82);
     const sf::Color DEBUG_COLOUR_SECONDARY = sf::Color(255,255,0);
     const sf::Color DEBUG_COLOUR_3 = sf::Color(255,100,100);
+
+    const sf::Vector2i HORIZONTAL_OFFSETS[4] = { sf::Vector2i(1,0), sf::Vector2i(-1, 0), sf::Vector2i(0, 1), sf::Vector2i(0, -1)};
+    
 };
 
 

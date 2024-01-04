@@ -14,7 +14,7 @@ enum SpriteInventory{
     isprite_Fibre,
     isprite_BigLeaf,
 
-    isprite_StoneBrick_Wall,
+    isprite_WoodPlanks,
 
     isprite_CopperBar,
     isprite_IronBar,
@@ -39,6 +39,26 @@ enum SpriteInventory{
 
     isprite_Mushroom,
     isprite_Sticks,
+
+    isprite_AncientStonePlate,
+    isprite_AncientStonePlateCracked,
+    isprite_AncientStonePlateShaped,
+    isprite_AncientStonePlateChiseled,
+    isprite_AncientStoneBricks,
+
+    isprite_CopperOre,
+    isprite_IronOre,
+    isprite_GoldOre,
+
+    isprite_Berries,
+    isprite_BerryHandful,
+
+    isprite_Dirt_Wall,
+    isprite_Stone_Wall,
+    isprite_WoodPlank_Wall,
+    isprite_StoneBrick_Wall,
+    isprite_StonePlate_Wall,
+    isprite_StonePlateCracked_Wall,
 
     isprite_USE_MAIN_SPRITE // use the sprite seen in the world
 };

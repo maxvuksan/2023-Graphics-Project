@@ -51,14 +51,16 @@ void UtilityStation::CatchEvent(sf::Event event){
 }
 
 
-// @returns true if the footprint over laps this stations footprint
-bool UtilityStation::FootprintOver(sf::Vector2i position, sf::Vector2i footprint){
+// @returns true if the bounds of this station overlaps the provided transforms
+bool UtilityStation::FootprintOver(sf::Vector2i other_position, sf::Vector2i other_footprint){
 
-    if(GetTransform()->position.y + utility_data->footprint.y > position.y && GetTransform()->position.y < position.y + footprint.y){
-        if(GetTransform()->position.x + utility_data->footprint.x > position.y && GetTransform()->position.x < position.x + footprint.x){
+
+    if(GetTransform()->position.y + utility_data->footprint.y * ItemDictionary::tile_size > other_position.y && GetTransform()->position.y < other_position.y + other_footprint.y * ItemDictionary::tile_size){
+
+        if(GetTransform()->position.x + utility_data->footprint.x * ItemDictionary::tile_size > other_position.x && GetTransform()->position.x < other_position.x + other_footprint.x * ItemDictionary::tile_size){
+            
             return true;
         }
     }
-
     return false;
 }

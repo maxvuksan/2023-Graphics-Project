@@ -21,29 +21,80 @@ void WorldGenerator::Generate(){
     perlin = PerlinNoise{ seed };
 
     SculptingPass();
+    IdentifySurface(); 
+
+    CoverCavernLayerInStone();
+    CarveCaves();
     OrePass();
 
-    EstablishSurface(); 
     TunnelPass();
-    EstablishSurface(); 
+    IdentifySurface(); 
     VegetationPass();
 }
 
 void WorldGenerator::SculptingPass(){
     
-    for(int x = 0; x < world->world_profile.width; x++){
+    // define surface curve
+
+    surface_y_vector.clear();
+
+    int center = (world->world_profile.width * world->tilemap_profile->width) / 2.0f;
+
+    for(int x = 0; x < world->world_profile.width * world->tilemap_profile->width; x++){
+
+        float surface_height = perlin.octave1D_01((x * settings.NOISE_1_SCALE), 2, 1) * settings.NOISE_1_AMPLITUDE 
+                             + perlin.octave1D_01((x * settings.NOISE_3_SCALE), 2, 1) * settings.NOISE_3_AMPLITUDE 
+                             + settings.NOISE_BASE;
+
+        float noise_2_driver = Calc::Clamp(perlin.octave1D_01((x * settings.NOISE_2_DRIVER_SCALE), 1, 1), 0, 1);
+
+        surface_height +=  perlin.octave1D_01((x * settings.NOISE_2_SCALE), 2, 2) * settings.NOISE_2_AMPLITUDE * noise_2_driver;
+
+        // gradually apply outer specific noise further from the center
+        float difference_from_center = abs(center - x) / (float)(world->world_profile.width * world->tilemap_profile->width);
+        if(difference_from_center > settings.OUTER_NOISE_THRESHHOLD){
+            surface_height += (perlin.octave1D_01((x * settings.OUTER_NOISE_SCALE), 2, 1) * settings.OUTER_NOISE_AMPLITUDE - settings.OUTER_BASE) * (difference_from_center - settings.OUTER_NOISE_THRESHHOLD);
+        }
         
+
+        surface_y_vector.push_back(round(Calc::Clamp(surface_height, 0, 999)));
+    }
+
+    world->world_spawn_coord = sf::Vector2i(center, surface_y_vector.at(center) - 2);
+
+    for(int x = 0; x < world->world_profile.width; x++){
         for(int y = 0; y < world->world_profile.height; y++){
 
             Sculpt(x, y);
         }
     }
 }
-void WorldGenerator::Sculpt(int x, int y){
+void WorldGenerator::Sculpt(int chunk_x, int chunk_y){
 
-    Tilemap* main_tilemap = world->chunks[x][y]->GetTilemap(SetLocation::MAIN);
-    Tilemap* background_tilemap = world->chunks[x][y]->GetTilemap(SetLocation::BACKGROUND);
+    Tilemap* main_tilemap = world->chunks[chunk_x][chunk_y]->GetTilemap(SetLocation::MAIN);
+    Tilemap* background_tilemap = world->chunks[chunk_x][chunk_y]->GetTilemap(SetLocation::BACKGROUND);
 
+    for(int x = 0; x < world->tilemap_profile->width; x++){
+        
+        int coord_x = chunk_x * world->tilemap_profile->height + x;
+
+        int y_set_area_start = -3; 
+
+        for(int y = 0; y <= world->tilemap_profile->height; y++){
+
+            int coord_y = chunk_y * world->tilemap_profile->height + y;
+
+            if(coord_y <= surface_y_vector.at(coord_x)){
+
+                y_set_area_start = y;
+            }
+        }
+
+        background_tilemap->SetArea(BackgroundBlockCode::background_Dirt, x, x + 1, Calc::Clamp(y_set_area_start + 3, 0, world->tilemap_profile->height), world->tilemap_profile->height);
+        main_tilemap->SetArea(MainBlockCode::main_Dirt, x, x + 1, Calc::Clamp(y_set_area_start, 0, world->tilemap_profile->height), world->tilemap_profile->height);
+    }
+
+    /*
     // air
     if(y <= settings.LEVEL_AIR){
         main_tilemap->SetAll(-1);
@@ -57,9 +108,9 @@ void WorldGenerator::Sculpt(int x, int y){
 
             float noise_val = perlin.octave1D_01((_x * 0.04), 1, 2);
             float noise_val2 = perlin.octave1D_01((_x * 0.015), 1, 3);
-            float noise_val3 = perlin.octave1D_01((_x * 0.008), 3, 1);
+            //float noise_val3 = perlin.octave1D_01((_x * 0.008), 3, 1);
                                     
-            float final_height_float = (noise_val + noise_val2 + noise_val3) * world->tilemap_profile->height - ((y - settings.LEVEL_AIR) * world->tilemap_profile->height);
+            float final_height_float = noise_val * world->tilemap_profile->height - ((y - settings.LEVEL_AIR) * world->tilemap_profile->height);
 
             int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_profile->height));
             int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_profile->height); // makes backgrounds 3 tiles below surface
@@ -116,6 +167,67 @@ void WorldGenerator::Sculpt(int x, int y){
             }
         }
     }
+    */
+}
+
+void WorldGenerator::CoverCavernLayerInStone(){
+
+    for(int x = 0; x < world->world_profile.width * world->tilemap_profile->width; x++){
+
+
+        int cavern_start = settings.SURFACE_THRESHOLD * world->tilemap_profile->height * world->world_profile.height;
+        int deep_surface_start = cavern_start - settings.DEEP_SURFACE_AMOUNT * settings.SURFACE_THRESHOLD * world->tilemap_profile->height * world->world_profile.height;
+
+        // deep surface
+        for(int y = deep_surface_start + surface_y_vector.at(x); y < cavern_start + surface_y_vector.at(x); y++){
+            
+            float noise_val = perlin.octave2D_01((x * 0.04), (y * 0.04), 2);
+
+            if(noise_val < settings.DEEP_SURFACE_STONE_AMOUNT){
+                world->SetTile(MainBlockCode::main_Stone, x, y, SetLocation::MAIN);
+            }
+        }
+
+        // cavern
+        for(int y = cavern_start + surface_y_vector.at(x); y < world->tilemap_profile->height * world->world_profile.height; y++){
+            world->SetTile(MainBlockCode::main_Stone, x, y, SetLocation::MAIN);
+            world->SetTile(BackgroundBlockCode::background_Stone, x, y, SetLocation::BACKGROUND);
+        }
+    }
+}
+
+void WorldGenerator::CarveCaves(){
+    
+    for(int y = 0; y < world->world_profile.height * world->tilemap_profile->height; y++){
+
+        float cave_threshold = Calc::Lerp(settings.CAVE_PERLIN_THRESHOLD_TOP, settings.CAVE_PERLIN_THRESHOLD_BOTTOM, y / (float)(world->world_profile.height * world->tilemap_profile->height));
+
+        for(int x = 0; x < world->world_profile.width * world->tilemap_profile->width; x++){
+
+            // cave too shallow to carve
+            if(surface_y_vector.at(x) + settings.CAVE_DEPTH_MIN > y){
+                continue;
+            }
+
+            float noise_val = perlin.octave2D_01((x * 0.04), (y * 0.04), 2);
+
+            if(noise_val < cave_threshold){
+                world->SetTile(-1, x, y, SetLocation::MAIN);
+            }
+        }
+    }
+}
+
+void WorldGenerator::TunnelPass(){
+
+    for(int x = 0; x < surface_y_vector.size(); x++){
+        
+        // create tunnel?
+        if(rand() % 100 < settings.SURFACE_TUNNEL_PERCENT){
+            Tunnel(x, surface_y_vector[x], 2, 4, RandomTunnelDirection(), 0); 
+        }
+
+    }
 }
 
 void WorldGenerator::Tunnel(int x, int y, int radius_min, int radius_max, float angle, int branch_count){
@@ -126,7 +238,11 @@ void WorldGenerator::Tunnel(int x, int y, int radius_min, int radius_max, float 
 
     float radians = Calc::Radians(angle);
 
-    int length = 30 + rand() % 50;
+    int length = 60 + rand() % 140;
+
+    if(angle == 0 || angle == 180){
+        length = 40;
+    }
 
     for(int i = 0; i < length; i++){
         
@@ -138,13 +254,13 @@ void WorldGenerator::Tunnel(int x, int y, int radius_min, int radius_max, float 
         }
 
         if(rand() % 100 < settings.SURFACE_TUNNEL_SPLIT_PERCENT){
-            Tunnel(x, y, radius_min - 1, radius_max - 1, RandomTunnelDirection(), branch_count + 1);
+            Tunnel(x, y, radius_min - 1, radius_max - 1, RandomTunnelDirection(false), branch_count + 1);
         }
 
         world->SetCircle(-1, x, y, rand_radius);
 
-        x += cos(radians) * rand_radius;
-        y -= sin(radians) * rand_radius;
+        x += cos(radians) * radius_min;
+        y -= sin(radians) * radius_min;
     }
 }
 
@@ -165,7 +281,7 @@ void WorldGenerator::OrePass(){
 
                 std::vector<MainBlockCode>* ore_pool;
 
-                if(y <= settings.LEVEL_DIRT_TO_STONE){
+                if(y * world->tilemap_profile->height <= settings.SURFACE_THRESHOLD * world->world_profile.height * world->tilemap_profile->height + surface_y_vector.at(x * world->tilemap_profile->height)){
                     ore_pool = &settings.SURFACE_ORE_POOL;
                 }
                 else{
@@ -209,13 +325,14 @@ void WorldGenerator::SpreadOre(int tile_index, int x, int y, int radius_min, int
     world->SetCircle(tile_index, x, y, rand_radius, SetLocation::MAIN, set_mode);
 }
 
-void WorldGenerator::EstablishSurface(){
+
+void WorldGenerator::IdentifySurface(){
     
     surface_y_vector.resize(world->tilemap_profile->width * world->world_profile.width, 0);
 
     for(int tile_x = 0; tile_x < world->tilemap_profile->width * world->world_profile.width; tile_x++){
 
-        for(int surface_y = settings.LEVEL_AIR * world->tilemap_profile->height; surface_y < world->tilemap_profile->height * world->world_profile.height; surface_y++){
+        for(int surface_y = 0; surface_y < world->tilemap_profile->height * world->world_profile.height; surface_y++){
 
             int main_block = world->GetTile(tile_x, surface_y, SetLocation::MAIN);
 
@@ -227,18 +344,6 @@ void WorldGenerator::EstablishSurface(){
                 break;
             }    
         }
-    }
-}
-
-void WorldGenerator::TunnelPass(){
-
-    for(int x = 0; x < surface_y_vector.size(); x++){
-        
-        // create tunnel?
-        if(rand() % 100 < settings.SURFACE_TUNNEL_PERCENT){
-            Tunnel(x, surface_y_vector[x], 2, 6, RandomTunnelDirection(), 0); 
-        }
-
     }
 }
 
@@ -255,6 +360,21 @@ void WorldGenerator::VegetationPass(){
             rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height), SetLocation::FOREGROUND, SetMode::ONLY_BLOCK);
     }
 
+    for(int i = 0; i < 1000 * world->world_profile.width * world->world_profile.height; i++){
+
+        int x = rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width);
+        int y = rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height);
+
+        if(world->GetTile(x, y + 1, SetLocation::MAIN) != -1 && world->GetTile(x, y, SetLocation::MAIN) == -1) {
+            if(rand() % 100 > 50){
+                world->SetTile(ForegroundBlockCode::foreground_FloorRoot, x, y, SetLocation::FOREGROUND);
+            }
+            else{
+                world->SetTile(ForegroundBlockCode::foreground_Stump, x, y, SetLocation::FOREGROUND);
+            }
+        }
+    }
+
     // add grass
     for(int x = 0; x < surface_y_vector.size(); x++){
        
@@ -269,7 +389,38 @@ void WorldGenerator::VegetationPass(){
             world->SetTile(foreground_Moss, x, surface_y_vector[x], SetLocation::FOREGROUND);
             world->SetTile(foreground_Grass, x, surface_y_vector[x] - 1, SetLocation::FOREGROUND);
         }
+
+        else if(rand() % 100 < settings.SURFACE_FLOOR_STICKS_PERCENT){
+            if(rand() % 100 > 50){
+                world->SetTile(ForegroundBlockCode::foreground_FloorRoot, x,  surface_y_vector[x] - 1, SetLocation::FOREGROUND);
+            }
+            else{
+                world->SetTile(ForegroundBlockCode::foreground_Stump, x,  surface_y_vector[x] - 1, SetLocation::FOREGROUND);
+            }
+        }
     }
+
+    for(int i = 0; i < 700 * world->world_profile.width * world->world_profile.height; i++){
+
+        int x = rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width);
+        int y = rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height);
+
+        sf::Vector2i chunk_coord = world->ChunkFromCoord(x, y);
+        sf::Vector2i chunk_offset = world->OffsetFromCoord(x, y, chunk_coord.x, chunk_coord.y);
+
+        // tile is solid, above tile is air
+        if(world->GetTile(x, y, SetLocation::MAIN) != -1 && world->GetTile(x, y - 1, SetLocation::MAIN) == -1){
+            
+
+            int foliage_index = rand() % foliage_NUMBER_OF_FOLIAGE;
+
+            world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->AddFoliage((Foliage)foliage_index, chunk_offset.x, chunk_offset.y);
+        }
+        
+    }
+
+
+    return;
 
     //return; // IGNORE TREES FOR NOW
 
@@ -287,8 +438,20 @@ void WorldGenerator::VegetationPass(){
     
 }
 
-float WorldGenerator::RandomTunnelDirection(){
-    return EqualChancePick(190 + rand() % 60, 290 + rand() % 60);
+float WorldGenerator::RandomTunnelDirection(bool can_be_straight){
+    
+
+    if(can_be_straight){
+        if(rand() % 100 > 50){
+            return 0;
+        }
+        return 180;
+    }
+
+    if(rand() % 100 > 50){
+        return 180 + 35 + (rand() % 20);
+    }
+    return 360 - 35 - (rand() % 20);
 }
 
 float WorldGenerator::EqualChancePick(float x, float y){

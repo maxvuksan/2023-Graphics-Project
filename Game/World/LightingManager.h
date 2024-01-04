@@ -11,10 +11,14 @@ class LightingManager : public Object{
 
 
         static void PropogateLighting(sf::Vector2i coordinate, const sf::Color& colour, float decay = 0.1f);
-        static void PropogateSkyLighting(sf::Vector2i coordinate, byte skylight_value);
 
         void Update() override;
+
         void Draw(sf::RenderTarget& surface) override;
+        
+        // draws the screens lightmap to the provided surface
+        static void DrawEachChunksLightmaps();
+        
         // @returns true everytime chunks should be updated for lighting
         static void DrawLightSources();
         static bool ShouldUpdateChunkLighting();
@@ -47,5 +51,7 @@ class LightingManager : public Object{
         static World* world;
 
         static sf::RenderTexture lighting_texture;
+        static sf::RenderTexture tile_fill_texture;
+        static sf::RenderTexture ambient_occlusion_texture;
         static sf::RenderTexture back_lighting_texture;
 }; 

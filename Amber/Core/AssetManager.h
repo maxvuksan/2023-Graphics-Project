@@ -4,6 +4,7 @@
 #include <iostream>
 #include "../Utility/Memory.h"
 
+#include "../PostProcessing/Effect.h"
 #include "../Object/Rendering/AnimationSet.h"
 #include "Scene.h"
 
@@ -24,6 +25,9 @@ class AssetManager {
     public:
         static void Construct();
         static void Destruct();
+
+        static Effect* CreatePostProcessingEffect(const char* label, const std::string fragment_file_location);
+        static Effect* GetPostProcessingEffect(const char* label);
 
         static sf::Font* CreateFontObj(const char* label, const std::string file_location);
         static sf::Font* GetFont(const char* label = "Amber_Default");
@@ -65,6 +69,7 @@ class AssetManager {
     protected:
         static Core* core;
 
+        static std::unordered_map<const char*, Effect> post_processing_effects;
         static std::unordered_map<const char*, sf::Font> fonts;
         static std::unordered_map<const char*, sf::Texture> textures; 
         static std::unordered_map<const char*, Scene*> scenes; /*scenes are stored as pointers to allow for inherited scenes*/

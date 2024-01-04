@@ -30,12 +30,14 @@ class Game : public Core{
 
             AssetManager::CreateTexture("slot", "Images/slot_sprite.png");
             AssetManager::CreateTexture("inventory_sprites", "Images/inventory_sprites.png");
+            AssetManager::CreateTexture("map_icon", "Images/map_icon.png");
+            AssetManager::CreateTexture("tool_slash", "Images/tool_slash.png");
 
-            // tiles
             AssetManager::CreateTexture("tiles", "Images/tiles.png");
             AssetManager::CreateTexture("utility_tiles", "Images/utility_objects.png");
             AssetManager::CreateTexture("foreground_tiles", "Images/sprite_overlays.png");       
             AssetManager::CreateTexture("background_tiles", "Images/tiles_background.png");
+            AssetManager::CreateTexture("foliage", "Images/foliage.png");
 
             AssetManager::CreateTexture("tree", "Images/tree.png");
             AssetManager::CreateTexture("background", "Images/background_idea.png");
@@ -61,6 +63,7 @@ class Game : public Core{
             AssetManager::CreateSound("hit", "Sounds/FX/hit.wav");
             AssetManager::CreateSound("break", "Sounds/FX/break.wav");
             AssetManager::CreateSound("noisy_blip", "Sounds/FX/noisy_blip.wav");
+            AssetManager::CreateSound("player_damage", "Sounds/FX/player_damage.wav");
 
             AssetManager::CreateSound("item_metal", "Sounds/FX/Inventory/item_Metal.wav");
             AssetManager::CreateSound("item_rubble", "Sounds/FX/Inventory/item_Rubble.wav");

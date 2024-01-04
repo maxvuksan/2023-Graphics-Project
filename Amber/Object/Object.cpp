@@ -27,6 +27,9 @@ bool Object::IsActive(){
 void Object::SetActive(bool new_active){
     
     if(new_active != active){
+
+        active = new_active; 
+
         if(new_active)
         { 
             this->OnSetActive(); 
@@ -35,7 +38,6 @@ void Object::SetActive(bool new_active){
             this->OnDisable();
         }
     }
-    active = new_active; 
 
 }
 

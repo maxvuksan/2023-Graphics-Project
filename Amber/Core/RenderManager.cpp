@@ -1,6 +1,5 @@
 #include "RenderManager.h"
 #include "Core.h"
-#include "../Object/Rendering/PointLight.h"
 #include "../Object/Rendering/Tilemap.h"
 #include <math.h>
 
@@ -57,14 +56,16 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     ClearRenderTextures();
 
     // clear scene texture
-    render_textures[SCENE]->clear(Scene::GetActiveCamera()->background_colour);
 
     sf::Sprite* background_sprite = Scene::GetActiveCamera()->GetBackgroundSprite();
 
     // fetch the cameras background sprite, only draw if is valid
     if(background_sprite != nullptr){
-        background_sprite->setPosition(sf::Vector2f(render_textures[0]->getSize().x / 2.0f, render_textures[0]->getSize().y / 2.0f));
-        render_textures[SCENE]->draw(*background_sprite);
+        render_textures[SCENE]->clear(sf::Color::Transparent);
+    }
+    else{
+        render_textures[SCENE]->clear(sf::Color::Transparent);
+        //render_textures[SCENE]->clear(Scene::GetActiveCamera()->background_colour);
     }
 
     // draw all objects
@@ -76,8 +77,18 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // we have drawn our scene
     render_textures[SCENE]->display();
+
+
+    // draw backgorund if necassary
+    if(background_sprite != nullptr){
+        background_sprite->setPosition(sf::Vector2f(render_textures[0]->getSize().x / 2.0f, render_textures[0]->getSize().y / 2.0f));
+        background_sprite->setColor(Scene::GetActiveCamera()->background_colour);
+        render_textures[COMPOSITE]->draw(*background_sprite);
+    }
+
     sf::Sprite scene_sprite(sf::Sprite(render_textures[SCENE]->getTexture()));
     render_textures[COMPOSITE]->draw(scene_sprite);
+
 
     // render debug graphics
     if(Core::DEBUG_MODE){
@@ -89,7 +100,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     render_textures[SCENE]->clear(Scene::GetActiveCamera()->ui_overlay_colour);
     render_textures[SCENE]->display();
 
-    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()), sf::BlendAlpha);
+    render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
 
     // draw all ui
     auto ui = scene->GetUI();

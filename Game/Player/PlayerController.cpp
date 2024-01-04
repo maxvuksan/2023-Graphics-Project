@@ -1,6 +1,11 @@
 #include "PlayerController.h"
 #include "../World/World.h"
 #include "../Items/ItemDictionary.h"
+#include "HealthBar.h"
+
+
+int PlayerController::fall_damage_free_threshold = 90;
+float PlayerController::fall_damage_velocity_threshold = 0;
 
 float PlayerController::speed = 0.07;
 float PlayerController::jump_height = 0.175;
@@ -17,7 +22,8 @@ void PlayerController::Start(){
     
     // set player camera as scene camera
     object->GetScene()->SetActiveCamera(object->AddComponent<Camera>());
-    // set still background
+
+    health_bar = object->GetScene()->AddUI<HealthBar>();
 
     body_collider = object->AddComponent<BoxCollider>();
     body_collider->SetSize(sf::Vector2f(8, 16));
@@ -52,9 +58,16 @@ void PlayerController::Start(){
     grab_delay_tracked = 0;
     forced_velocity_x = 0;
     controlled_velocity_x = 0;
-
+    height_when_grounded = 0;
 }
 
+void PlayerController::LinkHealthBar(HealthBar* health_bar){
+    this->health_bar = health_bar;
+}
+
+void PlayerController::LinkWorld(World* world){
+    this->world = world;
+}
 
 void PlayerController::UpdateEventFocusBounded(){
 
@@ -65,7 +78,7 @@ void PlayerController::UpdateEventFocusBounded(){
     if(in_fly_mode){
 
         // double speed in fly mode
-        _speed *= 2;
+        _speed *= 10;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
@@ -168,9 +181,14 @@ void PlayerController::UpdateEventFocusBounded(){
             grabbing_wall_left = false;
         }
 
+        if(pb->velocity.y < 0){
+            SetHeightWhenGrounded();
+        }
 
     }
     else{ // is grounded
+        ApplyFallDamage();
+        SetHeightWhenGrounded();
         cyote_time_buffer_tracked = cyote_time_buffer;
     }
 
@@ -242,6 +260,7 @@ void PlayerController::SuggestJump(){
 void PlayerController::Jump(){
 
     pb->velocity.y = -jump_height;
+    SetHeightWhenGrounded();
 }
 
 void PlayerController::LeftWallJump(){
@@ -272,7 +291,7 @@ void PlayerController::RightWallJump(){
 }
 
 void PlayerController::Respawn(){
-    object->GetTransform()->position = sf::Vector2f(50, -500);
+    object->GetTransform()->position = world->CoordToWorld(world->GetSpawnCoordinate().x, world->GetSpawnCoordinate().y);
 }
 void PlayerController::SetFlyMode(bool state){
     in_fly_mode = state;
@@ -280,4 +299,51 @@ void PlayerController::SetFlyMode(bool state){
 }
 bool PlayerController::GetFlyMode(){
     return in_fly_mode;
+}
+
+void PlayerController::SetHeightWhenGrounded(){
+    this->height_when_grounded = object->GetTransform()->position.y;
+}
+
+void PlayerController::ApplyFallDamage(){
+
+    float height_travelled = object->GetTransform()->position.y - this->height_when_grounded;
+
+    // not enough blocks for fall damage
+    if(height_travelled <= fall_damage_free_threshold){
+        return;
+    }
+
+    // not moving fast enought for fall damage
+    if(pb->velocity.y <= fall_damage_velocity_threshold){
+        return;
+    }
+    
+
+    int damage = 1 * (height_travelled - fall_damage_free_threshold);
+    
+    TakeDamage(damage);
+    this->height_when_grounded = 0;
+}
+
+void PlayerController::Die(){
+    
+    health_bar->SetHealth(health_bar->GetMaxHealth());
+    Respawn();
+}
+
+void PlayerController::TakeDamage(int damage){
+    
+    int new_health = health_bar->GetHealth() - damage;
+
+    Sound::Play("player_damage");
+
+    // kill player
+    if(new_health <= 0){
+        health_bar->SetHealth(0);
+        Die();
+    }
+    else{
+        health_bar->SetHealth(new_health);
+    }
 }

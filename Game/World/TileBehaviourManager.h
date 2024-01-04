@@ -22,8 +22,8 @@ class TileBehaviourManager {
 
     private:
 
-        // traverses down a position 
-        static void RemoveVine(int x, int y, signed_byte vine_code);
+        // traverses down a position removing all foreground blocks marked with VINE behaviour
+        static void RemoveVine(int x, int y);
 
     private:
         static int tickrate;

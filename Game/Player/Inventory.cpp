@@ -295,10 +295,8 @@ void Inventory::ShiftClickOnSlot(){
         return;
     }
 
-    Slot* hovered = GetHoveredSlot();
-
     // ignore empty shift clicks
-    if(!hovered->Occupied()){
+    if(!GetHoveredSlot()->Occupied()){
         return;
     }
 
@@ -307,37 +305,76 @@ void Inventory::ShiftClickOnSlot(){
     const std::vector<SlotSet*>& shift_container_1 = SlotSpace::GetShiftContainer1();
     std::vector<SlotSet*>* opposing_slotset = &SlotSpace::GetShiftContainer1();
 
+    // pushes both shifting containers in the order they should be checked
+    std::vector<std::vector<SlotSet*>*> containers_to_check;
+
+
+    bool in_first = false;
     // establish which container we should move the item to
     for(int i = 0; i < shift_container_1.size(); i++){
         if(shift_container_1[i] == current_slotset){
-            opposing_slotset = &SlotSpace::GetShiftContainer2();
+            containers_to_check.push_back(&SlotSpace::GetShiftContainer2());
+            in_first = true;
             break;
         }
     }
-
-
-    // look for an existing slot
-    for(int i = 0; i < opposing_slotset->size(); i++){
-        
-        sf::Vector2i existing_slot = FindSlotContainingItem(opposing_slotset->at(i), hovered->item_code);
-
-        if(existing_slot != sf::Vector2i(-1,-1)){
-            opposing_slotset->at(i)->GetSlot(existing_slot.x, existing_slot.y)->count += hovered->count;
-            hovered->count = 0;
-            return;
-        }
+    containers_to_check.push_back(&SlotSpace::GetShiftContainer1());
+    if(!in_first){
+        containers_to_check.push_back(&SlotSpace::GetShiftContainer2());
     }
 
-    // find free slot
-    for(int i = 0; i < opposing_slotset->size(); i++){
-        
-        sf::Vector2i free_slot = FindNextFreeSlot(opposing_slotset->at(i));
 
-        if(free_slot != sf::Vector2i(-1,-1)){
-            opposing_slotset->at(i)->GetSlot(free_slot.x, free_slot.y)->item_code = hovered->item_code;
-            opposing_slotset->at(i)->GetSlot(free_slot.x, free_slot.y)->count += hovered->count;
-            hovered->count = 0;
-            return;
+
+    int count_remaining = GetHoveredSlot()->count;
+
+    for(int container = 0; container < containers_to_check.size(); container++){
+        
+        // look for an existing slot
+        for(int i = 0; i < containers_to_check[container]->size(); i++){
+            
+            if(containers_to_check[container]->at(i) == current_slotset){
+                continue;
+            }
+
+            while(count_remaining > 0) {
+                sf::Vector2i existing_slot = FindSlotContainingItem(containers_to_check[container]->at(i), GetHoveredSlot()->item_code);
+
+                if(existing_slot != sf::Vector2i(-1,-1)){
+
+                    AddItemToSlot(containers_to_check[container]->at(i), GetHoveredSlot()->item_code, existing_slot.x, existing_slot.y, &count_remaining);
+
+                }
+                else{
+                    break;
+                }
+                
+                GetHoveredSlot()->count = count_remaining;
+            }
+        }
+        
+        if(count_remaining == 0){
+            break;
+        }
+
+        // find free slot
+        for(int i = 0; i < containers_to_check[container]->size(); i++){
+            
+            if(containers_to_check[container]->at(i) == current_slotset){
+                continue;
+            }
+
+            sf::Vector2i free_slot = FindNextFreeSlot(containers_to_check[container]->at(i));
+
+            if(free_slot != sf::Vector2i(-1,-1)){
+                containers_to_check[container]->at(i)->GetSlot(free_slot.x, free_slot.y)->item_code = GetHoveredSlot()->item_code;
+                containers_to_check[container]->at(i)->GetSlot(free_slot.x, free_slot.y)->count += count_remaining;
+                GetHoveredSlot()->count = 0;
+                return;
+            }
+        }
+
+        if(count_remaining == 0){
+            break;
         }
     }
 
@@ -358,7 +395,10 @@ void Inventory::ClickOnRecipeSlot(bool move_to_holding){
         purchase_many = true;
     }
 
-    int count_crafted = held_item_count;
+    int count_crafted = 0;
+    if(holding_item){
+        count_crafted = held_item_count;
+    }
     bool crafted = false;
 
     while(count_crafted + recipe.result.count <= ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[recipe.result.item_code].type]){
@@ -573,7 +613,7 @@ sf::Vector2i Inventory::FindSlotContainingItem(SlotSet* slot_set, ItemCode item,
 
             slot = slot_set->GetSlot(x, y);
 
-            if (slot->Occupied() && slot->item_code == item) {
+            if (slot->Occupied() && slot->item_code == item && slot->type != SlotType::RECIPE) {
                 if(!ignore_full || slot->count < ItemDictionary::TYPE_STACK_SIZES[ItemDictionary::ITEM_DATA[item].type]){
                     return sf::Vector2i(x, y);
                 }

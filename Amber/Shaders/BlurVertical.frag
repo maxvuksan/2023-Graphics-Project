@@ -1,3 +1,5 @@
+// blurs a texture on the y axis, by the u_strength uniform
+
 uniform vec2 u_texture_pixel_step; 
 uniform sampler2D texture;
 uniform float u_strength; 

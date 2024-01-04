@@ -1,6 +1,7 @@
 #include "CraftingStation.h"
 #include "../GameUI/SlotSpace.h"
 
+
 void CraftingStation::OnStart(){
 
     slot_set = chunk->AddUIToChunk<SlotSet>();
@@ -12,6 +13,7 @@ void CraftingStation::SetRecipeGroup(RecipeGroups recipe_group){
     
     slot_set->DefineGrid(ItemDictionary::RECIPE_GROUP[recipe_group].width, ItemDictionary::RECIPE_GROUP[recipe_group].height, SlotType::RECIPE);
     slot_set->DefineRecipeGrid(ItemDictionary::RECIPE_GROUP[recipe_group].recipes);
+
 }
 
 

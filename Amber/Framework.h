@@ -17,7 +17,7 @@
 
 #include "Object/Rendering/SpriteRenderer.h"
 #include "Object/Rendering/Tilemap.h"
-#include "Object/Rendering/PointLight.h"
+#include "Object/Rendering/PixelParticleSource.h"
 
 #include "Object/Rendering/AnimationSet.h"
 #include "Object/Rendering/AnimationRenderer.h"
@@ -25,6 +25,7 @@
 #include "Object/Physics/BoxCollider.h"
 #include "Object/Physics/PhysicsBody.h"
 #include "Object/Physics/TilemapCollider.h"
+
 
 #include "Object/UI/UIImage.h"
 #include "Object/UI/UIPixelGrid.h"

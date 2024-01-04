@@ -2,7 +2,6 @@
 #include "../Object.h"
 #include "../../Core/Core.h"
 #include "../../Core/Scene.h"
-#include "PointLight.h"
 #include "../Camera.h"
 #include <math.h>
 
@@ -73,9 +72,9 @@ void Tilemap::Draw(sf::RenderTarget& surface){
     }
 }
 
-void Tilemap::DrawSiloutte(sf::RenderTarget& surface){
+void Tilemap::DrawSiloutte(sf::RenderTarget& surface, sf::Texture* texture){
 
-    tilemap_primitive.SetTexture(AssetManager::GetTexture("Amber_Black"));
+    tilemap_primitive.SetTexture(texture);
     surface.draw(tilemap_primitive);
     tilemap_primitive.RevertTexture();
 }

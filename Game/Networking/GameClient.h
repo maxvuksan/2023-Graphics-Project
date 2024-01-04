@@ -10,6 +10,7 @@ class Player;
 class PlayerController;
 class ConsoleVisual;
 class PlayerWorldInteractions;
+class HealthBar;
 
 class GameClient : public Client {
 
@@ -53,6 +54,7 @@ class GameClient : public Client {
 
         Player* player;
         PlayerController* player_controller;
+        HealthBar* health_bar;
         Inventory* inventory;
         PlayerWorldInteractions* player_world_interactions;
 

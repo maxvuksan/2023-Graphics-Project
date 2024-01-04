@@ -64,9 +64,14 @@ class Calc{
             return a * (1.0 - t) + b * t;
         }
 
-        // @returns the interporlated vector between a and b and position t
+        // @returns the interporlated vector between a and b by position t
         static sf::Vector2f Lerp(const sf::Vector2f& a, const sf::Vector2f& b, float t){
             return sf::Vector2f(Lerp(a.x, b.x, t), Lerp(a.y, b.y, t));
+        }
+
+        // @returns the interpolated colour between a and by position t
+        static sf::Color Lerp(const sf::Color& a, const sf::Color& b, float t){
+            return sf::Color(Lerp(a.r, b.r, t), Lerp(a.g, b.g, t), Lerp(a.b, b.b, t), Lerp(a.a, b.a, t));
         }
 
         // @returns a vector of magnitude 1 from the provided vector

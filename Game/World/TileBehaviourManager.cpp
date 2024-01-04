@@ -47,6 +47,24 @@ void TileBehaviourManager::UpdateTile(int x, int y){
 
         // vine types
         case foreground_Vine:
+
+            if(world->GetTile(x, y + 1, SetLocation::MAIN) == -1 && world->GetTile(x, y + 1, SetLocation::FOREGROUND) == -1){
+
+                // 35% chance vine ends early
+                if(rand() % 100 < 35){
+                                    // vine end
+                    world->SetTile(foreground_Vine, x, y + 1, SetLocation::FOREGROUND);
+                }
+                if(rand() % 100 < 50){
+                    world->SetTile(foreground_VineBerry, x, y + 1, SetLocation::FOREGROUND);
+                }
+                else{               // vine itself
+                    world->SetTile(foreground_VineEnd, x, y + 1, SetLocation::FOREGROUND);
+                }
+            }
+
+            break;
+
         case foreground_Roots:
 
             if(world->GetTile(x, y + 1, SetLocation::MAIN) == -1 && world->GetTile(x, y + 1, SetLocation::FOREGROUND) == -1){
@@ -54,10 +72,10 @@ void TileBehaviourManager::UpdateTile(int x, int y){
                 // 35% chance vine ends early
                 if(rand() % 100 < 35){
                                     // vine end
-                    world->SetTile(tile.foreground + 1, x, y + 1, SetLocation::FOREGROUND);
+                    world->SetTile(foreground_Roots, x, y + 1, SetLocation::FOREGROUND);
                 }
                 else{               // vine itself
-                    world->SetTile(tile.foreground, x, y + 1, SetLocation::FOREGROUND);
+                    world->SetTile(foreground_RootsEnd, x, y + 1, SetLocation::FOREGROUND);
                 }
             }
 
@@ -86,6 +104,11 @@ void TileBehaviourManager::PropogateTile(int x, int y, signed_byte block, signed
     EntireTile entire_tile_below = world->GetEntireTile(x, y + 1);
     EntireTile entire_tile_above = world->GetEntireTile(x, y - 1);
 
+    ForegroundBehaviour behaviour = ItemDictionary::FOREGROUND_BLOCK_DATA[entire_tile.foreground].behaviour;
+    ForegroundBehaviour behaviour_below = ItemDictionary::FOREGROUND_BLOCK_DATA[entire_tile_below.foreground].behaviour;
+    ForegroundBehaviour behaviour_above = ItemDictionary::FOREGROUND_BLOCK_DATA[entire_tile_above.foreground].behaviour;
+
+    // establishing light sources if needed
     if(set_location == SetLocation::FOREGROUND){
         
         switch(previous_block){
@@ -94,14 +117,9 @@ void TileBehaviourManager::PropogateTile(int x, int y, signed_byte block, signed
                 chunk->RemoveTorchPosition(chunk_pos.x, chunk_pos.y);
                 break;
 
-            case foreground_Roots:
-            case foreground_Vine: 
-                RemoveVine(x, y, previous_block);
-                break;
         }
 
         switch(block){
-
             case foreground_Torch:{
                 
                 chunk->AddTorchPosition(chunk_pos.x, chunk_pos.y);
@@ -110,42 +128,57 @@ void TileBehaviourManager::PropogateTile(int x, int y, signed_byte block, signed
         }
     }
 
-
+    // changing tiles depending on foreground tile behaviour
     if(set_location == SetLocation::MAIN){
 
-        if(entire_tile.foreground != -1 || entire_tile_below.foreground != -1){
-        
-            signed_byte vine_types[2] = {foreground_Roots, foreground_Vine};
+        if(behaviour == ForegroundBehaviour::VINE){
+            RemoveVine(x, y);
+        }
+        if(behaviour_below == ForegroundBehaviour::VINE){
+            RemoveVine(x, y + 1);
+        }
 
-            for(int i = 0; i < 2; i++){
-                                        // vine type                                // end of vine type
-                if(entire_tile.foreground == vine_types[i] || entire_tile.foreground == vine_types[i] + 1){
-                    RemoveVine(x, y, vine_types[i]);
-                }
-                if(entire_tile_below.foreground == vine_types[i] || entire_tile_below.foreground == vine_types[i] + 1){
-                    RemoveVine(x, y + 1, vine_types[i]);
+
+        if(block == -1){
+
+            // remove any foliage that may be present
+            chunk->RemoveFoliage(chunk_pos.x, chunk_pos.y);
+
+            // remove any on block foreground tiles
+            if(behaviour == ForegroundBehaviour::ON_BLOCK){
+                world->SetTile(-1, x, y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, false, true);
+            }
+
+            // remove any above block foreground tiles if the above main block is also empty
+            if(entire_tile_above.main == -1){
+
+                if(behaviour_above == ForegroundBehaviour::ABOVE_BLOCK){
+                    world->SetTile(-1, x, y - 1, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, false, true);
                 }
             }
         }
+        else{ // we placed a block
 
-        if(entire_tile_above.main == -1 && entire_tile.main == -1){
-            if(entire_tile_above.foreground < foreground_Roots || entire_tile_above.foreground > foreground_VineEnd){
-                world->SetTile(-1, x, y - 1, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, false, true);
+            if(behaviour == ForegroundBehaviour::ABOVE_BLOCK){
+                world->SetTile(-1, x, y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, false, true);
             }
         }
+
     }
-
-
 
 }
 
-void TileBehaviourManager::RemoveVine(int x, int y, signed_byte vine_code){
+void TileBehaviourManager::RemoveVine(int x, int y){
 
-    signed_byte tile_found = vine_code;
+    signed_byte tile_found = world->GetTile(x, y, SetLocation::FOREGROUND);
     // traverses down the vine until 
-                                            // end of vine
-    while(tile_found == vine_code || tile_found == vine_code + 1){
+
+    while(ItemDictionary::FOREGROUND_BLOCK_DATA[tile_found].behaviour == ForegroundBehaviour::VINE){
         
+        if(tile_found == -1){
+            break;
+        }
+
         world->SetTile(-1, x, y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, false, true);
 
         y++; // move down the vine

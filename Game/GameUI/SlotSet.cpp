@@ -22,11 +22,14 @@ void SlotSet::Align(ScreenLocationX align_x, ScreenLocationY align_y){
 }
 
 void SlotSet::DefineGrid(int width, int height, SlotType type){
-    
+
+    for(int i = 0; i < slots.size(); i++){
+        slots.at(i).clear();
+    }
     slots.clear();
-    slots.resize(width, {});
 
     for(int x = 0; x < width; x++){
+        slots.push_back({});
         for(int y = 0; y < height; y++){
             slots.at(x).emplace_back(type);
         }

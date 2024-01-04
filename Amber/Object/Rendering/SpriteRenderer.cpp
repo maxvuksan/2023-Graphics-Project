@@ -14,7 +14,8 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
         object->GetTransform()->position + offset
     ));
     sprite.setScale(sf::Vector2f(object->GetTransform()->scale.x * this->flip_factor, object->GetTransform()->scale.y));
-    
+    sprite.setRotation(object->GetTransform()->rotation);
+
     surface.draw(sprite);
 }
 

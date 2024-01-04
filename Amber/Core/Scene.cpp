@@ -1,6 +1,5 @@
 #include "Scene.h"
 #include "../Utility/Time.h"
-#include "../Object/Rendering/PointLight.h"
 #include "../Object/Physics/BoxCollider.h"
 #include "../Object/Rendering/Tilemap.h"
 #include <iostream>
@@ -48,13 +47,9 @@ void Scene::InternalUpdate(){
 
     box_colliders.clear();
     tilemaps.clear();
-    point_lights.clear();
 
     CollectBoxCollider(objects);
     CollectBoxCollider(objects_additional);
-    
-    CollectPointLight(objects);
-    CollectPointLight(objects_additional);
     
     CollectTilemap(objects);
     CollectTilemap(objects_additional);
@@ -141,16 +136,6 @@ void Scene::CollectBoxCollider(std::vector<Object*>& array){
         }
     }
 }
-void Scene::CollectPointLight(std::vector<Object*>& array){
-    
-    for(auto obj : array){
-        std::vector<PointLight*> pt_lights = obj->GetAllComponentsOf<PointLight>();
-
-        for(int i = 0; i < pt_lights.size(); i++){
-            point_lights.push_back(pt_lights[i]);
-        } 
-    }
-}
 void Scene::CollectTilemap(std::vector<Object*>& array){
     
     for(auto obj : array){
@@ -176,7 +161,6 @@ void Scene::ClearAll(){
     
     active_camera = nullptr;
 
-    point_lights.clear();
     tilemaps.clear();
     box_colliders.clear();
 

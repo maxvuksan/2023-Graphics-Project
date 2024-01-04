@@ -4,7 +4,7 @@
 #include "../Utility/UtilityStation.h"
 #include "../Utility/Container.h"
 #include "../Utility/CraftingStation.h"
-
+#include "Projectile.h"
 void PlayerWorldInteractions::Start(){
     
     SetRenderLayer(7);
@@ -66,6 +66,7 @@ void PlayerWorldInteractions::ManageToolInHand(sf::RenderTarget& surface){
 }
 
 void PlayerWorldInteractions::SwingToolInHand(){
+
     swinging_tool = true;
     swing_completion = 1;
 
@@ -83,6 +84,10 @@ void PlayerWorldInteractions::SwingToolInHand(){
         new_swing_rotation = -90;
         overswing_multiplier = 20;
     }
+    
+    Object* projectile = GetThisObject()->GetScene()->AddObject<Projectile>();
+    projectile->GetTransform()->rotation = Calc::AngleBetween(Camera::WorldToScreenPosition(object->GetTransform()->position), sf::Vector2f(Mouse::DisplayPosition().x, Mouse::DisplayPosition().y));
+    projectile->GetTransform()->position = object->GetTransform()->position;
 }
 
 void PlayerWorldInteractions::CatchEvent(sf::Event event){
@@ -162,6 +167,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
         cursor_graphic->SetActive(false);
         utility_location_valid = true;
 
+
         for(int foot_x = 0; foot_x < ItemDictionary::UTILITY_BLOCK_DATA[data->code_in_type].footprint.x; foot_x++){
 
             // ensuring we are placing on ground
@@ -178,7 +184,11 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
         }
 
         ItemDictionary::SetItemSprite(utility_hologram, (ItemCode)item_in_hand, false);
-        
+
+        if(!UtilityHasNoUtilityOverlaps(coord_tile, rounded_world, ItemDictionary::UTILITY_BLOCK_DATA[data->code_in_type].footprint)){
+            utility_location_valid = false;
+        }
+
         if(utility_location_valid){
             utility_hologram.setColor(sf::Color(255,255,255,180));
         }
@@ -199,27 +209,32 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
         if(world->CoordIsConnectedToOtherTiles(coord_tile.x, coord_tile.y)){
 
-            if(data->type == ItemType::type_Main){
-                
-                if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::MAIN, SetMode::OVERRIDE, true, true)){
-                    inventory->DecrementSelectedSlot();
-                }
-            }
-            if(data->type == ItemType::type_Foreground){
+            switch(data->type){
 
-                if(world->GetTile(coord_tile.x, coord_tile.y, SetLocation::FOREGROUND) == -1){
-                    if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, true)){
+                case ItemType::type_Main: {
+                    
+                    if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::MAIN, SetMode::OVERRIDE, true, true)){
                         inventory->DecrementSelectedSlot();
                     }
+                    break;
                 }
+                case ItemType::type_Foreground: {
 
-            }
-            if(data->type == ItemType::type_Background){
-                
-                if(world->GetTile(coord_tile.x, coord_tile.y, SetLocation::BACKGROUND) == -1){
-                    if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::BACKGROUND, SetMode::OVERRIDE, true, true)){
-                        inventory->DecrementSelectedSlot();
+                    if(world->GetTile(coord_tile.x, coord_tile.y, SetLocation::FOREGROUND) == -1){
+                        if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, true)){
+                            inventory->DecrementSelectedSlot();
+                        }
                     }
+                    break;
+                }
+                case ItemType::type_Background: {
+
+                    if(world->GetTile(coord_tile.x, coord_tile.y, SetLocation::BACKGROUND) == -1){
+                        if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::BACKGROUND, SetMode::OVERRIDE, true, true)){
+                            inventory->DecrementSelectedSlot();
+                        }
+                    }
+                    break;
                 }
             }
         }
@@ -236,6 +251,54 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     }
 
     previous_item_code = (ItemCode)item_in_hand;
+}
+
+bool PlayerWorldInteractions::UtilityHasNoUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint){
+    
+    // checks each corner of the utility object to determine all the chunks it overlaps with, 
+
+    std::vector<sf::Vector2i> chunks_to_check;
+        
+    chunks_to_check.push_back(world->ChunkFromCoord(coord_tile.x, coord_tile.y));
+    
+    sf::Vector2i top_right_corner = world->ChunkFromCoord(coord_tile.x + footprint.x, coord_tile.y);
+    if(std::find(chunks_to_check.begin(), chunks_to_check.end(), top_right_corner) != chunks_to_check.end()){
+        
+        chunks_to_check.push_back(top_right_corner);
+    }
+    sf::Vector2i bottom_right_corner = world->ChunkFromCoord(coord_tile.x + footprint.x, coord_tile.y + footprint.y);
+    if(std::find(chunks_to_check.begin(), chunks_to_check.end(), bottom_right_corner) != chunks_to_check.end()){
+        
+        chunks_to_check.push_back(top_right_corner);
+    }
+
+    sf::Vector2i bottom_left_corner = world->ChunkFromCoord(coord_tile.x, coord_tile.y + footprint.y);
+    if(std::find(chunks_to_check.begin(), chunks_to_check.end(), bottom_left_corner) != chunks_to_check.end()){
+        
+        chunks_to_check.push_back(top_right_corner);
+    }
+
+    // check overlaps of each utility object in each chunk
+
+
+    for(int i = 0; i < chunks_to_check.size(); i++){
+        
+        if(!world->ChunkInBounds(chunks_to_check[i].x, chunks_to_check[i].y)){
+            continue;
+        }
+
+        std::vector<UtilityStation*>* stations_in_chunk =  world->GetChunks()->at(chunks_to_check[i].x).at(chunks_to_check[i].y)->GetUtilityStations();
+    
+        for(int u = 0; u < stations_in_chunk->size(); u++){
+
+
+            if(stations_in_chunk->at(u)->FootprintOver(rounded_world, footprint)){
+
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item_code){
@@ -301,7 +364,7 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item
                 set_location = SetLocation::BACKGROUND;
             }
 
-            world->BreakTileWorld(world_tile.x, world_tile.y, set_location, true);
+            world->SetTileWorld(-1, world_tile.x, world_tile.y, set_location, true);
             focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
         }
     }
@@ -320,12 +383,32 @@ void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, co
         
         UtilityStation* station = nullptr;
         CraftingStation* crafting_station = nullptr;
+        RecipeGroups recipe_group;
 
         switch(ItemDictionary::ITEM_DATA[item_code].code_in_type){
 
 
             case utility_WorkBench: {
                 crafting_station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<CraftingStation>();
+                recipe_group = rgroup_Workbench;
+                station = crafting_station;
+                break;
+            }
+            case utility_Furnace: {
+                crafting_station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<CraftingStation>();
+                recipe_group = rgroup_Furnace;
+                station = crafting_station;
+                break;
+            }
+            case utility_Anvil: {
+                crafting_station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<CraftingStation>();
+                recipe_group = rgroup_Anvil;
+                station = crafting_station;
+                break;
+            }
+            case utility_Cookpot: {
+                crafting_station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<CraftingStation>();
+                recipe_group = rgroup_Cookpot;
                 station = crafting_station;
                 break;
             }
@@ -337,19 +420,18 @@ void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, co
         }
 
 
-    
-
         if(station == nullptr){
             return;
         }
+
+        world->GetChunks()->at(chunk.x)[chunk.y]->StoreUtilityStationReference(station);
         station->LinkChunk(world->GetChunks()->at(chunk.x)[chunk.y]);
         station->OnStart();
         
         station->SetItemType((ItemCode)item_code);
 
-        // it is a crafting station so we must provide a recipe group
         if(crafting_station != nullptr){
-            crafting_station->SetRecipeGroup(rgroup_Workbench);
+            crafting_station->SetRecipeGroup(recipe_group);
         }
 
         station->GetTransform()->position = sf::Vector2f(rounded_world.x, rounded_world.y);
