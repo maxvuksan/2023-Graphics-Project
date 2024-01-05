@@ -420,9 +420,8 @@ void WorldGenerator::VegetationPass(){
     }
 
 
-    return;
 
-    //return; // IGNORE TREES FOR NOW
+    return; // IGNORE TREES FOR NOW
 
     // adding trees
     for(int x = 0; x < surface_y_vector.size(); x++){

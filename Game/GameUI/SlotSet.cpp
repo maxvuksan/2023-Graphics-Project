@@ -13,9 +13,6 @@ void SlotSet::Construct(){
 
 }
 
-void SlotSet::Start(){
-}
-
 void SlotSet::Align(ScreenLocationX align_x, ScreenLocationY align_y){
 
     UIRect::Align(GetTransform(), GetWidth(), GetHeight(), align_x, align_y);
@@ -102,6 +99,20 @@ void SlotSet::Draw(sf::RenderTarget& surface){
             slots[x][y].DrawSlot(surface, position);
         }
     } 
+}
+
+bool SlotSet::IsEmpty(){
+
+    for(int x = 0; x < slots.size(); x++){
+        for(int y = 0; y < slots.at(x).size(); y++){
+
+            if(slots[x][y].count > 0){
+                return false;
+            }
+
+        }
+    } 
+    return true;
 }
 
 HoveredSlot SlotSet::GetHoveredSlotFromMultipleSets(std::vector<SlotSet*>& slot_sets){

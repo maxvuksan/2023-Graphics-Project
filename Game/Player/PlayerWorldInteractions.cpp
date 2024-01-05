@@ -5,6 +5,7 @@
 #include "../Utility/Container.h"
 #include "../Utility/CraftingStation.h"
 #include "Projectile.h"
+
 void PlayerWorldInteractions::Start(){
     
     SetRenderLayer(7);
@@ -46,7 +47,6 @@ void PlayerWorldInteractions::ManageToolInHand(sf::RenderTarget& surface){
 
     if(swinging_tool){
         
-
         swing_completion -= Time::Dt() * 0.002f;
 
         if(!Calc::InRange(swing_completion, 0, 1)){
@@ -157,7 +157,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     focused_block = world->GetTile(coord_tile.x, coord_tile.y, set_location);
     
     if(data->type == ItemType::type_Hammer || data->type == ItemType::type_Picaxe){
-        Mine(rounded_world, (ItemCode)item_in_hand);
+        Mine(coord_tile, rounded_world, (ItemCode)item_in_hand);
     }
         
     
@@ -185,7 +185,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
         ItemDictionary::SetItemSprite(utility_hologram, (ItemCode)item_in_hand, false);
 
-        if(!UtilityHasNoUtilityOverlaps(coord_tile, rounded_world, ItemDictionary::UTILITY_BLOCK_DATA[data->code_in_type].footprint)){
+        if(NewUtilityOverlaps(coord_tile, rounded_world, ItemDictionary::UTILITY_BLOCK_DATA[data->code_in_type].footprint) != nullptr){
             utility_location_valid = false;
         }
 
@@ -200,7 +200,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
         surface.draw(utility_hologram);
     }
 
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Right)){
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
         
         if(focused_block != -1){
             return;
@@ -213,8 +213,12 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
                 case ItemType::type_Main: {
                     
-                    if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::MAIN, SetMode::OVERRIDE, true, true)){
-                        inventory->DecrementSelectedSlot();
+                    // would this new block overlap any utility stations
+                    if(NewUtilityOverlaps(coord_tile, rounded_world, sf::Vector2i(1,1)) == nullptr){
+
+                        if(world->SetTile(data->code_in_type, coord_tile.x, coord_tile.y, SetLocation::MAIN, SetMode::OVERRIDE, true, true)){
+                            inventory->DecrementSelectedSlot();
+                        }
                     }
                     break;
                 }
@@ -244,7 +248,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
             if(utility_location_valid){
                 
-                PlaceUtility(rounded_world, coord_tile, (ItemCode)item_in_hand);
+                PlaceUtility(coord_tile, rounded_world, (ItemCode)item_in_hand);
             }
         }
 
@@ -253,7 +257,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     previous_item_code = (ItemCode)item_in_hand;
 }
 
-bool PlayerWorldInteractions::UtilityHasNoUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint){
+UtilityStation* PlayerWorldInteractions::NewUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint){
     
     // checks each corner of the utility object to determine all the chunks it overlaps with, 
 
@@ -282,27 +286,29 @@ bool PlayerWorldInteractions::UtilityHasNoUtilityOverlaps(const sf::Vector2i& co
 
 
     for(int i = 0; i < chunks_to_check.size(); i++){
+
         
         if(!world->ChunkInBounds(chunks_to_check[i].x, chunks_to_check[i].y)){
             continue;
         }
 
+        chunk_last_utility_overlap_was_in = world->GetChunks()->at(chunks_to_check[i].x).at(chunks_to_check[i].y);
+
         std::vector<UtilityStation*>* stations_in_chunk =  world->GetChunks()->at(chunks_to_check[i].x).at(chunks_to_check[i].y)->GetUtilityStations();
     
         for(int u = 0; u < stations_in_chunk->size(); u++){
-
-
             if(stations_in_chunk->at(u)->FootprintOver(rounded_world, footprint)){
 
-                return false;
+                return stations_in_chunk->at(u);
             }
         }
     }
-    return true;
+    return nullptr;
 }
 
-void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item_code){
+void PlayerWorldInteractions::Mine(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, ItemCode item_code){
     
+    // we have switched tools
     if(previous_item_code != item_code){
         cursor_graphic->SetComplete(0);
         breaking_completeness = 0;
@@ -313,9 +319,13 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item
     float mining_speed = 1;
     const ItemData* data = &ItemDictionary::ITEM_DATA[item_code];
 
+    UtilityStation* utility_to_mine = nullptr;
+
     // get the tool 
     if(data->type == ItemType::type_Picaxe){
         mining_speed = ItemDictionary::PICAXE_DATA[data->code_in_type].speed;
+        
+        utility_to_mine = NewUtilityOverlaps(coord_tile, rounded_world, sf::Vector2i(1,1));
     }
     if(data->type == ItemType::type_Hammer){
         mining_speed = ItemDictionary::HAMMER_DATA[data->code_in_type].speed;
@@ -323,13 +333,14 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
         
-        if(world_tile != focused_block_position){
-            focused_block_position = world_tile;
+        if(rounded_world != focused_block_position){
+            focused_block_position = rounded_world;
 
             breaking_completeness = 0;
             sound_increment = 0;
         }
 
+        // mining block
         if(focused_block != -1){
 
             // multiply the tool speed by the durability of the block
@@ -346,26 +357,38 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item
             breaking_completeness += increment;
             sound_increment += increment;
 
-            if(sound_increment > 0.3){
-                sound_increment = 0;
-                Sound::Play("hit", 30);
-            }
+        }
+
+        else if(utility_to_mine != nullptr){
+            float increment = mining_speed * 0.01f * Time::Dt() / utility_to_mine->GetUtilityData()->block_data.durability;
+            breaking_completeness += increment;
         }
 
         cursor_graphic->SetComplete(breaking_completeness);
 
         if(breaking_completeness >= 1){
-            // block breaks...
-            Sound::Play("break", 10);
 
-            // assume we have a picaxe
-            SetLocation set_location = SetLocation::MAIN;
-            if(data->type == ItemType::type_Hammer){
-                set_location = SetLocation::BACKGROUND;
+            // we broke a utility station
+            if(utility_to_mine != nullptr){
+                Sound::Play("break", 10);
+                chunk_last_utility_overlap_was_in->BreakUtilityStation(utility_to_mine);
+
+                focused_block_position = sf::Vector2i(-1,-1);
             }
 
-            world->SetTileWorld(-1, world_tile.x, world_tile.y, set_location, true);
-            focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
+            else{
+                // block breaks...
+                Sound::Play("break", 10);
+
+                // assume we have a picaxe
+                SetLocation set_location = SetLocation::MAIN;
+                if(data->type == ItemType::type_Hammer){
+                    set_location = SetLocation::BACKGROUND;
+                }
+
+                world->SetTile(-1, coord_tile.x, coord_tile.y, set_location, SetMode::OVERRIDE, true, true, true);
+                focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
+            }
         }
     }
     else{
@@ -375,7 +398,8 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& world_tile, ItemCode item
     }
 }
 
-void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code){
+void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, ItemCode item_code){
+
 
     sf::Vector2i chunk = world->ChunkFromCoord(coord_tile.x, coord_tile.y);
 
@@ -412,6 +436,8 @@ void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& rounded_world, co
                 station = crafting_station;
                 break;
             }
+
+            // containers 
 
             case utility_Chest: {
                 station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<Container>();

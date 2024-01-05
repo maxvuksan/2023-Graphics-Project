@@ -2,6 +2,10 @@
 
 void UtilityStation::Start(){
     auto sr = AddComponent<SpriteRenderer>();
+
+    slot_set = chunk->AddUIToChunk<SlotSet>();
+    slot_set->DefineGrid(8,2, SlotType::OPEN);
+    slot_set->SetActive(false);
 }
 
 void UtilityStation::LinkChunk(Chunk* chunk){
@@ -63,4 +67,20 @@ bool UtilityStation::FootprintOver(sf::Vector2i other_position, sf::Vector2i oth
         }
     }
     return false;
+}
+
+bool UtilityStation::CanBreak(){
+
+    switch(utility_data->breaking_behaviour){
+
+        case UtilityBreakingBehaviour::ALWAYS: {
+            return true;
+        }
+
+        case UtilityBreakingBehaviour::IF_EMPTY: {
+            if(slot_set->)
+        }
+    }
+
+    
 }

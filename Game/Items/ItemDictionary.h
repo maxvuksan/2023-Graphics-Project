@@ -42,11 +42,18 @@ struct ItemData{
     ItemSound inventory_sound = sound_Rubble;
 };
 
+enum class UtilityBreakingBehaviour{
+
+    ALWAYS, 
+    IF_EMPTY, // for containers
+};
+
 struct UtilityBlockData{
     BlockData block_data;
 
     sf::Vector2i footprint; // how many tiles the object takes up
     sf::Vector2i texture_coordinate; // which coordinate on the texture is it, assuming the texture follows an 8px grid
+    UtilityBreakingBehaviour breaking_behaviour = UtilityBreakingBehaviour::ALWAYS;
 };
 
 // foliage refers to sprites which overlay the tiled grid,
@@ -172,7 +179,7 @@ namespace ItemDictionary {
         {{5, sf::Color(50,50,50), item_Utility_WorkBench}, sf::Vector2i(2,2), sf::Vector2i(1,0)},
         {{5, sf::Color(50,50,50), item_Utility_Furnace}, sf::Vector2i(2,2), sf::Vector2i(3,0)},
         {{5, sf::Color(50,50,50), item_Utility_HeavyFurnace}, sf::Vector2i(2,2), sf::Vector2i(5,0)},
-        {{5, sf::Color(50,50,50), item_Utility_Chest}, sf::Vector2i(2, 2), sf::Vector2i(0,2)},
+        {{5, sf::Color(50,50,50), item_Utility_Chest}, sf::Vector2i(2, 2), sf::Vector2i(0,2), IF_EMPTY},
         {{5, sf::Color(50,50,50), item_Utility_Anvil}, sf::Vector2i(2, 2), sf::Vector2i(2,2)},
         {{5, sf::Color(50,50,50), item_Utility_Cookpot}, sf::Vector2i(2,2), sf::Vector2i(4,2)}
     };

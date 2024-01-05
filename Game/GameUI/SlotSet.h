@@ -17,9 +17,6 @@ class SlotSet : public Object{
 
         static void Construct();
 
-
-        void Start() override;
-
         // should be called after a grid is defined
         void Align(ScreenLocationX align_x, ScreenLocationY align_y);
 
@@ -34,6 +31,9 @@ class SlotSet : public Object{
         int GetRowCount();
 
         void Draw(sf::RenderTarget& surface) override;
+
+        // @returns true if all slots are empty (count of 0), false otherwise
+        bool IsEmpty();
 
         // @returns a struct containing what SlotSet, and what coordinate within said slot set the mouse is over, nullptr and -1 coords if nothing is hovered
         static HoveredSlot GetHoveredSlotFromMultipleSets(std::vector<SlotSet*>& slot_sets);

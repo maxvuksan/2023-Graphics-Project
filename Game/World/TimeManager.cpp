@@ -9,7 +9,7 @@ sf::Color TimeManager::start_night(42,37,63);
 sf::Color TimeManager::midnight_colour(0,0,0);
 sf::Color TimeManager::end_night(20,23,38);
 
-float TimeManager::cycle_passing_speed = 0.0005;
+float TimeManager::cycle_passing_speed = 0.0015;
 float TimeManager::time_of_day = 1200;
 int TimeManager::total_time_of_day = 2400; 
 

@@ -47,6 +47,20 @@ class Chunk : public Object {
             objects_bound_to_chunk.push_back(obj);
 
             return obj;
+        }
+
+        template <typename T>
+        void RemoveObjectFromChunk(T* object){
+
+            for(int i = 0; i < objects_bound_to_chunk.size(); i++){
+                
+                if(objects_bound_to_chunk[i] == object){
+                    objects_bound_to_chunk.erase(objects_bound_to_chunk.begin() + i);
+                    Memory::Delete(object, __FUNCTION__);
+                    return;
+                    
+                }
+            }
 
         }
 
@@ -65,15 +79,16 @@ class Chunk : public Object {
 
         /*
             adds a new foliage object at local position x, y
+            
             @param foliage_index the specific foliage item to create
-            @param x position in this chunk to attach to
-            @param y position in this chunk to attach to
+            @param x component of tilemap offset
+            @param y component of tilemap offset
         */
         void AddFoliage(Foliage foliage_index, int x, int y);
         /*
             removes a foliage object at local position x, y
-            @param x position to be erased at
-            @param y position to be erased at
+            @param x component of tilemap offset
+            @param y component of tilemap offset
         */ 
         void RemoveFoliage(int x, int y);
 
@@ -87,9 +102,19 @@ class Chunk : public Object {
             stores a reference of a UtilityStation in this chunk.
             saying this chunk "owns" the utility station,
 
+            @param reference the object we wish to store
+
             should be called after created new utility stations 
         */
-        void StoreUtilityStationReference(UtilityStation*);
+        void StoreUtilityStationReference(UtilityStation* reference);
+
+        /*
+            removes a utility station and creates any necassary item pickups through World::CreatePickup()
+
+            @param reference the object we wish to break
+        */
+        void BreakUtilityStation(UtilityStation* reference);
+
 
         /*
             @returns references to all UtilityStations attached to this chunk
@@ -116,12 +141,12 @@ class Chunk : public Object {
         void ClearLightmap();
         void RefreshSkylight();
         void CalculateSkyLight();
-
+    /*
         // checks if the current position has already been considered, if not add it to the sky light vectors
         void IntroduceTileToSkylight(int x, int y);
         // checks the existence of a position in the sky light vectors, if it exists, remove it. 
         void RemoveTileFromSkylight(int x, int y);
-
+    */
         std::vector<std::vector<float>> lighting_closed_grid;
 
     private:

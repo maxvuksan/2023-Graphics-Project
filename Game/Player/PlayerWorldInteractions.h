@@ -1,9 +1,11 @@
 #include "../../Amber/Framework.h"
 #include "../Items/ItemDictionary.h"
 #include "CursorGraphic.h"
+#include "../World/Chunk.h"
 
 class World;
 class Inventory;
+class UtilityStation;
 
 class PlayerWorldInteractions : public Component {
 
@@ -14,14 +16,43 @@ class PlayerWorldInteractions : public Component {
         void ManageToolInHand(sf::RenderTarget&);
         void SwingToolInHand();
 
-        void CalculateMouse(sf::RenderTarget&);
+        /*
+            responds to the current state of the mouse
 
-        void Mine(const sf::Vector2i& world_tile, ItemCode item_code);
-        void PlaceUtility(const sf::Vector2i& rounded_world, const sf::Vector2i& coord_tile, ItemCode item_code);
-        bool UtilityHasNoUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint);
+            @param surface the surface we are drawing to (provided by Draw()) is used as a canvas to draw utility hologram visual
+        */
+        void CalculateMouse(sf::RenderTarget& surface);
+
+        /*
+            incrementally mines whatever is at the mouse position 
+
+            @param coord_tile the position we are placing at (as a coordinate)
+            @param rounded_world the position we are placing at (as a world position, rounded to the coordinate grid)
+            @param item_code the item currently in the players hand, determines what layer to be mined (if any) 
+        */
+        void Mine(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, ItemCode item_code);
+
+        /*
+            creates a utility object at the provided position, 
+
+            @param coord_tile the position we are placing at (as a coordinate)
+            @param rounded_world the position we are placing at (as a world position, rounded to the coordinate grid)
+            @param item_code associated with the new utility object
+        */
+        void PlaceUtility(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, ItemCode item_code);
+        
+        /*
+            determines if a new utility object will overlap any existing ones
+
+            @returns pointer to station which data overlaps, nullptr otherwise
+            @param coord_tile the position we are placing at (as a coordinate)
+            @param rounded_world the position we are placing at (as a world position, rounded to the coordinate grid)
+            @param footprint the dimensions of the new utility object
+        */
+        UtilityStation* NewUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint);
+
 
         void CatchEvent(sf::Event) override;
-
         void LinkWorld(World* world);
         void LinkInventory(Inventory* inventory);
 
@@ -40,7 +71,7 @@ class PlayerWorldInteractions : public Component {
 
         CursorGraphic* cursor_graphic;
         sf::Vector2i focused_block_position;
-
+        Chunk* chunk_last_utility_overlap_was_in;
 
         // shows the player the footprint of a utility object
         sf::Sprite utility_hologram;

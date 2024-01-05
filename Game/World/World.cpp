@@ -157,7 +157,8 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
         TileBehaviourManager::PropogateTile(x, y, tile_index, chunks.at(chunk.x).at(chunk.y)->GetTile(pos.x, pos.y, set_location), set_location);
     
         if(SetLocation::MAIN){
-
+            chunks.at(chunk.x).at(chunk.y)->CalculateSkyLight();
+            /*
             // solid
             if(tile_index != -1){
                 // if we create a create a pickup the block has been hand broken, 
@@ -169,6 +170,7 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
                 chunks.at(chunk.x).at(chunk.y)->RemoveTileFromSkylight(pos.x, pos.y);
 
             }
+            */
         }
     }
 
@@ -235,57 +237,7 @@ void World::CreatePickup(ItemCode item_to_drop, float world_x, float world_y){
     pickup->AttractToTransform(focus);
     client->GetInventory()->PickupItem(item_to_drop);
 }
-
-bool World::BreakTileWorld(float world_x, float world_y, SetLocation set_location, bool send_packet){
-
-    std::vector<ItemCode> items_to_drop;
     
-    sf::Vector2i coord = WorldToCoord(world_x, world_y);
-
-    // if we are mining on the MAIN SetLocation, remove and drop both MAIN and FOREGROUND
-    if(set_location == SetLocation::MAIN){
-        signed_byte main_block = GetTile(coord.x, coord.y, SetLocation::MAIN);
-        if(main_block != -1){
-            ItemCode pickup = ItemDictionary::MAIN_BLOCK_DATA[main_block].pickup;
-            items_to_drop.push_back(pickup);
-        }
-
-        // removes foreground blocks attached to the main block we may have broken
-        signed_byte foreground_block = GetTile(coord.x, coord.y, SetLocation::FOREGROUND);
-        if(foreground_block != -1){
-            ItemCode pickup = ItemDictionary::FOREGROUND_BLOCK_DATA[foreground_block].pickup;
-            items_to_drop.push_back(pickup);
-        }
-
-
-        // checks if a foregorund block is standing upon this block, (e.g. grass)
-        signed_byte main_above = GetTile(coord.x, coord.y - 1, SetLocation::MAIN);
-        signed_byte foreground_above = GetTile(coord.x, coord.y - 1, SetLocation::FOREGROUND); 
-        if(main_above == -1 && foreground_above != -1){
-            
-            SetTile(-1, coord.x, coord.y - 1, SetLocation::FOREGROUND, SetMode::OVERRIDE, send_packet, true);
-            ItemCode pickup = ItemDictionary::FOREGROUND_BLOCK_DATA[foreground_above].pickup;
-            items_to_drop.push_back(pickup);
-        }
-    }
-    else if(set_location == SetLocation::BACKGROUND){
-        
-        signed_byte background_block = GetTile(coord.x, coord.y, SetLocation::BACKGROUND);
-        if(background_block != -1){
-
-            ItemCode pickup = ItemDictionary::BACKGROUND_BLOCK_DATA[background_block].pickup;
-            items_to_drop.push_back(pickup);
-        } 
-    }
-
-    // if we break a MAIN tile, we also remove its FOREGROUND tile
-    if(set_location == SetLocation::MAIN){
-        SetTile(-1, coord.x, coord.y, SetLocation::FOREGROUND, SetMode::OVERRIDE, send_packet);
-    }
-
-    return SetTileWorld(-1, world_x, world_y, set_location, send_packet);
-}
-
 signed_byte World::GetTileWorld(float world_x, float world_y, SetLocation get_location){
     sf::Vector2i coord = WorldToCoord(world_x, world_y);
     return GetTile(coord.x, coord.y, get_location);

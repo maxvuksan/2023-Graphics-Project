@@ -141,6 +141,8 @@ void LightingManager::DrawLightSources(){
 
     if(light_update_delay_tracked > Settings::LIGHT_REFRESH_RATE){
 
+        Time::StartRecord();
+
         // clear lightmap
         for(int x = world->GetActiveChunksMin().x; x < world->GetActiveChunksMax().x; x++){
             for(int y = world->GetActiveChunksMin().y; y < world->GetActiveChunksMax().y; y++){
@@ -160,6 +162,8 @@ void LightingManager::DrawLightSources(){
             pos = light_sources[i]->GetThisObject()->GetTransform()->position + light_sources[i]->offset;
             PropogateLighting(world->WorldToCoord(pos.x, pos.y), light_sources[i]->colour, light_sources[i]->decay);
         }
+
+        Time::EndRecord();
 
     }
 }
@@ -182,7 +186,9 @@ bool LightingManager::CanPropogateToNewChunk(sf::Vector2i chunk_pos){
 }
 
 void LightingManager::ResetClosedTileVectorForChunk(sf::Vector2i chunk_pos){
+    // the chunk has not yet been touched
     if(std::find(light_propogation_explored_chunks.begin(), light_propogation_explored_chunks.end(), world->GetChunks()->at(chunk_pos.x).at(chunk_pos.y)) == light_propogation_explored_chunks.end()){
+        
         light_propogation_explored_chunks.push_back(world->GetChunks()->at(chunk_pos.x).at(chunk_pos.y));
         
         for(int x = 0; x < world->GetWorldProfile()->tilemap_profile.width; x++){
@@ -194,7 +200,6 @@ void LightingManager::ResetClosedTileVectorForChunk(sf::Vector2i chunk_pos){
 
 void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color& _colour, float decay){
 
-    //Time::StartRecord();
 
     struct LightTile {
         sf::Vector2i coord;
@@ -207,12 +212,12 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
     sf::Vector2i chunk_coord = world->ChunkFromCoord(coordinate.x, coordinate.y);
     coordinate = world->OffsetFromCoord(coordinate.x, coordinate.y, chunk_coord.x, chunk_coord.y);
 
-    LightingManager::light_propogation_explored_chunks.clear();
+    light_propogation_explored_chunks.clear();
 
     if(!CanPropogateToNewChunk(chunk_coord)){
         return;
     }
-    ResetClosedTileVectorForChunk(chunk_coord);
+    //ResetClosedTileVectorForChunk(chunk_coord);
     
     queue.push({coordinate, 1.0f, sf::Vector2i(chunk_coord.x, chunk_coord.y)});
 
@@ -221,6 +226,9 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
     }
 
     Chunk* chunk;
+    signed_byte current_tile;
+    sf::Color old_colour;
+    sf::Color new_colour;
 
     while(!queue.empty()){
 
@@ -270,33 +278,30 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
         }
 
 
-        chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);
-
-
+        chunk = chunks->at(light_tile.chunk_origin.x).at(light_tile.chunk_origin.y);        
         
         /*
-        if(chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] >= light_tile.intensity){
+        if(chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] > light_tile.intensity){
             continue;
         }
         */
 
-        signed_byte current_tile = chunk->GetTilemap(SetLocation::MAIN)->GetTile(light_tile.coord.x, light_tile.coord.y);
-
-
-
         sf::Image& light_map = chunk->GetLightmap();
         
-        sf::Color old_col = light_map.getPixel(light_tile.coord.x, light_tile.coord.y);
-        sf::Color new_col(std::fmax(old_col.r, _colour.r * light_tile.intensity), std::fmax(old_col.g, _colour.g * light_tile.intensity),std::fmax(old_col.b, _colour.b * light_tile.intensity));
+        old_colour = light_map.getPixel(light_tile.coord.x, light_tile.coord.y);
+        new_colour = sf::Color(std::fmax(old_colour.r, _colour.r * light_tile.intensity), std::fmax(old_colour.g, _colour.g * light_tile.intensity),std::fmax(old_colour.b, _colour.b * light_tile.intensity));
 
     
-        if(old_col.r >= new_col.r && old_col.g >= new_col.g && old_col.b >= new_col.b){
+        if(old_colour.r >= new_colour.r && old_colour.g >= new_colour.g && old_colour.b >= new_colour.b){
             continue;
         }
-    
-        //chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] = light_tile.intensity;
-        light_map.setPixel(light_tile.coord.x, light_tile.coord.y, new_col);
+
+        chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] = light_tile.intensity;
+
+        light_map.setPixel(light_tile.coord.x, light_tile.coord.y, new_colour);
         chunk->MarkLightmapDirty();
+
+        current_tile = chunk->GetTilemap(SetLocation::MAIN)->GetTile(light_tile.coord.x, light_tile.coord.y);
 
         if(current_tile != -1){
             light_tile.intensity *= 0.2f;
@@ -310,7 +315,6 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
         chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] = light_tile.intensity;
     }
 
-    //Time::EndRecord();
 }
 
 void LightingManager::AddLightSource(LightSource* light_source){

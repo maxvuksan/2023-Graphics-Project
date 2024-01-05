@@ -28,50 +28,108 @@ class World : public Object{
         void LinkClient(GameClient* client);
         void LinkWorldScene(WorldScene* world_scene);
 
+        /*
+            initalizes all data and generates the world
+        */
         void Create();
         void Update() override;
 
-        // iterates over every chunk recalculating the minimap
+        /*
+            completley recalculates the minimap, iterating over each coordinate
+        */
         void CalculateMinimap();
 
         /*
-            converts a world position to the appropriate chunks SetTile call
+            sets a tile through a world position
+
             @returns true if the tile could be set, false otherwise
+            
+            @param tile_index the index (within the appropriate set_location) to set
+            @param world_x the x component of the world position
+            @param world_y the y component of the world position
+            @param set_location the layer we are interacting with
+            @param send_packet should this operation send a networking packet?
         */
         bool SetTileWorld(signed_byte tile_index, float world_x, float world_y, SetLocation set_location = SetLocation::MAIN, bool send_packet = false);
+        
+        /*
+            sets a tile through a coordinate position
+            
+            @returns true if the tile could be set, false otherwise
+            
+            @param tile_index the index (within the appropriate set_location) to set
+            @param x the x component of the coordinate
+            @param y the y component of the coordinate
+            @param set_location the layer we are interacting with
+            @param set_mode determines if the tile can be set in relation to exisiting tiles (see SetMode enum)
+            @param send_packet should this operation send a networking packet?
+            @param propogate_to_other_tiles does this set operation causes the TileBehaviourManager to propogate at this coordinate
+            @param create_pickup should an item pickup be created from the old tile?
+        */
         bool SetTile(signed_byte tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN, SetMode set_mode = SetMode::OVERRIDE, bool send_packet = false, bool propogate_to_other_tiles = false, bool create_pickup = false);
+        
+        /*
+            @param item_to_drop the item code of the pickup
+            @param world_x the x component of the world position
+            @param world_y the y component of the world position
+        */
         void CreatePickup(ItemCode item_to_drop, float world_x, float world_y);
+        
+        /*
+            drawing a single tile on a set layer to the minimap
+
+            @param tile_index the index (within the appropriate set_location) to set
+            @param x the x component of the coordinate
+            @param y the y component of the coordinate
+            @param set_location the layer we are interacting with
+        */
         void DrawTileToMinimap(signed_byte tile_index, int x, int y, SetLocation set_location);
+
+        /*
+            reveals tiles on the minimap explored layer within a set radius (Minimap::exploring_radius)
+        */
         void RevealMapAroundFocus(); 
 
-        // @returns true if the position provided has adjacent tiles (on either main tilemap or background tilemap), aids checking if a position is valid for placement
-        bool CoordIsConnectedToOtherTiles(int x, int y);
+        /*
+            aids checking if a position is valid for placement
 
-        // DEPRECATED! use SetTile with the create pickup flag = true
-        // same as SetTileWorld to -1, but also spawns pickup if needed.
-        bool BreakTileWorld(float world_x, float world_y, SetLocation set_location = SetLocation::MAIN, bool send_packet = false);
+            @returns true if the coordinate provided has adjacent tiles (on either main tilemap or background tilemap)
+            
+            @param x the x component of the coordinate
+            @param y the y component of the coordinate
+        */
+        bool CoordIsConnectedToOtherTiles(int x, int y);
 
         // @returns the tile_index at a specific world position
         signed_byte GetTileWorld(float world_x, float world_y, SetLocation set_location = SetLocation::MAIN);
+
         // @returns the tile_index at a specific coordinate
         signed_byte GetTile(int x, int y, SetLocation set_location = SetLocation::MAIN);
+
         // @returns a struct containing the byte for each layer
         EntireTile GetEntireTile(int x, int y);
+        
         // @returns starting at world_position, returns the nearest tile coordinate in the mouses direction
         sf::Vector2i GetNearestTileInDirectionOfMouse(sf::Vector2f world_position, SetLocation set_location = SetLocation::MAIN);
 
         // @returns true if a chunk coordinate is valid
         bool ChunkInBounds(int chunk_x, int chunk_y);
+        
         // @returns true if a coordinate is valid
         bool CoordInBounds(int x, int y);
+        
         // @returns a world position rounded by increments of the tilesize
         sf::Vector2i RoundWorld(float world_x, float world_y);
+        
         // @returns the coordinate position of a world position
         sf::Vector2i WorldToCoord(float world_x, float world_y);
+        
         // @returns the world position of a coordinate
         sf::Vector2f CoordToWorld(int x, int y);
+        
         // @returns the chunk the provided position falls in
         sf::Vector2i ChunkFromCoord(int x, int y);
+        
         // @returns the tilemap position of a coordinate, relative to the provided chunk
         sf::Vector2i OffsetFromCoord(int x, int y, int chunk_x, int chunk_y);
 

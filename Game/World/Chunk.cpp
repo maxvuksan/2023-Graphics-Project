@@ -49,6 +49,22 @@ void Chunk::StoreUtilityStationReference(UtilityStation* station){
     utility_stations.push_back(station);
 }
 
+void Chunk::BreakUtilityStation(UtilityStation* reference){
+    
+    for(int i = 0; i < utility_stations.size(); i++){
+        if(utility_stations[i] == reference){
+            utility_stations.erase(utility_stations.begin() + i);
+
+            world->CreatePickup(reference->GetUtilityData()->block_data.pickup, reference->GetTransform()->position.x, reference->GetTransform()->position.y);
+
+            RemoveObjectFromChunk(reference);
+
+            return;
+        }
+    }
+}
+
+
 
 void Chunk::RemoveTorchPosition(int coord_x, int coord_y){
     for(int i = 0; i < torch_positions.size(); i++){
@@ -206,7 +222,7 @@ void Chunk::CalculateSkyLight(){
                 sky_tiles.push_back(sf::Vector2i(x,y));
             }
             else{
-                return;
+                continue;
             }
 
             for(auto offset : Globals::HORIZONTAL_OFFSETS){
@@ -219,14 +235,12 @@ void Chunk::CalculateSkyLight(){
                     if(std::find(sky_tiles_to_propogate.begin(), sky_tiles_to_propogate.end(), sf::Vector2i(coord.x,coord.y)) == sky_tiles_to_propogate.end()){
                         sky_tiles_to_propogate.push_back(sf::Vector2i(coord.x,coord.y));
                     }
-
-
                 }
             }
         }
     }    
 }
-
+/*
 void Chunk::IntroduceTileToSkylight(int x, int y){
 
     if(background_tilemap->GetTile(x, y) == -1 && main_tilemap->GetTile(x,y) == -1){
@@ -256,7 +270,6 @@ void Chunk::IntroduceTileToSkylight(int x, int y){
 
 void Chunk::RemoveTileFromSkylight(int x, int y){
 
-    return;
     sf::Vector2i chunk_coord = world->WorldToCoord(GetTransform()->position.x, GetTransform()->position.y);
     sf::Vector2i coord = sf::Vector2i(x, y) + chunk_coord;
     
@@ -293,7 +306,7 @@ void Chunk::RemoveTileFromSkylight(int x, int y){
         }
     }
 }
-
+*/
 void Chunk::PropogateTorches(){
     
 
@@ -304,7 +317,7 @@ void Chunk::PropogateTorches(){
     MarkLightmapDirty();
 
     for(int i = 0; i < sky_tiles_to_propogate.size(); i++){
-        LightingManager::PropogateLighting(sky_tiles_to_propogate.at(i), LightingManager::sunlight_colour, 0.03f);    
+        LightingManager::PropogateLighting(sky_tiles_to_propogate.at(i), LightingManager::sunlight_colour, 0.06f);    
     }
 
     sf::Vector2i coord = world->WorldToCoord(GetTransform()->position.x, GetTransform()->position.y);
