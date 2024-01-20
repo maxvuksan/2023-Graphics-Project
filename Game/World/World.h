@@ -10,7 +10,6 @@
 
 
 
-
 class WorldScene;
 class GameClient;
 class WorldGenerator;
@@ -20,6 +19,7 @@ class World : public Object{
     friend class WorldGenerator;
     friend class Chunk;
     friend class TileBehaviourManager;
+    friend class RotatedRectManager;
 
     public:
 
@@ -148,6 +148,7 @@ class World : public Object{
         WorldProfile* GetWorldProfile(){return &world_profile;}
         
         std::vector<std::vector<Chunk*>>* GetChunks(){ return &chunks; }
+        
 
         // @returns true if the world has had a change which requires pathfinding node grid to be recalculated, is reset to false by PathfindingGraph
         bool GetWorldNeedsPathfindingRecalculating(){return world_needs_pathfinding_recalculating; }

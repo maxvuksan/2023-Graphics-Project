@@ -7,6 +7,9 @@ class SpriteRenderer : public Component{
 
         SpriteRenderer();
 
+        // does the sprite draw with an outline?
+        void SetOutline(bool state);
+
         void Start() override;
         void Draw(sf::RenderTarget& surface) override;
 
@@ -25,6 +28,7 @@ class SpriteRenderer : public Component{
         void SetOffset(sf::Vector2f offset);
 
     protected:
+        bool show_outline;
         sf::Vector2f offset;
         int flip_factor;
         sf::Sprite sprite;

@@ -12,10 +12,9 @@ class UtilityStation : public Object {
 
     public:
 
-        void Start() override;
+        void OnStart();
 
         void LinkChunk(Chunk* chunk);
-        virtual void OnStart(){}
 
         // sets the type of station, only utility item codes should be provided
         void SetItemType(ItemCode item);

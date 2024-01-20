@@ -33,10 +33,13 @@ void AnimationRenderer::Draw(sf::RenderTarget& surface){
     }
 
     sprite.setTextureRect(sf::IntRect(current_animation->GetCellsize() * (index + current_animation->GetStart()), 0, current_animation->GetCellsize(), sprite.getTexture()->getSize().y));
-    sprite.setOrigin(sf::Vector2f(current_animation->GetCellsize() / 2.0f, current_animation->GetCellsize() / 2.0f));
+    sprite.setOrigin(sf::Vector2f(current_animation->GetCellsize() / 2.0f, current_animation->GetCellsize() / 2.0f));    
+    
     sprite.setPosition(Camera::WorldToScreenPosition(object->GetTransform()->position));
+    
     sprite.setScale(sf::Vector2f(object->GetTransform()->scale.x * flip_factor, object->GetTransform()->scale.y * 1));
-
+    sprite.setRotation(object->GetTransform()->rotation);
+    
     surface.draw(sprite);
 }
 

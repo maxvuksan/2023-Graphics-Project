@@ -20,7 +20,7 @@ class SlotSet : public Object{
         // should be called after a grid is defined
         void Align(ScreenLocationX align_x, ScreenLocationY align_y);
 
-        void DefineRecipeGrid(const std::vector<std::vector<Recipes>>& recipes);
+        void DefineRecipeGrid(const std::vector<Recipes>& recipes);
         void DefineGrid(int width, int height, SlotType type);
         void SetSlotType(int slot_x, int slot_y, SlotType type);
 

@@ -22,6 +22,10 @@ class Pickup : public Object {
 
         sf::Vector2f on_attract_position;
 
+
+        static float popin_speed;
+        float popin_speed_tracked;
+
         static float attract_speed; // lerp by
         float attract_tracked; // the lerp value
 };

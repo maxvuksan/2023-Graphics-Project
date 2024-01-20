@@ -28,11 +28,16 @@ class WorldGenerator{
         static void CarveCaves();
 
         // creating caves with direction
-        static void Tunnel(int x, int y, int radius_min, int radius_max, float angle, int branch_count);
+        static void Tunnel(float x, float y, int radius_min, int radius_max, float angle, int branch_count);
 
         static float RandomTunnelDirection(bool can_be_straight = true);
         // @ returns a random choice between the two given floats
         static float EqualChancePick(float x, float y);
+
+        // generates a tree at the provided coordinates
+        static void SpawnTree(int x, int y);
+
+        static void CreateHibernationStructure();
 
         // iterates over the scultped terrain determining where the top most tiles are
         static void IdentifySurface();

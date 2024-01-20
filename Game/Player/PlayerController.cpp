@@ -23,16 +23,9 @@ void PlayerController::Start(){
     // set player camera as scene camera
     object->GetScene()->SetActiveCamera(object->AddComponent<Camera>());
 
-    health_bar = object->GetScene()->AddUI<HealthBar>();
-
     body_collider = object->AddComponent<BoxCollider>();
     body_collider->SetSize(sf::Vector2f(8, 16));
     body_collider->SetOffset(sf::Vector2f(-4,-8));
-
-    ground = object->AddComponent<BoxCollider>();
-    ground->SetIsTrigger(true);
-    ground->SetSize(sf::Vector2f(8, 4));
-    ground->SetOffset(sf::Vector2f(-4,8));
 
     left = object->AddComponent<BoxCollider>();
     left->SetIsTrigger(true);
@@ -67,9 +60,30 @@ void PlayerController::LinkHealthBar(HealthBar* health_bar){
 
 void PlayerController::LinkWorld(World* world){
     this->world = world;
+
+    /*
+        auto obj = object->GetScene()->AddObject<Object>();
+        obj->GetTransform()->position = world->CoordToWorld(world->GetSpawnCoordinate().x, world->GetSpawnCoordinate().y - 20);
+        //obj->GetTransform()->rotation = 15;
+        rect = obj->AddComponent<RotatingRect>();
+        rect->SetSize(20, 90);
+
+        obj = object->GetScene()->AddObject<Object>();
+        obj->GetTransform()->position = world->CoordToWorld(world->GetSpawnCoordinate().x, world->GetSpawnCoordinate().y - 25);
+        obj->GetTransform()->rotation = 100;
+        rect2 = obj->AddComponent<RotatingRect>();
+        rect2->SetSize(10, 30);
+    */
 }
 
 void PlayerController::UpdateEventFocusBounded(){
+
+    health_bar->SetCycle(TimeManager::GetTimeOfDay());
+
+    //rect2->Overlapping(rect->GetTopLeft(), rect->GetTopRight(), rect->GetBottomLeft(), rect->GetBottomRight());
+    //rect2->GetThisObject()->GetTransform()->position = Scene::GetActiveCamera()->ScreenToWorldPosition(Mouse::DisplayPosition());
+    //rect->GetThisObject()->GetTransform()->rotation += Time::Dt() * 0.1f;
+    
 
     float _speed = speed;
 
@@ -138,7 +152,9 @@ void PlayerController::UpdateEventFocusBounded(){
         pb->gravity = 1;
     }
 
-    if(!ground->Triggered()){
+    
+
+    if(pb->GetLastBottomCollision() > 20){
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) && grab_delay_tracked <= 0){
             grabbing_wall = true;
@@ -237,9 +253,22 @@ void PlayerController::CatchEvent(sf::Event event){
 
                 break;
             }       
+            case sf::Keyboard::Scan::S:{
+                body_collider->SetCollisionInteractionMode(IGNORE_PLATFORM);
+            }
         }
         
-    }       
+    }      
+    if (event.type == sf::Event::KeyReleased)
+    {
+        switch(event.key.scancode){
+
+            case sf::Keyboard::Scan::S: {
+                body_collider->SetCollisionInteractionMode(ALL);
+            }
+        }
+        
+    }    
 }
 
 void PlayerController::SuggestJump(){
@@ -318,7 +347,6 @@ void PlayerController::ApplyFallDamage(){
     if(pb->velocity.y <= fall_damage_velocity_threshold){
         return;
     }
-    
 
     int damage = 1 * (height_travelled - fall_damage_free_threshold);
     

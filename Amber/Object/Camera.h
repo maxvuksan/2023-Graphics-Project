@@ -25,6 +25,18 @@ class Camera : public Component {
         sf::Vector2f GetBoundedPosition(){ return bounded_position;}
 
         void Update() override;
+        // sets the intensity of screenshake to apply each frame
+        void SetConstantScreenShake(int shake_factor);
+
+        /*
+            changes the screenwipe colour, used to transitions
+
+            @param new_colour the colour to fill the screen
+            @param milliseconds how long it takes to transition from the current screen wipe colour to new_colour
+        */
+        void SetScreenWipeColourOvertime(sf::Color new_colour, int milliseconds);
+        void SetScreenWipeColour(sf::Color new_colour);
+        const sf::Color& GetFinalScreenWipeColour(){return final_screen_wipe_colour;}
 
         // Converts a world space position to its position relative to the scenes active camera
         static sf::Vector2f WorldToScreenPosition(sf::Vector2f world);
@@ -33,12 +45,18 @@ class Camera : public Component {
         static sf::Vector2f ScreenToWorldPosition(sf::Vector2f screen);
         static sf::Vector2f ScreenToWorldPosition(sf::Vector2i screen);        
 
-
     
-    private:
+    private:    
 
         sf::Sprite background_sprite;
 
+        int constant_screen_shake_factor;
         static sf::Vector2f bounded_position;
         static sf::Vector2f ceil_bounded_position;
+
+        float milliseconds_to_screen_wipe;
+        float milliseconds_to_screen_wipe_tracked;
+        sf::Color previous_screen_wipe_colour;
+        sf::Color target_screen_wipe_colour;
+        sf::Color final_screen_wipe_colour;
 };

@@ -1,6 +1,6 @@
 #include "NoodleCreature.h"
 #include "PathfindingGraph.h"
-#include "../LightSource.h"
+#include "../World/Lighting/LightSource.h"
 #include "InverseKinematicLimb.h"
 #include "../World/World.h"
 

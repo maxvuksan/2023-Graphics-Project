@@ -17,21 +17,34 @@ class HealthBar : public Object {
         int GetMaxHunger(){return max_hunger;}
         void SetHunger(int hunger);
         void SetMaxHunger(int max_hunger);
-
+        
+        int GetCycle(){return cycle;}
+        int GetMaxCycle(){return max_cycle;}
+        void SetCycle(int cycle);
+        void SetMaxCycle(int max_cycle);
 
         
 
     private:
 
-        int health = 100;
+        static int hunger_decay_delay;
+        float hunger_decay_delay_tracked;
+
+        int health;
         int max_health = 200;
 
-        int hunger = 50;
+        int hunger;
         int max_hunger = 200;
+
+        int cycle = 50;
+        int max_cycle = 200;
 
         sf::RectangleShape health_frame;
         sf::RectangleShape health_remaining;
 
         sf::RectangleShape hunger_frame;
         sf::RectangleShape hunger_remaining;
+
+        sf::RectangleShape cycle_frame;
+        sf::RectangleShape cycle_remaining;
 };

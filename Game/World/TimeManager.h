@@ -8,6 +8,8 @@ class TimeManager {
 
         static int GetTotalTimeInDay(){return total_time_of_day;}
         static void SetTimeOfDay(int new_time);
+        static int GetTimeOfDay(){return time_of_day;}
+        static int GetTotalTimeOfDay(){return total_time_of_day;}
         static void Tick();
         
 
@@ -19,6 +21,10 @@ class TimeManager {
         static float time_of_day;
         // total time in cycle
         static int total_time_of_day; 
+
+
+        static bool triggered_screen_wipe;
+
 
         // lerps between these colours to determine the current sunlight colour
 

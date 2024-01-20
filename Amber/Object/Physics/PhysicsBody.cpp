@@ -7,7 +7,7 @@
 float PhysicsBody::max_movement = 7;
 int PhysicsBody::max_number_of_steps = 100; // allowed number of max_movement sub steps, ignores any after that point
 
-PhysicsBody::PhysicsBody() : velocity(0,0), gravity_on(true), gravity(1){}
+PhysicsBody::PhysicsBody() : velocity(0,0), gravity_on(true), gravity(1), last_left_collision(1000), last_right_collision(1000), last_bottom_collision(1000), last_top_collision(1000){}
 
 void PhysicsBody::Update(){
 
@@ -18,6 +18,20 @@ void PhysicsBody::Update(){
         else{
             velocity.y = gravity_max;
         }
+    }
+
+    // prevent potentially float overflow if a collision does not occur for a LONG time
+    if(last_left_collision < 100000){
+        last_left_collision += Time::Dt();
+    }
+    if(last_right_collision < 100000){
+        last_right_collision += Time::Dt();
+    }
+    if(last_top_collision < 100000){
+        last_top_collision += Time::Dt();
+    }
+    if(last_bottom_collision < 100000){
+        last_bottom_collision += Time::Dt();
     }
 
     Move(velocity * Time::Dt());
@@ -69,3 +83,15 @@ void PhysicsBody::SetGravityState(bool state){
     gravity_on = state;
 }
 
+void PhysicsBody::SetLastLeftCollision(float value){
+    last_left_collision = value;
+}
+void PhysicsBody::SetLastRightCollision(float value){
+    last_right_collision = value;
+}
+void PhysicsBody::SetLastBottomCollision(float value){
+    last_bottom_collision = value;
+}
+void PhysicsBody::SetLastTopCollision(float value){
+    last_top_collision = value;
+}

@@ -5,9 +5,7 @@
 
 /*
     allows the range -128 -> 127
-*/
-typedef signed char signed_byte; 
-
+*/ 
 class TilemapPrimitive : public sf::Drawable, public sf::Transformable
 {
     /*

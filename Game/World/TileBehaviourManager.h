@@ -24,6 +24,9 @@ class TileBehaviourManager {
 
         // traverses down a position removing all foreground blocks marked with VINE behaviour
         static void RemoveVine(int x, int y);
+        static void UpdateTorch(int x, int y);
+        static void UpdatePlatform(int x, int y);
+        static void CutdownTree(int x, int y);
 
     private:
         static int tickrate;

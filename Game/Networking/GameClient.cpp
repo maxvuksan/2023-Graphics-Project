@@ -39,15 +39,25 @@ void GameClient::CreateObjects(){
     scene->SetMaxYBound(wp->height * wp->tilemap_profile.height * wp->tilemap_profile.tile_height);
 
     // creating player and adding all player based components
+    HealthBar* health_bar = scene->AddUI<HealthBar>();
+    health_bar->SetCycle(TimeManager::GetTimeOfDay());
+    health_bar->SetMaxCycle(TimeManager::GetTotalTimeInDay());
+
     player = scene->AddObject<Player>();
     player_controller = player->AddComponent<PlayerController>();
-    player_controller->LinkWorld(world);
-    player_controller->Respawn();
 
     player_world_interactions = player->AddComponent<PlayerWorldInteractions>();
-    player_world_interactions->LinkWorld(world);
     inventory = scene->AddUI<Inventory>();
-    player_world_interactions->LinkInventory(inventory);
+    inventory->PickupItem(item_Copper_Picaxe);
+    inventory->PickupItem(item_Copper_Axe);
+    inventory->PickupItem(item_Copper_Sword);
+
+    player_world_interactions->LinkInventory(inventory);    
+    player_world_interactions->LinkHealthBar(health_bar);
+    player_world_interactions->LinkWorld(world);
+    player_controller->LinkHealthBar(health_bar);
+    player_controller->LinkWorld(world);
+    player_controller->Respawn();
 
     scene->GetActiveCamera()->SetBackgroundTexture("background");
 

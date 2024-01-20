@@ -14,6 +14,22 @@ class Calc{
             return 1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2);
         }
 
+        static float EaseOutElastic(float x) {
+
+            if(x == 0){
+                return 0;
+            }
+            if(x == 1){
+                return 0;
+            }
+
+            // otherwise
+            float c4 = (2 * 3.1415) / 3;
+            return pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1;
+        }
+
+
+        // @returns true if @param val is within the min and max value (inclusive)
         static bool InRange(float val, float min, float max){
             if(val > max){
                 return false;
@@ -77,19 +93,32 @@ class Calc{
         // @returns a vector of magnitude 1 from the provided vector
         static sf::Vector2f Normalize(sf::Vector2f vector){
 
-            float magnitude = sqrt(pow(vector.x, 2) + pow(vector.y, 2));
+            float magnitude = Magnitude(vector);
             return sf::Vector2f(vector.x / magnitude, vector.y / magnitude);
-        
         }
         // @returns a vector of magnitude 1 from the provided vector
         static sf::Vector2f Normalize(sf::Vector2i vector){
             return Normalize(sf::Vector2f(vector.x, vector.y));
         }
 
+        // @returns the magnitude (hypotenuse) of a vector
+        static float Magnitude(sf::Vector2f vector){
+            return sqrt(pow(vector.x, 2) + pow(vector.y, 2));
+        }
+
+        // @returns the dot product of two vectors
+        static float DotProduct(sf::Vector2f a, sf::Vector2f b){
+            return a.x * b.x + a.y * b.y;
+        }
+
         // @returns the angle between two points in degreess
         static float AngleBetween(sf::Vector2f a, sf::Vector2f b){
+            return Degrees(RadiansBetween(a, b));
+        }
+        // @returns the angle between two points in radians
+        static float RadiansBetween(sf::Vector2f a, sf::Vector2f b){
             sf::Vector2f dif = b - a;
-            return Degrees(atan2(dif.y, dif.x));
+            return atan2(dif.y, dif.x);
         }
 
         static float VectorToRadians(sf::Vector2f vector){

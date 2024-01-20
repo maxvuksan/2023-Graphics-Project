@@ -10,7 +10,6 @@ enum Foliage {
     foliage_BushBerries,
     foliage_TumbleWeed,
     foliage_DeadShrug,
-    foliage_Stones,
 
     foliage_NUMBER_OF_FOLIAGE
 };

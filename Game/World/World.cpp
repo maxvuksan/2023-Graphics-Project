@@ -3,8 +3,12 @@
 #include "../Networking/GameClient.h"
 #include "../Items/Pickup.h"
 #include "../WorldScene.h"
-#include "LightingManager.h"
 #include "TileBehaviourManager.h"
+#include "RotatedRectManager.h"
+#include "WaterManager.h"
+
+#include "Lighting/LightingManager.h"
+#include "Lighting/BackgroundShadowManager.h"
 
 void World::LinkWorldScene(WorldScene* world_scene){
     this->world_scene = world_scene;
@@ -20,10 +24,16 @@ void World::Create() {
     world_profile.height_in_tiles = world_profile.height * tilemap_profile->height;
 
     GetScene()->AddObject<LightingManager>(50);
-
+    GetScene()->AddObject<RotatedRectManager>();
+    GetScene()->AddObject<WaterManager>();
+    GetScene()->AddObject<BackgroundShadowManager>(1);
+    
+    TilemapCollisionTypeDivider::platform_collider_begins_at = main_Platform;
     LightingManager::LinkWorld(this);
     TileBehaviourManager::LinkWorld(this);
-
+    RotatedRectManager::LinkWorld(this);
+    WaterManager::LinkWorld(this);
+    
     // creating each tilemap...
 
     half_tilemap_width = floor(tilemap_profile->width * 0.5f);
@@ -55,7 +65,7 @@ void World::Create() {
             chunks[x][y]->LinkScene(world_scene);
             chunks[x][y]->Init(this);
             chunks[x][y]->SetActive(false); 
-            chunks[x][y]->GetTransform()->position = sf::Vector2f(x * tilemap_profile->tile_width * tilemap_profile->width, y * tilemap_profile->tile_height * tilemap_profile->height);
+            chunks[x][y]->SetChunkCoordinate(x, y);
         }
     }
 
@@ -148,15 +158,28 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
                 }
             }
 
-            CreatePickup(item_to_drop, world_pos.x, world_pos.y);
+            CreatePickup(item_to_drop, world_pos.x + ItemDictionary::half_tile_size, world_pos.y + ItemDictionary::half_tile_size);
         }
 
     }
 
+    signed_byte old_tile = chunks.at(chunk.x).at(chunk.y)->GetTile(pos.x, pos.y, set_location);
+
+    chunks.at(chunk.x).at(chunk.y)->SetTile(tile_index, pos.x, pos.y, set_location);
+    chunks[chunk.x][chunk.y]->dirty = true; // marking the chunk as "dirty" (changed)
+
+
     if(propogate_to_other_tiles){
-        TileBehaviourManager::PropogateTile(x, y, tile_index, chunks.at(chunk.x).at(chunk.y)->GetTile(pos.x, pos.y, set_location), set_location);
+
+        // communicate for water manager
+        chunks.at(chunk.x).at(chunk.y)->SetAwakeForWaterSim(true);
+        if(chunks.at(chunk.x).at(chunk.y)->water_updated.size() > 0){
+            chunks.at(chunk.x).at(chunk.y)->water_updated[pos.x][pos.y] = true;
+        }
+
+        TileBehaviourManager::PropogateTile(x, y, tile_index, old_tile, set_location);
     
-        if(SetLocation::MAIN){
+        if(set_location == SetLocation::MAIN || set_location == SetLocation::BACKGROUND){
             chunks.at(chunk.x).at(chunk.y)->CalculateSkyLight();
             /*
             // solid
@@ -173,9 +196,6 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
             */
         }
     }
-
-    chunks.at(chunk.x).at(chunk.y)->SetTile(tile_index, pos.x, pos.y, set_location);
-    chunks[chunk.x][chunk.y]->dirty = true; // marking the chunk as "dirty" (changed)
 
 
     DrawTileToMinimap(tile_index, x, y, set_location);
@@ -231,11 +251,16 @@ void World::CreatePickup(ItemCode item_to_drop, float world_x, float world_y){
         return;
     }
 
+    int rand_offset_x = -2 + rand() % 4;
+    int rand_offset_y = -2 + rand() % 4;
+
+
     Pickup* pickup = GetScene()->AddObject<Pickup>();
     pickup->SetItemCode(item_to_drop);
-    pickup->GetTransform()->position = sf::Vector2f(world_x, world_y);
+    pickup->GetTransform()->position = sf::Vector2f(world_x + rand_offset_x, world_y + rand_offset_y);
     pickup->AttractToTransform(focus);
     client->GetInventory()->PickupItem(item_to_drop);
+
 }
     
 signed_byte World::GetTileWorld(float world_x, float world_y, SetLocation get_location){
@@ -468,13 +493,13 @@ void World::Update(){
 
 
     LightingManager::DrawLightSources();
-    LightingManager::DrawEachChunksLightmaps();
     LightingManager::ResetLightDelay();
 
     TimeManager::Tick();
 
     TileBehaviourManager::PerformTileUpdatePass();
     
+
     RevealMapAroundFocus();
 }
 

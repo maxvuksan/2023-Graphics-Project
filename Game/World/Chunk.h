@@ -22,6 +22,9 @@ class Chunk : public Object {
         EntireTile GetEntireTile(int x, int y);
         void SetTile(signed_byte tile_index, int x, int y, SetLocation set_location = SetLocation::MAIN);
 
+        void SetChunkCoordinate(int x, int y);
+        sf::Vector2i GetChunkCoordinate(){return chunk_coordinate;}
+
         void ClearColliders();
         void ResetCollidersIfChanged();
         void ResetColliders();
@@ -29,7 +32,8 @@ class Chunk : public Object {
         virtual void OnSetActive() override;
         virtual void OnDisable() override;
 
-        void Draw(sf::RenderTarget& surface);
+        void DrawDebug(sf::RenderTarget& surface) override;
+        void Draw(sf::RenderTarget& surface) override;
         void PropogateTorches();
 
         Tilemap* GetTilemap(SetLocation set_location);
@@ -91,6 +95,7 @@ class Chunk : public Object {
             @param y component of tilemap offset
         */ 
         void RemoveFoliage(int x, int y);
+        const sf::VertexArray& GetFoliageVertexArray(){return foliage_vertex_array;}
 
         /*
             iterates over the chunks foliage map, constructing a vertex array with each foliage objects data,
@@ -135,12 +140,18 @@ class Chunk : public Object {
         sf::Texture& GetLightmapTexture(){return light_texture;}
         void MarkLightmapDirty(){light_map_dirty = true;}
 
+        // @returns map structured as... key (x offset + y offset * width) : foliage id
+        const std::map<int, Foliage>& GetFoliageMap(){return foliage_map;}
+
         void RemoveTorchPosition(int  coord_x, int coord_y);
         void AddTorchPosition(int coord_x, int coord_y);
 
         void ClearLightmap();
         void RefreshSkylight();
         void CalculateSkyLight();
+
+        short GetAwakeForWaterSim(){ return awake_decay_tracked;}
+        void SetAwakeForWaterSim(short awake_decay_tracked);
     /*
         // checks if the current position has already been considered, if not add it to the sky light vectors
         void IntroduceTileToSkylight(int x, int y);
@@ -149,7 +160,16 @@ class Chunk : public Object {
     */
         std::vector<std::vector<float>> lighting_closed_grid;
 
+        Tilemap* water_tilemap;
+        std::vector<std::vector<bool>> water_updated;
+        
     private:
+
+        sf::Vector2i chunk_coordinate;
+
+        // determines if this chunks water tilemap is simulated (through WaterManager)
+        // records how long a chunks water has been idle, if reaches 0 turn to 
+        short awake_decay_tracked;
 
         // local positions which should emit skylight, 
         std::vector<sf::Vector2i> sky_tiles_to_propogate;

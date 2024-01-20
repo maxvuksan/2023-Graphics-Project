@@ -1,18 +1,15 @@
 #include "Player.h"
-#include "../LightSource.h"
+#include "../World/Lighting/LightSource.h"
 #include "../Items/ItemDictionary.h"
-#include "../World/LightingManager.h"
+#include "../World/Lighting/LightingManager.h"
 
 void Player::Start(){
 
     auto ar = AddComponent<AnimationRenderer>();
 
     ar->SetAnimationSet("player");
-    ar->SetRenderLayer(2);
+    ar->SetRenderLayer(8);
     
-    auto light = AddComponent<LightSource>();
-    light->decay = 0.03;
-
     AddComponent<PixelParticleSource>();
 
 }

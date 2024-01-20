@@ -6,12 +6,15 @@
 class World;
 class Inventory;
 class UtilityStation;
+class HealthBar;
 
 class PlayerWorldInteractions : public Component {
 
     public:
         void Start();
         void Draw(sf::RenderTarget&) override;
+
+        void LinkHealthBar(HealthBar* health_bar);
 
         void ManageToolInHand(sf::RenderTarget&);
         void SwingToolInHand();
@@ -48,8 +51,9 @@ class PlayerWorldInteractions : public Component {
             @param coord_tile the position we are placing at (as a coordinate)
             @param rounded_world the position we are placing at (as a world position, rounded to the coordinate grid)
             @param footprint the dimensions of the new utility object
+            @param assign_last_overlap_chunk should this function call assign the chunk_last_utility_overlap_was_in variable, doing so may effect if a utility station is destroyed
         */
-        UtilityStation* NewUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint);
+        UtilityStation* NewUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint, bool assign_last_overlap_chunk = false);
 
 
         void CatchEvent(sf::Event) override;
@@ -60,6 +64,7 @@ class PlayerWorldInteractions : public Component {
 
     private:
 
+        HealthBar* health_bar;
 
         sf::Sprite tool_in_hand_sprite;
         float swing_completion;

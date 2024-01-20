@@ -27,6 +27,8 @@ void AssetManager::Construct()
     CreateShader("Amber_LightSource", "Amber/Shaders/LightSource.frag");
     CreateShader("Amber_ColourOverlay", "Amber/Shaders/ColourOverlay.frag");
     CreateShader("Amber_Banding", "Amber/Shaders/Banding.frag");
+    CreateShader("Amber_ColourToBlack", "Amber/Shaders/ColourToBlack.frag");
+    CreateShader("Amber_Outline", "Amber/Shaders/Outline.frag");
 
     GetShader("Amber_Banding")->setUniform("u_band_count", 1.0f);
 

@@ -29,6 +29,9 @@ class PlayerController : public Component {
 
     private:
     
+        RotatingRect* rect;
+        RotatingRect* rect2;
+
         void ApplyFallDamage();
         void SetHeightWhenGrounded();
 
@@ -42,7 +45,6 @@ class PlayerController : public Component {
         bool grabbing_wall_right;
     
         SpriteRenderer* sr;
-        BoxCollider* ground;
         BoxCollider* left;
         BoxCollider* right;
         BoxCollider* body_collider;

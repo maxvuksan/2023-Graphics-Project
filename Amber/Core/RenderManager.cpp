@@ -5,7 +5,7 @@
 
 
 std::vector<sf::RenderTexture*> RenderManager::render_textures;
-//int RenderManager::camera_smoothing_edge_buffer = 1;
+int RenderManager::camera_smoothing_edge_buffer = 4;
 
 sf::Text RenderManager::fps_text;
 int RenderManager::fps_refresh_delay_tracked;
@@ -30,8 +30,8 @@ void RenderManager::Construct() {
 
 void RenderManager::OnResize(){
     for(int i = 0; i < render_textures.size(); i++){
-        //render_textures[i]->create(Core::GetDisplayWidth() + camera_smoothing_edge_buffer * 2, Core::GetDisplayHeight() + camera_smoothing_edge_buffer * 2);
-        render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
+        render_textures[i]->create(Core::GetDisplayWidth() + camera_smoothing_edge_buffer * 2, Core::GetDisplayHeight() + camera_smoothing_edge_buffer * 2);
+        //render_textures[i]->create(Core::GetDisplayWidth(), Core::GetDisplayHeight());
     }
 
     // assign blur shader uniforms
@@ -65,7 +65,6 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     }
     else{
         render_textures[SCENE]->clear(sf::Color::Transparent);
-        //render_textures[SCENE]->clear(Scene::GetActiveCamera()->background_colour);
     }
 
     // draw all objects
@@ -78,28 +77,41 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     // we have drawn our scene
     render_textures[SCENE]->display();
 
-
     // draw backgorund if necassary
     if(background_sprite != nullptr){
         background_sprite->setPosition(sf::Vector2f(render_textures[0]->getSize().x / 2.0f, render_textures[0]->getSize().y / 2.0f));
         background_sprite->setColor(Scene::GetActiveCamera()->background_colour);
         render_textures[COMPOSITE]->draw(*background_sprite);
     }
+    render_textures[COMPOSITE]->display();
 
-    sf::Sprite scene_sprite(sf::Sprite(render_textures[SCENE]->getTexture()));
-    render_textures[COMPOSITE]->draw(scene_sprite);
-
+    // rescaling our final image to fit window
+    sf::Sprite upscaled_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
+    upscaled_image.setScale(sf::Vector2f(Core::GetDisplayToWindowMultiplier().x, Core::GetDisplayToWindowMultiplier().y));
+    surface.draw(upscaled_image);
 
     // render debug graphics
     if(Core::DEBUG_MODE){
-        RenderDebug(*render_textures[COMPOSITE], scene->GetThisObjects());
-        RenderDebug(*render_textures[COMPOSITE], scene->GetThisObjectsAdditional());
+        RenderDebug(*render_textures[SCENE], scene->GetThisObjects());
+        RenderDebug(*render_textures[SCENE], scene->GetThisObjectsAdditional());
     }
+    render_textures[SCENE]->display();
+    
+    // smoothing camera movement
+    sf::Vector2f cam_pos = Scene::GetActiveCamera()->GetBoundedPosition();
+    upscaled_image.setPosition(sf::Vector2f(
+        -camera_smoothing_edge_buffer,//-(cam_pos.x - floor(cam_pos.x)) * Core::GetDisplayToWindowMultiplier().x, 
+        -camera_smoothing_edge_buffer));//-(cam_pos.y - floor(cam_pos.y)) * Core::GetDisplayToWindowMultiplier().y ) );
+    
+    upscaled_image.setTexture(render_textures[SCENE]->getTexture());
+    surface.draw(upscaled_image);
+
 
     // reusing Scene render texture to draw ui_overlay_colour
     render_textures[SCENE]->clear(Scene::GetActiveCamera()->ui_overlay_colour);
     render_textures[SCENE]->display();
 
+    render_textures[COMPOSITE]->clear(sf::Color::Transparent);
     render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
 
     // draw all ui
@@ -113,19 +125,29 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         RenderLayer(*render_textures[COMPOSITE], *ui_additional, false, ui_render_layers->at(i));
     }
 
+
     // we have drawn everything in the "Display"
     render_textures[COMPOSITE]->display();
 
-    // rescaling our final image to fit window
-    sf::Sprite final_image = sf::Sprite(render_textures[COMPOSITE]->getTexture());
-    final_image.setScale(sf::Vector2f(Core::GetDisplayToWindowMultiplier().x, Core::GetDisplayToWindowMultiplier().y));
-    
-    surface.draw(final_image); 
+    upscaled_image.setTexture(render_textures[COMPOSITE]->getTexture());
+    upscaled_image.setPosition(sf::Vector2f(-camera_smoothing_edge_buffer,-camera_smoothing_edge_buffer));
+    surface.draw(upscaled_image); 
 
     // UI elements which are configured to draw at the window size
     RenderLayer(surface, *ui, true);
 
     DrawFPS(surface);
+
+    // apply screen wipe if it is present
+    if(Scene::GetActiveCamera()->GetFinalScreenWipeColour().a != 0){
+        render_textures[COMPOSITE]->clear(sf::Color::White);
+        render_textures[COMPOSITE]->display();
+
+        upscaled_image.setTexture(render_textures[COMPOSITE]->getTexture());
+        upscaled_image.setColor(Scene::GetActiveCamera()->GetFinalScreenWipeColour());
+
+        surface.draw(upscaled_image);
+    }
 
 }
 

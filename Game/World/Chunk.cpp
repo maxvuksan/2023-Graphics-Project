@@ -1,22 +1,26 @@
 #include "Chunk.h"
-#include "LightingManager.h"
+#include "Lighting/LightingManager.h"
 #include "World.h"
 #include "../Utility/UtilityStation.h"
+#include "WaterManager.h"
 
 void Chunk::Init(World* world){
 
     this->world = world;
 
-    SetRenderLayer(10);
+    SetRenderLayer(7);
 
-    main_tilemap = this->AddComponent<Tilemap>(0);
-    foreground_tilemap = this->AddComponent<Tilemap>(0);
+    main_tilemap = this->AddComponent<Tilemap>(5);
+    foreground_tilemap = this->AddComponent<Tilemap>(6);
     background_tilemap = this->AddComponent<Tilemap>(-1);
-
-    foreground_tilemap->Load("foreground_tiles", &world->world_profile.tilemap_profile);
-    main_tilemap->Load("tiles", &world->world_profile.tilemap_profile);
-    background_tilemap->Load("background_tiles", &world->world_profile.tilemap_profile);
     
+    water_tilemap = this->AddComponent<Tilemap>(2);
+    water_tilemap->Load("water", &world->world_profile.tilemap_profile);
+
+    main_tilemap->Load("tiles", &world->world_profile.tilemap_profile);
+    foreground_tilemap->Load("foreground_tiles", &world->world_profile.tilemap_profile);
+    background_tilemap->Load("background_tiles", &world->world_profile.tilemap_profile);
+ 
     // assigning a collider to the main tilemap
     auto collider = this->AddComponent<TilemapCollider>();
     collider->SetTilemap(main_tilemap);
@@ -24,8 +28,52 @@ void Chunk::Init(World* world){
     foliage_vertex_array.setPrimitiveType(sf::PrimitiveType::Quads);
 
     light_map_dirty = false;
-
+    awake_decay_tracked = 0;
     skylight_first_calculated = false;
+}
+
+void Chunk::SetChunkCoordinate(int x, int y){
+    chunk_coordinate.x = x;
+    chunk_coordinate.y = y;
+    GetTransform()->position = sf::Vector2f(x * world->tilemap_profile->tile_width * world->tilemap_profile->width, y * world->tilemap_profile->tile_height * world->tilemap_profile->height);
+}
+
+void Chunk::DrawDebug(sf::RenderTarget& surface){
+    
+    sf::VertexArray debug_vertex_array;
+    debug_vertex_array.setPrimitiveType(sf::Lines);
+
+    for(int i = 0; i < foliage_vertex_array.getVertexCount(); i += 4){
+
+        if(i + 4 > foliage_vertex_array.getVertexCount()){
+            break;
+        }
+
+        sf::Vertex vertex;
+        vertex.color = Globals::DEBUG_COLOUR_SECONDARY;
+
+        vertex.position = foliage_vertex_array[i].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i+1].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i+1].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i+2].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i+2].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i+3].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i+3].position;
+        debug_vertex_array.append(vertex);
+        vertex.position = foliage_vertex_array[i].position;
+        debug_vertex_array.append(vertex);
+    }
+
+    sf::RenderStates render_states;
+    render_states.transform.translate(Scene::GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(0,0)));
+
+    surface.draw(debug_vertex_array, render_states);
 }
 
 void Chunk::Draw(sf::RenderTarget& surface){
@@ -41,6 +89,7 @@ void Chunk::Draw(sf::RenderTarget& surface){
     sf::RenderStates render_states;
     render_states.transform.translate(Scene::GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(0,0)));
     render_states.texture = AssetManager::GetTexture("foliage");
+
     surface.draw(foliage_vertex_array, render_states);
 
 }
@@ -55,7 +104,10 @@ void Chunk::BreakUtilityStation(UtilityStation* reference){
         if(utility_stations[i] == reference){
             utility_stations.erase(utility_stations.begin() + i);
 
-            world->CreatePickup(reference->GetUtilityData()->block_data.pickup, reference->GetTransform()->position.x, reference->GetTransform()->position.y);
+            // create pickup and offset its position by half its footprint so it spawns in the center of the utility station
+            world->CreatePickup(reference->GetUtilityData()->block_data.pickup, 
+                reference->GetTransform()->position.x + (reference->GetUtilityData()->footprint.x * ItemDictionary::tile_size)/ 2.0f, 
+                reference->GetTransform()->position.y + (reference->GetUtilityData()->footprint.x * ItemDictionary::tile_size)/ 2.0f);
 
             RemoveObjectFromChunk(reference);
 
@@ -91,8 +143,11 @@ Tilemap* Chunk::GetTilemap(SetLocation set_location){
     else if(set_location == SetLocation::BACKGROUND){
         return background_tilemap;
     }
-    else{
+    else if(set_location == SetLocation::FOREGROUND){
         return foreground_tilemap;
+    }
+    else{ // water
+        return water_tilemap;
     }
 }
 
@@ -104,8 +159,11 @@ signed_byte Chunk::GetTile(int x, int y, SetLocation get_location){
     else if(get_location == SetLocation::BACKGROUND){
         return background_tilemap->GetTile(x, y);
     }
-    else{
+    else if(get_location == SetLocation::FOREGROUND){
         return foreground_tilemap->GetTile(x, y);
+    }
+    else{
+        return water_tilemap->GetTile(x, y);
     }
 }
 EntireTile Chunk::GetEntireTile(int x, int y){
@@ -194,8 +252,11 @@ void Chunk::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     else if(set_location == SetLocation::BACKGROUND){
         background_tilemap->SetTileSafe(tile_index, x, y);
     }
-    else{
+    else if(set_location == SetLocation::FOREGROUND){
         foreground_tilemap->SetTileSafe(tile_index, x, y);
+    }
+    else{ //water
+        water_tilemap->SetTileSafe(tile_index, x, y);
     }
 }
 
@@ -329,6 +390,7 @@ void Chunk::PropogateTorches(){
 
 }
 
+
 void Chunk::RefreshSkylight(){
 
     if(!skylight_first_calculated){
@@ -355,6 +417,7 @@ void Chunk::OnSetActive(){
     main_tilemap->ConstructVertexArray();
     foreground_tilemap->ConstructVertexArray();
     background_tilemap->ConstructVertexArray();
+    water_tilemap->ConstructVertexArray();
 }
 
 void Chunk::OnDisable(){
@@ -367,6 +430,7 @@ void Chunk::OnDisable(){
     main_tilemap->ClearVertexArray();
     foreground_tilemap->ClearVertexArray();
     background_tilemap->ClearVertexArray();
+    water_tilemap->ClearVertexArray();
 }
 
 void Chunk::ClearColliders(){
@@ -389,4 +453,15 @@ Chunk::~Chunk(){
     for(auto obj : ui_bound_to_chunk){
         Memory::Delete<Object>(obj, __FUNCTION__);
     }
+}
+
+void Chunk::SetAwakeForWaterSim(short new_awake_value)
+{   
+
+    if(new_awake_value > 0 && this->awake_decay_tracked <= 0){
+    
+        WaterManager::AddNewAwakeChunk(chunk_coordinate);
+    }
+    
+    this->awake_decay_tracked = new_awake_value;
 }

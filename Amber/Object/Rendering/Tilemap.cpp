@@ -72,7 +72,13 @@ void Tilemap::Draw(sf::RenderTarget& surface){
     }
 }
 
-void Tilemap::DrawSiloutte(sf::RenderTarget& surface, sf::Texture* texture){
+void Tilemap::DrawSiloutte(sf::RenderTarget& surface){
+    
+    tilemap_primitive.RevertTexture();
+    surface.draw(tilemap_primitive, AssetManager::GetShader("Amber_ColourToBlack"));
+}
+void Tilemap::DrawWithExternalTexture(sf::RenderTarget& surface, sf::Texture* texture){
+
 
     tilemap_primitive.SetTexture(texture);
     surface.draw(tilemap_primitive);

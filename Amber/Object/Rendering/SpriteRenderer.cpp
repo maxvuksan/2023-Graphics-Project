@@ -3,9 +3,13 @@
 #include "../../Core/Core.h"
 #include <iostream>
 
-SpriteRenderer::SpriteRenderer(): offset(0,0), flip_factor(1){}
+SpriteRenderer::SpriteRenderer(): offset(0,0), flip_factor(1), show_outline(false){}
 
 void SpriteRenderer::Start(){}
+
+void SpriteRenderer::SetOutline(bool state){
+    this->show_outline = state;
+}
 
 void SpriteRenderer::Draw(sf::RenderTarget& surface){
 
@@ -16,7 +20,17 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
     sprite.setScale(sf::Vector2f(object->GetTransform()->scale.x * this->flip_factor, object->GetTransform()->scale.y));
     sprite.setRotation(object->GetTransform()->rotation);
 
-    surface.draw(sprite);
+    if(show_outline){
+
+        AssetManager::GetShader("Amber_Outline")->setUniform("u_texture_pixel_step", 
+            sf::Vector2f(1 / (float)sprite.getTexture()->getSize().x,
+                        1 / (float)sprite.getTexture()->getSize().y));
+
+        surface.draw(sprite, AssetManager::GetShader("Amber_Outline"));
+    }
+    else{
+        surface.draw(sprite);
+    }
 }
 
 void SpriteRenderer::SetTexture(const char* label, bool center){

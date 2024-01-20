@@ -28,6 +28,8 @@ enum ItemCode{
     item_Main_IronOre,
     item_Main_GoldOre,
 
+    item_Main_Platform,
+
     item_Copper,
     item_Iron,
     item_Gold,
@@ -41,10 +43,11 @@ enum ItemCode{
     item_Background_StonePlateCracked,
 
     // utility
+    item_Utility_HibernationStation,
     item_Utility_CraftingStool,
     item_Utility_WorkBench,
     item_Utility_Furnace,
-    item_Utility_HeavyFurnace,
+    item_Utility_StoneCutter,
     item_Utility_Chest,
     item_Utility_Anvil,
     item_Utility_Cookpot,
@@ -64,6 +67,10 @@ enum ItemCode{
     item_Iron_Sword,
     item_Gold_Sword,
 
+    item_Copper_Axe,
+    item_Iron_Axe,
+    item_Gold_Axe,
+
     // resource
     item_Fibre,
     item_BigLeaf,
@@ -77,7 +84,6 @@ enum ItemCode{
     item_Berries,
     item_BerryHandful,
     
-
     item_NUMBER_OF_ITEMS,
 };
 
@@ -93,12 +99,9 @@ enum ItemType{
     type_Utility,
     type_Picaxe,
     type_Hammer,
-    type_Resource,
+    type_Axe,
     type_Food,
-
-    //type_Consumable,
-    //type_RangedWeapon,
-    //type_MeleeWeapon,
+    type_Resource,
 
     type_NUMBER_OF_TYPES
 };
@@ -118,6 +121,13 @@ enum Hammer{
 
     hammer_NUMBER_OF_HAMMERS,
 };
+enum Axe{
+    axe_Copper,
+    axe_Iron,
+    axe_Gold,
+
+    axe_NUMBER_OF_AXES,
+};
 
 struct PicaxeData{
 
@@ -125,4 +135,16 @@ struct PicaxeData{
     float speed; // how fast can this picaxe mine?
 };
 
+enum Food {
+    food_Mushroom,
+    food_Berries,
+    food_BerryHandful,
+
+    food_NUMBER_OF_FOODS,
+};
+
+struct FoodData{
+    int health_to_add;
+    int hunger_to_add;
+};
 

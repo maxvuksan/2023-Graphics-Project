@@ -1,6 +1,7 @@
 #include "WorldGenerator.h"
 #include "World.h"
 #include "../Tree.h"
+#include "../Utility/HibernationStation.h"
 
 // static declarations...
 PerlinNoise::seed_type WorldGenerator::seed; 
@@ -29,7 +30,10 @@ void WorldGenerator::Generate(){
 
     TunnelPass();
     IdentifySurface(); 
+
+    CreateHibernationStructure();
     VegetationPass();
+
 }
 
 void WorldGenerator::SculptingPass(){
@@ -220,17 +224,25 @@ void WorldGenerator::CarveCaves(){
 
 void WorldGenerator::TunnelPass(){
 
+    int spacing_counter = 999;
     for(int x = 0; x < surface_y_vector.size(); x++){
         
+        spacing_counter++;
+        if(spacing_counter < settings.SURFACE_TUNNEL_MIN_SPACING){
+            continue;
+        }
+
         // create tunnel?
-        if(rand() % 100 < settings.SURFACE_TUNNEL_PERCENT){
-            Tunnel(x, surface_y_vector[x], 2, 4, RandomTunnelDirection(), 0); 
+        if(rand() % 1000 < settings.SURFACE_TUNNEL_PERCENT * 10){
+            int radius = 3 + rand() % 2;
+            Tunnel(x, surface_y_vector[x], 0, radius, RandomTunnelDirection(false), 0); 
+            spacing_counter = 0;
         }
 
     }
 }
 
-void WorldGenerator::Tunnel(int x, int y, int radius_min, int radius_max, float angle, int branch_count){
+void WorldGenerator::Tunnel(float x, float y, int radius_min, int radius_max, float angle, int branch_count){
     
     if(branch_count > 1){
         return;
@@ -238,29 +250,38 @@ void WorldGenerator::Tunnel(int x, int y, int radius_min, int radius_max, float 
 
     float radians = Calc::Radians(angle);
 
-    int length = 60 + rand() % 140;
+    float one_degree_of_radian = Calc::Radians(1);
 
-    if(angle == 0 || angle == 180){
-        length = 40;
+    int length = 200 + rand() % 400;
+
+    if(branch_count > 0){
+        length *= 0.05;
     }
+
 
     for(int i = 0; i < length; i++){
         
-        int rand_radius = rand() % (radius_max - radius_min + 1) + radius_min;
+        if(rand() % 100 < settings.SURFACE_TUNNEL_ANGLE_SHIFT_PERCENT){
+            if(rand() % 100 > 50){
+                radians += -one_degree_of_radian;
+            }
+            else{
+                radians += one_degree_of_radian;
+            }
+        }
 
-        angle += -1 + rand() % 2;
         if(rand() % 100 < settings.SURFACE_TUNNEL_CHANCE_DIRECTION_PERCENT){
-            angle = RandomTunnelDirection();
+            radians = Calc::Radians(RandomTunnelDirection());
         }
 
         if(rand() % 100 < settings.SURFACE_TUNNEL_SPLIT_PERCENT){
-            Tunnel(x, y, radius_min - 1, radius_max - 1, RandomTunnelDirection(false), branch_count + 1);
+            Tunnel(x, y, radius_max, radius_max, RandomTunnelDirection(false), branch_count + 1);
         }
 
-        world->SetCircle(-1, x, y, rand_radius);
+        world->SetCircle(-1, floor(x), floor(y), radius_max);
 
-        x += cos(radians) * radius_min;
-        y -= sin(radians) * radius_min;
+        x += cos(radians);
+        y -= sin(radians);
     }
 }
 
@@ -275,7 +296,7 @@ void WorldGenerator::OrePass(){
 
             // spawns a random number of ores in a specific chunk
             float add_ore_to_chunk = rand() % 100;
-            while(add_ore_to_chunk < settings.ORE_PERCENT && ores_in_chunk < 10){
+            while(add_ore_to_chunk < settings.ORE_PERCENT && ores_in_chunk < settings.MAX_ORES_PER_CHUNK){
 
                 // determining what block the vein should be
 
@@ -289,7 +310,6 @@ void WorldGenerator::OrePass(){
                 }
 
                 int tile_index = ore_pool->at(rand() % ore_pool->size()); 
-
 
                 ores_in_chunk++;
 
@@ -324,7 +344,6 @@ void WorldGenerator::SpreadOre(int tile_index, int x, int y, int radius_min, int
 
     world->SetCircle(tile_index, x, y, rand_radius, SetLocation::MAIN, set_mode);
 }
-
 
 void WorldGenerator::IdentifySurface(){
     
@@ -400,7 +419,8 @@ void WorldGenerator::VegetationPass(){
         }
     }
 
-    for(int i = 0; i < 700 * world->world_profile.width * world->world_profile.height; i++){
+    // create foliage
+    for(int i = 0; i < settings.FOLIAGE_ATTEMPTS_PER_CHUNK * world->world_profile.width * world->world_profile.height; i++){
 
         int x = rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width);
         int y = rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height);
@@ -409,9 +429,8 @@ void WorldGenerator::VegetationPass(){
         sf::Vector2i chunk_offset = world->OffsetFromCoord(x, y, chunk_coord.x, chunk_coord.y);
 
         // tile is solid, above tile is air
-        if(world->GetTile(x, y, SetLocation::MAIN) != -1 && world->GetTile(x, y - 1, SetLocation::MAIN) == -1){
+        if(world->GetTile(x, y, SetLocation::MAIN) != -1 && world->GetTile(x, y - 1, SetLocation::MAIN) == -1 && world->GetTile(x, y - 1, SetLocation::BACKGROUND) != -1){
             
-
             int foliage_index = rand() % foliage_NUMBER_OF_FOLIAGE;
 
             world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->AddFoliage((Foliage)foliage_index, chunk_offset.x, chunk_offset.y);
@@ -421,36 +440,90 @@ void WorldGenerator::VegetationPass(){
 
 
 
-    return; // IGNORE TREES FOR NOW
 
+    bool tree_last = false;
     // adding trees
     for(int x = 0; x < surface_y_vector.size(); x++){
-        if(rand() % 100 < settings.TREE_PERCENT){
 
-            sf::Vector2i chunk_coord = world->ChunkFromCoord(x, surface_y_vector[x]);
-            Chunk* chunk = world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y);
+        if(tree_last){
+            tree_last = false;
+            continue;
+        }
 
-            Object* tree = chunk->AddObjectToChunk<Tree>();
-            tree->GetTransform()->position = sf::Vector2f(world->CoordToWorld(x, surface_y_vector[x])) + sf::Vector2f(-116, 30);
+        float noise_val = perlin.octave1D_01((x * settings.TREE_PERLIN_SCALE), 2) + perlin.octave1D_01((x * 0.5), 2);
+
+
+        if(noise_val < settings.TREE_PERLIN_THRESHOLD * 2){
+
+            // only grow trees on dirt
+            if(world->GetTile(x, surface_y_vector.at(x)) != main_Dirt){
+                continue;
+            }
+
+            SpawnTree(x, surface_y_vector.at(x) + 1);
+            tree_last = true;
+            
+            if(rand() % 100 > 35){
+                x++;
+            }
+            if(rand() % 100 > 15){
+                x++;
+            }
         }
     }
     
 }
 
+void WorldGenerator::CreateHibernationStructure(){
+    world->GetSpawnCoordinate();
+
+    for(int x = -3; x < 3; x++){
+        for(int y = -6; y < 6; y++){
+
+            sf::Vector2i coord = sf::Vector2i(world->GetSpawnCoordinate().x + x, world->GetSpawnCoordinate().y + y + 2);
+
+            if(x == -3 && y == -6){
+
+                sf::Vector2i chunk_coord = world->ChunkFromCoord(coord.x, coord.y);
+                Chunk* chunk = world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y);
+
+                UtilityStation* hibernation_station = chunk->AddObjectToChunk<HibernationStation>();
+                
+                chunk->StoreUtilityStationReference(hibernation_station);
+                hibernation_station->LinkChunk(chunk);
+                hibernation_station->OnStart();
+                
+                hibernation_station->SetItemType(item_Utility_HibernationStation);
+
+
+                hibernation_station->GetTransform()->position = world->CoordToWorld(coord.x, coord.y);
+            }
+
+            if(y < 0){
+                // create air space
+                world->SetTile(-1, coord.x, coord.y);
+                world->SetTile(-1, coord.x, coord.y, SetLocation::FOREGROUND);
+            }
+            else{
+                world->SetTile(main_Stone_Bricks, coord.x, coord.y);
+                world->SetTile(-1, coord.x, coord.y, SetLocation::FOREGROUND);
+            }
+
+        }
+    }
+}
+
+void WorldGenerator::SpawnTree(int x, int y){
+    int height = settings.TREE_MIN_HEIGHT + rand() % (settings.TREE_MAX_HEIGHT - settings.TREE_MIN_HEIGHT);
+    for(int h = 0; h < height; h++){
+        world->SetTile(foreground_Log, x, y - h, SetLocation::FOREGROUND, SetMode::OVERRIDE);
+    }
+}
+
 float WorldGenerator::RandomTunnelDirection(bool can_be_straight){
     
-
-    if(can_be_straight){
-        if(rand() % 100 > 50){
-            return 0;
-        }
-        return 180;
-    }
-
-    if(rand() % 100 > 50){
-        return 180 + 35 + (rand() % 20);
-    }
-    return 360 - 35 - (rand() % 20);
+    int random_dir = rand() % settings.SURFACE_TUNNEL_ANGLES.size();
+    return settings.SURFACE_TUNNEL_ANGLES[random_dir];
 }
 
 float WorldGenerator::EqualChancePick(float x, float y){

@@ -4,12 +4,22 @@
 int Inventory::row_length = 8;
 int Inventory::row_count = 5;
 
+
 void Inventory::Start() {
 
 
     selected_slot = 0;
 
     SetRenderLayer(1);
+
+
+
+    sf::Font* font = AssetManager::GetFont("m3x6");
+    
+    if(font == nullptr){
+        std::cout << "ERROR : font is nullptr, Slot::Construct()\n";
+        return;
+    }
 
     hotbar_slot_set = GetScene()->AddUI<SlotSet>();
     backpack_slot_set = GetScene()->AddUI<SlotSet>();
@@ -31,20 +41,6 @@ void Inventory::Start() {
     held_item_text.setCharacterSize(16);
 
     holding_item = false;
-
-   // PickupItem(ItemCode::item_Utility_WorkBench);
-    PickupItem(ItemCode::item_Gold_Picaxe);
-    PickupItem(ItemCode::item_Copper_Picaxe);
-    PickupItem(ItemCode::item_Utility_Furnace);
-    PickupItem(ItemCode::item_Utility_Chest);
-    PickupItem(ItemCode::item_BigLeaf);
-    PickupItem(ItemCode::item_Fibre);
-    //PickupItem(ItemCode::item_Fibre);
-
-    PickupItem(ItemCode::item_Main_StonePlate);
-    PickupItem(ItemCode::item_Gold);
-    PickupItem(ItemCode::item_Gold);
-    PickupItem(ItemCode::item_Gold);
 
     SetSelectedSlotSprite();
 
@@ -71,6 +67,7 @@ void Inventory::Draw(sf::RenderTarget& surface) {
             surface.draw(held_item_text);
         }
     }
+
 }
 
 
@@ -80,11 +77,13 @@ Slot* Inventory::GetHoveredSlot(){
 
 
 void Inventory::CatchEvent(sf::Event event) {
+
+  int previous_selected = selected_slot;
+
   if (event.type == sf::Event::KeyPressed) {
 
-    int previous_selected = selected_slot;
 
-    switch (event.key.scancode) {
+    switch (event.key.scancode){ 
 
         // open inventory
         case sf::Keyboard::Scan::E:
@@ -116,25 +115,28 @@ void Inventory::CatchEvent(sf::Event event) {
 
             
     }
+  }
 
     // allows scrolling through hotbar
     if (event.type == sf::Event::MouseWheelScrolled)
     {
-        if (event.mouseWheelScroll.delta > 0) // moving up
+        if (event.mouseWheelScroll.delta < 0) // moving up
         {
             selected_slot++;
         }
         else{
             selected_slot--;
+            if(selected_slot < 0){
+                selected_slot = row_length - 1;
+            }
         }
-        selected_slot = selected_slot % row_length;
-    }
+        selected_slot %= row_length; 
 
+    }
     if(previous_selected != selected_slot){
         SetSelectedSlotSprite();
     }
 
-  }
   // only procceed if inventory open
   if(!SlotSpace::Open()){
     return;
@@ -500,7 +502,6 @@ void Inventory::RemoveItemFromSlotSet(SlotSet* slot_set, ItemCode item_code, int
     }
 
 }
-
 
 void Inventory::SetSelectedSlotSprite(){
     for(int i = 0; i < row_length; i++){

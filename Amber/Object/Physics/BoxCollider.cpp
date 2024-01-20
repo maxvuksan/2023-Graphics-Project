@@ -16,7 +16,7 @@ void BoxCollider::Update(){
     }
 
     // if we have more than 1 overlap, the trigger is 'triggered'...
-    auto overlaps = DetermineBoxOverlaps();
+    auto overlaps = DetermineBoxOverlaps(rects[0].Bottom());
 
     if(overlaps.size() > 0){
         SetTriggered(true);
@@ -26,7 +26,7 @@ void BoxCollider::Update(){
     }
 }
 
-std::vector<BoxCollider::Rect*> BoxCollider::DetermineBoxOverlaps(){
+std::vector<BoxCollider::Rect*> BoxCollider::DetermineBoxOverlaps(float previous_frame_bottom){
     std::vector<BoxCollider*>* box_colliders = object->GetScene()->GetBoxColliders();
 
     std::vector<Rect*> overlaps;
@@ -68,6 +68,10 @@ std::vector<BoxCollider::Rect*> BoxCollider::DetermineBoxOverlaps(){
             
             // compare overlaps between two BoxColliders
 
+            // only allow platforms to work if the collider is above 
+            if(rect.collision_mode == ColliderType::PLATFORM && (previous_frame_bottom > rect.Top() || collision_interaction_mode == CollisionInteractionMode::IGNORE_PLATFORM)){
+                continue;
+            }
             if(rects[0].Top() < rect.Bottom() && rects[0].Bottom() > rect.Top()){
                 if(rects[0].Right() > rect.Left() && rects[0].Left() < rect.Right()){
 
@@ -96,13 +100,15 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
 
     Transform* transform = object->GetTransform();
 
+    float previous_frame_bottom = rects[0].Bottom();
+
     transform->position.y += movement.y;
 
     std::vector<Rect*> overlapping; 
 
     if(movement.y != 0){
 
-        overlapping = DetermineBoxOverlaps();
+        overlapping = DetermineBoxOverlaps(previous_frame_bottom);
 
         // vertical (Y) collisions
         for(auto& other_rect : overlapping){
@@ -111,11 +117,13 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
                 
                 transform->position.y = other_rect->Bottom() - rects[0].y;
                 pb->velocity.y = 0;
+                pb->SetLastBottomCollision(0);
             }
             else{ 
                 
                 transform->position.y = other_rect->Top() - rects[0].height - rects[0].y;
                 pb->velocity.y = 0;
+                pb->SetLastTopCollision(0);
             }
         }
         overlapping.clear();
@@ -124,7 +132,7 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
     transform->position.x += movement.x;
 
     if(movement.x != 0){
-        overlapping = DetermineBoxOverlaps();
+        overlapping = DetermineBoxOverlaps(previous_frame_bottom);
 
         // horizontal (X) collisions
         for(auto& other_rect : overlapping){
@@ -133,11 +141,13 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
                 
                 transform->position.x = other_rect->Right() - rects[0].x;
                 pb->velocity.x = 0;
+                pb->SetLastLeftCollision(0);
             }
             else{ 
                 
                 transform->position.x = other_rect->Left() - rects[0].width - rects[0].x;
                 pb->velocity.x = 0;
+                pb->SetLastRightCollision(0);
             }
         }
     }
@@ -185,6 +195,10 @@ void BoxCollider::DrawDebug(sf::RenderTarget& surface){
         sf::Vertex vertex;
         vertex.color = Globals::DEBUG_COLOUR;
 
+        if(rect.collision_mode == ColliderType::PLATFORM){
+            vertex.color = Globals::DEBUG_COLOUR_3;
+        }
+
         // change colour for triggers...
         if(IsTrigger()){
             vertex.color = Globals::DEBUG_COLOUR_SECONDARY;
@@ -210,8 +224,8 @@ void BoxCollider::DrawDebug(sf::RenderTarget& surface){
 }
 
 
-void BoxCollider::AddRect(int x, int y, unsigned int width, unsigned int height){
-    Rect rect({x, y, width, height, object->GetTransform()});
+void BoxCollider::AddRect(int x, int y, unsigned int width, unsigned int height, ColliderType collision_mode){
+    Rect rect({x, y, width, height, object->GetTransform(), collision_mode});
     rects.push_back(rect);
 }
 void BoxCollider::AddRect(Rect rect){

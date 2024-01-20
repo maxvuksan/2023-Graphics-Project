@@ -1,5 +1,7 @@
 #pragma once
 
+typedef signed char signed_byte; 
+
 /*
     Aims to reduce duplicated variables. In the case of a chunk based world where each tilemap 
     would have the same configuration 

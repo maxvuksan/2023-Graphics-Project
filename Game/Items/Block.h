@@ -25,7 +25,11 @@ enum MainBlockCode{
 
     main_WoodPlanks,
 
-    main_NUMBER_OF_BLOCKS
+    main_Platform,
+    main_PlatformLeftSupported,
+    main_PlatformRightSupported,
+
+    main_NUMBER_OF_BLOCKS,
 };
 
 // overlayed ontop of surface
@@ -52,6 +56,8 @@ enum ForegroundBlockCode{
 
     foreground_VineBerry,
 
+    foreground_Log,
+
     foreground_NUMBER_OF_BLOCKS
 };
 
@@ -69,10 +75,12 @@ enum BackgroundBlockCode{
 
 // utility blocks occupying multiple tiles derived from UtilityStation
 enum UtilityBlock{
+    utility_Hibernator,
+    
     utility_CraftingStool,
     utility_WorkBench,
     utility_Furnace,
-    utility_HeavyFurnace,
+    utility_StoneCutter,
     utility_Chest,
     utility_Anvil,
     utility_Cookpot,

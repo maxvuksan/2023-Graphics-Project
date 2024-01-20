@@ -5,10 +5,11 @@
 #include "../Utility/Container.h"
 #include "../Utility/CraftingStation.h"
 #include "Projectile.h"
+#include "HealthBar.h"
 
 void PlayerWorldInteractions::Start(){
     
-    SetRenderLayer(7);
+    SetRenderLayer(9);
 
     cursor_graphic = object->GetScene()->AddUI<CursorGraphic>();
     selected_block = 0;
@@ -23,11 +24,14 @@ void PlayerWorldInteractions::LinkWorld(World* world){
 }
 void PlayerWorldInteractions::LinkInventory(Inventory* inventory){
     this->inventory = inventory;
+
+
+}
+void PlayerWorldInteractions::LinkHealthBar(HealthBar* health_bar){
+    this->health_bar = health_bar;
 }
 
-
 void PlayerWorldInteractions::Draw(sf::RenderTarget& surface){
-
 
     if(world == nullptr){
         std::cout << "ERROR: world variable is nullptr, please us PlayerWorldInteractions::LinkWorld(), PlayerWorldInteractions::Update()\n";
@@ -102,6 +106,25 @@ void PlayerWorldInteractions::CatchEvent(sf::Event event){
 
     }
     if(event.type == sf::Event::MouseButtonPressed){
+        
+        // right clicking with an item in hand
+        if(event.mouseButton.button == sf::Mouse::Button::Right){
+            int item_in_hand = inventory->GetItemInSelectedSlot();
+
+            if(item_in_hand == -1){
+                return;
+            }
+
+            const ItemData* data = &ItemDictionary::ITEM_DATA[item_in_hand];
+            
+            // eat food
+            if(data->type == type_Food){
+                std::cout << "eat\n";
+                health_bar->SetHunger(health_bar->GetHunger() + ItemDictionary::FOOD_DATA[data->code_in_type].hunger_to_add);
+                health_bar->SetHealth(health_bar->GetHealth() + ItemDictionary::FOOD_DATA[data->code_in_type].health_to_add);
+                Sound::Play("player_damage");
+            }
+        }
         SwingToolInHand();
     }
 }
@@ -137,6 +160,9 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     if(data->type == ItemType::type_Hammer){
         set_location = SetLocation::BACKGROUND;
     }
+    else if(data->type == ItemType::type_Axe){
+        set_location = SetLocation::FOREGROUND;
+    }
 
     // should we consider auto target mode?
     if(auto_target_blocks && (data->type == ItemType::type_Hammer || data->type == ItemType::type_Picaxe)){
@@ -156,9 +182,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
 
     focused_block = world->GetTile(coord_tile.x, coord_tile.y, set_location);
     
-    if(data->type == ItemType::type_Hammer || data->type == ItemType::type_Picaxe){
-        Mine(coord_tile, rounded_world, (ItemCode)item_in_hand);
-    }
+    Mine(coord_tile, rounded_world, (ItemCode)item_in_hand);
         
     
     // for utility objects, check if footprint overlaps a tile
@@ -257,7 +281,7 @@ void PlayerWorldInteractions::CalculateMouse(sf::RenderTarget& surface){
     previous_item_code = (ItemCode)item_in_hand;
 }
 
-UtilityStation* PlayerWorldInteractions::NewUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint){
+UtilityStation* PlayerWorldInteractions::NewUtilityOverlaps(const sf::Vector2i& coord_tile, const sf::Vector2i& rounded_world, sf::Vector2i footprint, bool assign_last_overlap_chunk){
     
     // checks each corner of the utility object to determine all the chunks it overlaps with, 
 
@@ -278,21 +302,26 @@ UtilityStation* PlayerWorldInteractions::NewUtilityOverlaps(const sf::Vector2i& 
 
     sf::Vector2i bottom_left_corner = world->ChunkFromCoord(coord_tile.x, coord_tile.y + footprint.y);
     if(std::find(chunks_to_check.begin(), chunks_to_check.end(), bottom_left_corner) != chunks_to_check.end()){
-        
         chunks_to_check.push_back(top_right_corner);
     }
 
     // check overlaps of each utility object in each chunk
 
 
+
+
+
+
+
     for(int i = 0; i < chunks_to_check.size(); i++){
 
-        
         if(!world->ChunkInBounds(chunks_to_check[i].x, chunks_to_check[i].y)){
             continue;
         }
 
-        chunk_last_utility_overlap_was_in = world->GetChunks()->at(chunks_to_check[i].x).at(chunks_to_check[i].y);
+        if(assign_last_overlap_chunk){
+            chunk_last_utility_overlap_was_in = world->GetChunks()->at(chunks_to_check[i].x).at(chunks_to_check[i].y);
+        }
 
         std::vector<UtilityStation*>* stations_in_chunk =  world->GetChunks()->at(chunks_to_check[i].x).at(chunks_to_check[i].y)->GetUtilityStations();
     
@@ -325,10 +354,16 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& coord_tile, const sf::Vec
     if(data->type == ItemType::type_Picaxe){
         mining_speed = ItemDictionary::PICAXE_DATA[data->code_in_type].speed;
         
-        utility_to_mine = NewUtilityOverlaps(coord_tile, rounded_world, sf::Vector2i(1,1));
+        utility_to_mine = NewUtilityOverlaps(coord_tile, rounded_world, sf::Vector2i(1,1), true);
     }
-    if(data->type == ItemType::type_Hammer){
+    else if(data->type == ItemType::type_Hammer){
         mining_speed = ItemDictionary::HAMMER_DATA[data->code_in_type].speed;
+    }
+    else if(data->type == ItemType::type_Axe){
+        mining_speed = ItemDictionary::AXE_DATA[data->code_in_type].speed;
+    }
+    else{
+        return;
     }
 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left)){
@@ -351,6 +386,9 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& coord_tile, const sf::Vec
             else if(data->type == ItemType::type_Hammer){
                 speed_of_specific_tile = (float)ItemDictionary::BACKGROUND_BLOCK_DATA[focused_block].durability;
             }
+            else if(data->type == ItemType::type_Axe){
+                speed_of_specific_tile = (float)ItemDictionary::FOREGROUND_BLOCK_DATA[focused_block].durability;              
+            }
 
 
             float increment = mining_speed * 0.01f * Time::Dt() / speed_of_specific_tile;
@@ -370,24 +408,52 @@ void PlayerWorldInteractions::Mine(const sf::Vector2i& coord_tile, const sf::Vec
 
             // we broke a utility station
             if(utility_to_mine != nullptr){
-                Sound::Play("break", 10);
-                chunk_last_utility_overlap_was_in->BreakUtilityStation(utility_to_mine);
 
-                focused_block_position = sf::Vector2i(-1,-1);
+                if(utility_to_mine->CanBreak()){
+
+                    Sound::Play("break", 10);
+                    chunk_last_utility_overlap_was_in->BreakUtilityStation(utility_to_mine);
+
+                    focused_block_position = sf::Vector2i(-1,-1);
+                }
             }
 
             else{
-                // block breaks...
-                Sound::Play("break", 10);
-
                 // assume we have a picaxe
                 SetLocation set_location = SetLocation::MAIN;
                 if(data->type == ItemType::type_Hammer){
                     set_location = SetLocation::BACKGROUND;
                 }
+                if(data->type == ItemType::type_Axe){
+                    set_location = SetLocation::FOREGROUND;
+                }
 
-                world->SetTile(-1, coord_tile.x, coord_tile.y, set_location, SetMode::OVERRIDE, true, true, true);
-                focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
+
+                // break utility station above block as well
+                bool break_allowed = true;
+
+                if(set_location == SetLocation::MAIN){
+                    UtilityStation* station = NewUtilityOverlaps(coord_tile + sf::Vector2i(0, -1), rounded_world + sf::Vector2i(0,-ItemDictionary::tile_size), sf::Vector2i(1,1), false);
+                    
+                    if(station != nullptr){
+                        
+                        if(!station->CanBreak()){
+                            break_allowed = false;
+                        }
+                        else{
+                            chunk_last_utility_overlap_was_in->BreakUtilityStation(station);
+                        }
+                    }
+                }
+
+
+                if(break_allowed){
+                    // block breaks...
+                    Sound::Play("break", 10);
+
+                    world->SetTile(-1, coord_tile.x, coord_tile.y, set_location, SetMode::OVERRIDE, true, true, true);
+                    focused_block_position = sf::Vector2i(-1,-1); // clearing the focused block (an impossible position)
+                }
             }
         }
     }
@@ -436,7 +502,12 @@ void PlayerWorldInteractions::PlaceUtility(const sf::Vector2i& coord_tile, const
                 station = crafting_station;
                 break;
             }
-
+            case utility_StoneCutter: {
+                crafting_station = world->GetChunks()->at(chunk.x)[chunk.y]->AddObjectToChunk<CraftingStation>();
+                recipe_group = rgroup_StoneCutter;
+                station = crafting_station;
+                break;
+            }
             // containers 
 
             case utility_Chest: {

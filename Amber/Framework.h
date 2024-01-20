@@ -25,6 +25,8 @@
 #include "Object/Physics/BoxCollider.h"
 #include "Object/Physics/PhysicsBody.h"
 #include "Object/Physics/TilemapCollider.h"
+#include "Object/Physics/TilemapCollisionTypeDivider.h"
+#include "Object/Physics/RotatingRect.h"
 
 
 #include "Object/UI/UIImage.h"

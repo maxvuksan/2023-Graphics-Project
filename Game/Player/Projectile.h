@@ -7,7 +7,8 @@ class Projectile : public Object {
         void Update() override;
 
     private:
-        SpriteRenderer* sr;
+        RotatingRect* rotating_rect;
+        AnimationRenderer* animation_renderer;
         float speed;
         float inital_speed;
         float decay_speed;

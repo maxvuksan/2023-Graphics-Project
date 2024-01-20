@@ -14,6 +14,7 @@ enum Recipes{
     recipe_Anvil,
     recipe_Chest,
     recipe_Cookpot,
+    recipe_StoneCutter,
 
     recipe_Copper,
     recipe_Iron,
@@ -34,10 +35,25 @@ enum Recipes{
     recipe_Iron_Sword,
     recipe_Gold_Sword,
 
+    // sword
+    recipe_Copper_Axe,
+    recipe_Iron_Axe,
+    recipe_Gold_Axe,
+
     //food
     recipe_BerryHandful,
 
+    recipe_Platform,
 
+    recipe_WoodBackground,
+
+    recipe_StoneBricks,
+    recipe_StonePlate,
+    recipe_StonePlateCracked,
+    recipe_Background_StoneBricks,
+    recipe_Background_StonePlate,
+    recipe_Background_StonePlateCracked,
+    
     recipe_NUMBER_OF_RECIPES,
 };
 
@@ -49,6 +65,7 @@ enum RecipeGroups{
     rgroup_Furnace,
     rgroup_Anvil,
     rgroup_Cookpot,
+    rgroup_StoneCutter,
 
     rgroup_NUMBER_OF_RECIPE_GROUPS,
 };
@@ -71,8 +88,7 @@ struct RecipeData{
 
 // a RecipeGroup represents a set of recipies a utility station could show, we could create groupings for each type crafting based utility station 
 struct RecipeGroupData{
-    int height = 0; // slot rows
-    int width = 0; // slot count
-    // note : width and height must match the provided vector dimensions
-    std::vector<std::vector<Recipes>> recipes;
+    int width = 0; // slot rows
+    int height = 0; // slot count
+    std::vector<Recipes> recipes;
 };

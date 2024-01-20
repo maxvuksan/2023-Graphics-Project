@@ -35,10 +35,9 @@ enum SpriteInventory{
     isprite_Iron_Sword,
     isprite_Gold_Sword,
 
-    isprite_Torch,
-
-    isprite_Mushroom,
-    isprite_Sticks,
+    isprite_Copper_Axe,
+    isprite_Iron_Axe,
+    isprite_Gold_Axe,
 
     isprite_AncientStonePlate,
     isprite_AncientStonePlateCracked,
@@ -59,6 +58,12 @@ enum SpriteInventory{
     isprite_StoneBrick_Wall,
     isprite_StonePlate_Wall,
     isprite_StonePlateCracked_Wall,
+
+    isprite_Platform,
+
+    isprite_Mushroom,
+    isprite_Sticks,
+    isprite_Torch,
 
     isprite_USE_MAIN_SPRITE // use the sprite seen in the world
 };

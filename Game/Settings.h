@@ -9,5 +9,6 @@ class Settings {
 
         static bool AMBIENT_OCCLUSION;
         static float AMBIENT_OCCLUSION_BLUR_FACTOR;
+        static int AMBIENT_OCCLUSION_ALPHA;
 
 };

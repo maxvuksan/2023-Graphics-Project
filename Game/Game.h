@@ -6,7 +6,7 @@
 class Game : public Core{
 
     public:
-        Game(bool is_server = false) : Core(1400, 800, 700, 400, "My Game")
+        Game(bool is_server = false) : Core(1600, 800, 800, 400, "My Game")
         {
             if(is_server){
                server.Run(6868); 
@@ -38,6 +38,7 @@ class Game : public Core{
             AssetManager::CreateTexture("foreground_tiles", "Images/sprite_overlays.png");       
             AssetManager::CreateTexture("background_tiles", "Images/tiles_background.png");
             AssetManager::CreateTexture("foliage", "Images/foliage.png");
+            AssetManager::CreateTexture("water", "Images/water.png");
 
             AssetManager::CreateTexture("tree", "Images/tree.png");
             AssetManager::CreateTexture("background", "Images/background_idea.png");
@@ -58,6 +59,8 @@ class Game : public Core{
                                                         Animation("player", 16, 7, 8, 100),  // FallDown
                                                         Animation("player", 16, 8, 9, 100)  // OnWall
                                                         }, {"idle", "run", "fallup", "falldown", "onwall"});
+
+            AssetManager::CreateAnimationSet("tool_slash", { Animation("tool_slash", 28, 0, 4, {50, 100, 50, 50}, false)}, {"default"});
             // Sounds ---------------------------------------------------------------------
 
             AssetManager::CreateSound("hit", "Sounds/FX/hit.wav");

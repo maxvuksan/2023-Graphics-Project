@@ -47,6 +47,8 @@ class Inventory : public Object {
 
     private:
 
+
+
         /*
             @param slot_set the slot set we are searching through
             @param item the ItemCode of said item
@@ -74,6 +76,7 @@ class Inventory : public Object {
         SlotSet* hotbar_slot_set;
         SlotSet* backpack_slot_set;
         SlotSet* inventory_crafting_slot_set;
+        
 
         static int row_length;
         static int row_count;

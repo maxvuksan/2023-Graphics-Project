@@ -5,7 +5,7 @@
 #include <cstring>
 #include "ConsoleVisual.h"
 #include <sstream>
-#include "World/LightingManager.h"
+#include "World/Lighting/LightingManager.h"
 #include "Pathfinding/NoodleCreature.h"
 #include "Settings.h"
 #include "World/TimeManager.h"
@@ -24,8 +24,13 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {cmd_raw};
     }
 
+
     sf::Color debug_grey = sf::Color(200,200,200);
     sf::Color debug_error = sf::Color(235, 124, 124);
+
+    if(cmd_raw == "/"){
+        return {"command must not be empty", debug_error};
+    }
 
     // removing '/' 
     cmd_raw = cmd_raw.substr(1, cmd_raw.length()); 
@@ -35,6 +40,7 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
     std::istream_iterator<std::string> begin(ss);
     std::istream_iterator<std::string> end;
     std::vector<std::string> tokens(begin, end);
+
 
 
     if(tokens[0] == "RESPAWN"){
@@ -77,7 +83,7 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {""};
     }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /SUMMON, /OCCLUSION, /HIT, /HEAL, /TIME", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /SUMMON, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /W", Globals::DEBUG_COLOUR};
     }
     else if(tokens[0] == "GIVE"){
         if(tokens.size() <= 1){
@@ -130,7 +136,19 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
 
         TimeManager::SetTimeOfDay(new_time);
         return {""};
+    }
+    else if(tokens[0] == "WATER"){
 
+        sf::Vector2f world_pos = Scene::GetActiveCamera()->ScreenToWorldPosition(Mouse::DisplayPosition());
+        sf::Vector2i coord = client->world->WorldToCoord(world_pos.x, world_pos.y);
+
+        sf::Vector2i chunk_coord = client->world->ChunkFromCoord(coord.x, coord.y);
+        sf::Vector2i chunk_offset = client->world->OffsetFromCoord(coord.x, coord.y, chunk_coord.x, chunk_coord.y);
+
+        client->world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->water_tilemap->SetTile(16, chunk_offset.x, chunk_offset.y);
+        client->world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->SetAwakeForWaterSim(true);
+
+        return {""};
     }
 
     return {"'/" + cmd_raw + "' is not a command, see /HELP", debug_error};

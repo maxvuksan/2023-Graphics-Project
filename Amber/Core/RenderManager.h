@@ -19,6 +19,8 @@ class RenderManager{
         
         static void Render(sf::RenderTarget&, Scene*);
 
+        static int GetCameraSmoothingEdgeBuffer(){return camera_smoothing_edge_buffer;}
+
         static void OnResize();
         //static int GetCameraSmoothingEdgeBuffer(){return camera_smoothing_edge_buffer;}
 
@@ -34,8 +36,9 @@ class RenderManager{
 
 
 
+
         static std::vector<sf::RenderTexture*> render_textures;
-        //static int camera_smoothing_edge_buffer;
+        static int camera_smoothing_edge_buffer;
 
         static sf::Text fps_text;
         static int fps_refresh_delay_tracked;

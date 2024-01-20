@@ -25,7 +25,8 @@ class Tilemap : public Component
         void ClearVertexArray();
 
         void Draw(sf::RenderTarget& surface) override;
-        void DrawSiloutte(sf::RenderTarget& surface, sf::Texture* texture);
+        void DrawSiloutte(sf::RenderTarget& surface);
+        void DrawWithExternalTexture(sf::RenderTarget& surface, sf::Texture* texture);
 
         /*
             @param texture_label What the tile texture is saved as (in AssetManager)

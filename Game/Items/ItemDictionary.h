@@ -8,6 +8,7 @@
 #include <math.h>
 #include "ItemSound.h"
 #include "Foliage.h"
+#include "Water.h"
 
 /*
 
@@ -22,7 +23,9 @@ enum class ForegroundBehaviour{
     NONE, // can sit freely in the air
     ABOVE_BLOCK, // must have a block below, no block in position
     ON_BLOCK, // position must have a block
-    VINE, // have a block 
+    VINE, // have either a main tile above or another vine foreground tile
+    TORCH, // can go on background walls, main floors and walls, essentially must be attached somewhere
+    PLATFORM,
 };
 
 struct BlockData{
@@ -45,7 +48,7 @@ struct ItemData{
 enum class UtilityBreakingBehaviour{
 
     ALWAYS, 
-    IF_EMPTY, // for containers
+    IF_EMPTY, // will be used for containers
 };
 
 struct UtilityBlockData{
@@ -73,9 +76,10 @@ namespace ItemDictionary {
     const float torch_propogate_decay = 0.03f;
 
     const int tile_size = 8;
+    const int half_tile_size = 4;
     const int inventory_item_tile_size = 16;
     
-    const int main_tiles_sprites_per_row = 6;
+    const int main_tiles_sprites_per_row = 3;
     const int inventory_sprites_per_row = 12;
 
     const short TYPE_STACK_SIZES[type_NUMBER_OF_TYPES] = {
@@ -85,7 +89,9 @@ namespace ItemDictionary {
         99,     //type_Utility,
         1,      //type_Picaxe,
         1,      //type_Hammer,
-        99,
+        1,      //type_Axe
+        99,     //type_Food
+        99      //type_Resource  
     };
 
     // label of sound in AssetManager
@@ -104,8 +110,8 @@ namespace ItemDictionary {
         {sf::Vector2i(16,16), sf::Vector2i(80,0), sf::Vector2i(8,8), item_Berries},
         {sf::Vector2i(16,16), sf::Vector2i(80,16), sf::Vector2i(8,16), item_Sticks},
         {sf::Vector2i(16,16), sf::Vector2i(80,32), sf::Vector2i(8,16), item_Sticks},
-        {sf::Vector2i(16,16), sf::Vector2i(96,0), sf::Vector2i(8,8), item_Main_Stone}
     };
+
 
     const BlockData MAIN_BLOCK_DATA[main_NUMBER_OF_BLOCKS]{
 
@@ -131,6 +137,11 @@ namespace ItemDictionary {
 
         {8, sf::Color(186, 97, 81), item_Main_WoodPlanks},
 
+        // wooden platforms
+        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},
+        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},     
+        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},
+
     };
 
     const BlockData FOREGROUND_BLOCK_DATA[foreground_NUMBER_OF_BLOCKS]{
@@ -144,9 +155,9 @@ namespace ItemDictionary {
         {0, sf::Color(145, 71, 63), item_Main_Stone, ForegroundBehaviour::ABOVE_BLOCK},
 
         // torch
-        {0, sf::Color(252, 197, 195), item_Torch},
-        {0, sf::Color(252, 197, 195), item_Torch},
-        {0, sf::Color(252, 197, 195), item_Torch},
+        {0, sf::Color(252, 197, 195), item_Torch, ForegroundBehaviour::TORCH},
+        {0, sf::Color(252, 197, 195), item_Torch, ForegroundBehaviour::TORCH},
+        {0, sf::Color(252, 197, 195), item_Torch, ForegroundBehaviour::TORCH},
 
         // roots
         {0, sf::Color(145, 71, 63), item_Sticks, ForegroundBehaviour::VINE},
@@ -162,6 +173,8 @@ namespace ItemDictionary {
 
         // vine berry
         {0, sf::Color(73, 109, 8), item_Berries, ForegroundBehaviour::VINE},
+
+        {20, sf::Color(186, 97, 81), item_Main_WoodPlanks},
     };
 
     const BlockData BACKGROUND_BLOCK_DATA[background_NUMBER_OF_BLOCKS]{
@@ -175,11 +188,13 @@ namespace ItemDictionary {
     };
 
     const UtilityBlockData UTILITY_BLOCK_DATA[utility_NUMBER_OF_BLOCKS]{
+        {{999999999, sf::Color(50,50,50), item_NO_DROP}, sf::Vector2i(6,6), sf::Vector2i(0,4)},
+
         {{5, sf::Color(50,50,50), item_Utility_CraftingStool}, sf::Vector2i(1,1), sf::Vector2i(0,0)},
         {{5, sf::Color(50,50,50), item_Utility_WorkBench}, sf::Vector2i(2,2), sf::Vector2i(1,0)},
         {{5, sf::Color(50,50,50), item_Utility_Furnace}, sf::Vector2i(2,2), sf::Vector2i(3,0)},
-        {{5, sf::Color(50,50,50), item_Utility_HeavyFurnace}, sf::Vector2i(2,2), sf::Vector2i(5,0)},
-        {{5, sf::Color(50,50,50), item_Utility_Chest}, sf::Vector2i(2, 2), sf::Vector2i(0,2), IF_EMPTY},
+        {{5, sf::Color(50,50,50), item_Utility_StoneCutter}, sf::Vector2i(2,2), sf::Vector2i(5,0)},
+        {{5, sf::Color(50,50,50), item_Utility_Chest}, sf::Vector2i(2, 2), sf::Vector2i(0,2), UtilityBreakingBehaviour::IF_EMPTY},
         {{5, sf::Color(50,50,50), item_Utility_Anvil}, sf::Vector2i(2, 2), sf::Vector2i(2,2)},
         {{5, sf::Color(50,50,50), item_Utility_Cookpot}, sf::Vector2i(2,2), sf::Vector2i(4,2)}
     };
@@ -195,6 +210,17 @@ namespace ItemDictionary {
         {1, 2.6f}, // Iron
         {2, 13.1f} // Gold
     };
+    const PicaxeData AXE_DATA[axe_NUMBER_OF_AXES]{
+        {1, 2.0f}, // Copper
+        {1, 2.6f}, // Iron
+        {2, 13.1f} // Gold
+    };
+
+    const FoodData FOOD_DATA[food_NUMBER_OF_FOODS]{
+        {1, 10}, // mushroom
+        {5, 10}, // berry
+        {40, 45} // berry handful
+    };
 
     const RecipeData RECIPE_DATA[recipe_NUMBER_OF_RECIPES]{
 
@@ -202,15 +228,16 @@ namespace ItemDictionary {
         { { item_Torch, 3}, {{ item_Fibre, 1}} },
         { { item_Main_WoodPlanks}, {{ item_Sticks, 4}}},
         // workbench
-        { {item_Utility_WorkBench}, {{ item_Main_Stone, 10}, { item_Sticks, 4}}},
+        { {item_Utility_WorkBench}, {{ item_Main_WoodPlanks, 15}}},
         // furnace
-        { {item_Utility_Furnace}, {{ item_Main_Stone, 50}}},
+        { {item_Utility_Furnace}, {{ item_Main_Stone, 25}}},
         // anvil
         { {item_Utility_Anvil}, {{ item_Iron, 15}}},
         // chest
         { {item_Utility_Chest}, {{ item_Sticks, 30}, {item_Copper, 4}}},
         // cookpot
         { {item_Utility_Cookpot}, {{ item_Sticks, 15}, {item_Iron, 4}, {item_Main_Stone, 10}}},
+        { {item_Utility_StoneCutter}, {{item_Main_Stone, 15}, {item_Iron, 5}}},
 
         // ores
         { {item_Copper}, {{ item_Main_CopperOre, 1}}},
@@ -218,37 +245,56 @@ namespace ItemDictionary {
         { {item_Gold}, {{ item_Main_GoldOre, 1}}},
 
         // picaxe
-        { {item_Copper_Picaxe}, {{item_Copper, 6}}  },
-        { {item_Iron_Picaxe}, {{item_Iron, 6}}  },
-        { {item_Gold_Picaxe}, {{item_Gold, 6}}  },
+        { {item_Copper_Picaxe}, {{item_Copper, 6}, {item_Sticks}}},
+        { {item_Iron_Picaxe}, {{item_Iron, 6}, {item_Sticks}}},
+        { {item_Gold_Picaxe}, {{item_Gold, 6}, {item_Sticks}}},
 
         // hammer
-        { {item_Copper_Hammer}, {{item_Copper, 6}}  },
-        { {item_Iron_Hammer}, {{item_Iron, 6}}  },
-        { {item_Gold_Hammer}, {{item_Gold, 6}}  },
+        { {item_Copper_Hammer}, {{item_Copper, 6}, {item_Sticks}}  },
+        { {item_Iron_Hammer}, {{item_Iron, 6}, {item_Sticks}}  },
+        { {item_Gold_Hammer}, {{item_Gold, 6}, {item_Sticks}}  },
 
         // sword
-        { {item_Copper_Sword}, {{item_Copper, 6}}  },
-        { {item_Iron_Sword}, {{item_Iron, 6}}  },
-        { {item_Gold_Sword}, {{item_Gold, 6}}  },
+        { {item_Copper_Sword}, {{item_Copper, 6}, {item_Sticks}}  },
+        { {item_Iron_Sword}, {{item_Iron, 6}, {item_Sticks}}  },
+        { {item_Gold_Sword}, {{item_Gold, 6}, {item_Sticks}}  },
+
+        // axe
+        { {item_Copper_Axe}, {{item_Copper, 6}, {item_Sticks}}  },
+        { {item_Iron_Axe}, {{item_Iron, 6}, {item_Sticks}}  },
+        { {item_Gold_Axe}, {{item_Gold, 6}, {item_Sticks}}  },
 
         // food
-        { {item_BerryHandful}, {{item_Berries, 4}}}
+        { {item_BerryHandful}, {{item_Berries, 4}}},
 
+        // platform
+        { {item_Main_Platform, 4}, {{item_Main_WoodPlanks, 1}}},
+
+        { {item_Background_WoodPlanks, 4}, {{item_Main_WoodPlanks, 1}}},
+
+        // stone brick
+        { {item_Main_StoneBricks, 1}, {{item_Main_Stone}}},
+        { {item_Main_StonePlate, 1}, {{item_Main_Stone}}},
+        { {item_Main_StonePlateCracked, 1}, {{item_Main_Stone}}},
+        { {item_Background_StoneBricks, 4}, {{item_Main_StoneBricks}}},
+        { {item_Background_StonePlate, 4}, {{item_Main_StonePlate}}},
+        { {item_Background_StonePlateCracked, 4}, {{item_Main_StonePlateCracked}}},
     };
 
     const RecipeGroupData RECIPE_GROUP[rgroup_NUMBER_OF_RECIPE_GROUPS] = {
 
         // inventory
-        {1, 3, {{recipe_Torch}, {recipe_WoodPlanks}, {recipe_Workbench} }},
+        {3, 1, {recipe_Torch, recipe_Platform, recipe_Workbench }},
         // workbench
-        {1, 4, {{recipe_Furnace}, {recipe_Anvil}, {recipe_Chest}, {recipe_Cookpot}}},
+        {5, 1, {recipe_Furnace, recipe_Anvil, recipe_Chest, recipe_Cookpot, recipe_StoneCutter}},
         // furnace
-        {1, 3, {{recipe_Copper}, {recipe_Iron}, {recipe_Gold}}},
+        {3, 1, {recipe_Copper, recipe_Iron, recipe_Gold}},
         // anvil
-        {3,3, {{recipe_Copper_Picaxe, recipe_Copper_Hammer, recipe_Copper_Sword}, {recipe_Iron_Picaxe, recipe_Iron_Hammer, recipe_Iron_Sword}, {recipe_Gold_Picaxe, recipe_Gold_Hammer, recipe_Gold_Sword}}},
+        {3,4, {recipe_Copper_Picaxe, recipe_Copper_Hammer, recipe_Copper_Axe, recipe_Copper_Sword, recipe_Iron_Picaxe, recipe_Iron_Hammer, recipe_Iron_Axe, recipe_Iron_Sword, recipe_Gold_Picaxe, recipe_Gold_Hammer, recipe_Gold_Axe, recipe_Gold_Sword}},
         // cook pot
-        {1,1, {{recipe_BerryHandful}}}
+        {1,1, {recipe_BerryHandful}},
+        // stone cutter
+        {3 , 2, {recipe_StoneBricks, recipe_Background_StoneBricks, recipe_StonePlate, recipe_Background_StonePlate, recipe_StonePlateCracked, recipe_Background_StonePlateCracked}},
     };
 
     const ItemData ITEM_DATA[item_NUMBER_OF_ITEMS]{
@@ -280,6 +326,8 @@ namespace ItemDictionary {
         { "Raw Iron", type_Main, main_IronOre, isprite_IronOre, sound_Rubble},
         { "Raw Gold", type_Main, main_GoldOre, isprite_GoldOre, sound_Rubble},
 
+        { "Wooden Platform", type_Main, main_Platform, isprite_Platform, sound_Rubble},
+
         { "Copper", type_Resource, 0, isprite_CopperBar, sound_Metal },
         { "Iron", type_Resource, 0, isprite_IronBar, sound_Metal},
         { "Gold", type_Resource, 0, isprite_GoldBar, sound_Metal},
@@ -292,12 +340,12 @@ namespace ItemDictionary {
         { "Stone Plate Background", type_Background, background_StonePlate, isprite_StonePlate_Wall, sound_Rubble},
         { "Stone Plate Cracked Background", type_Background, background_StonePlateCracked, isprite_StonePlateCracked_Wall, sound_Rubble},
 
-
         // utility
+        { "Hibernation Station", type_Utility, utility_Hibernator },
         { "Crafting Stool", type_Utility, utility_CraftingStool },
         { "Workbench", type_Utility, utility_WorkBench },
         { "Furnace", type_Utility, utility_Furnace },
-        { "Heavy Furnace", type_Utility, utility_HeavyFurnace },
+        { "StoneCutter", type_Utility, utility_StoneCutter },
         { "Chest", type_Utility, utility_Chest },
         { "Anvil", type_Utility, utility_Anvil },
         { "Cook Pot", type_Utility, utility_Cookpot},
@@ -317,6 +365,12 @@ namespace ItemDictionary {
         { "Iron Sword", type_Hammer, hammer_Iron, isprite_Iron_Sword, sound_Metal },
         { "Gold Sword", type_Hammer, hammer_Gold, isprite_Gold_Sword, sound_Metal },
 
+        // axe
+        { "Copper Axe", type_Axe, axe_Copper, isprite_Copper_Axe, sound_Metal },
+        { "Iron Axe", type_Axe, axe_Iron, isprite_Iron_Axe, sound_Metal },
+        { "Gold Axe", type_Axe, axe_Gold, isprite_Gold_Axe, sound_Metal },
+
+
         { "Fibre", type_Resource, 0, isprite_Fibre, sound_Soft},
         { "Spade Leaf", type_Resource, 0, isprite_BigLeaf, sound_Soft},
         { "Book", type_Resource, 0, isprite_Book, sound_Soft},
@@ -324,9 +378,11 @@ namespace ItemDictionary {
         {"Torch", type_Foreground, foreground_Torch, isprite_Torch, sound_Soft},
 
         {"Sticks", type_Resource, 0, isprite_Sticks, sound_Soft},
-        {"Mushroom", type_Resource, 0, isprite_Mushroom, sound_Soft},
-        {"Berries", type_Resource, 0, isprite_Berries, sound_Soft},
-        {"Berry Handful", type_Resource, 0, isprite_BerryHandful, sound_Soft},
+        
+        {"Mushroom", type_Food, food_Mushroom, isprite_Mushroom, sound_Soft},
+        {"Berries", type_Food, food_Berries, isprite_Berries, sound_Soft},
+        {"Berry Handful", type_Food, food_BerryHandful, isprite_BerryHandful, sound_Soft},
+        
     };
 
 

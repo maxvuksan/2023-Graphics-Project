@@ -14,6 +14,7 @@ enum SetLocation{
     MAIN, // collidable ground
     FOREGROUND,
     BACKGROUND, 
+    WATER,
 };
 
 struct WorldSettings{
@@ -54,17 +55,27 @@ struct WorldSettings{
     float CAVE_PERLIN_THRESHOLD_BOTTOM = 0.45; 
 
     // percentages
-    float SURFACE_TUNNEL_PERCENT = 3;
-    float SURFACE_TUNNEL_CHANCE_DIRECTION_PERCENT = 20;
-    float SURFACE_TUNNEL_SPLIT_PERCENT = 10;
+    float SURFACE_TUNNEL_PERCENT = 1;
+    int SURFACE_TUNNEL_MIN_SPACING = 160;
+    float SURFACE_TUNNEL_ANGLE_SHIFT_PERCENT = 60;
+    float SURFACE_TUNNEL_CHANCE_DIRECTION_PERCENT = 1;
+    float SURFACE_TUNNEL_SPLIT_PERCENT = 5;
+    std::vector<float> SURFACE_TUNNEL_ANGLES = {200, 210, 225, 330, 315, 340};
+
+    int TREE_MIN_HEIGHT = 11;
+    int TREE_MAX_HEIGHT = 20;
+    float TREE_PERLIN_SCALE = 0.04;
+    float TREE_PERLIN_THRESHOLD = 0.45;
 
     float SURFACE_FLOOR_STICKS_PERCENT = 30;
-
     float SURFACE_GRASS_PERCENT = 40;
 
-    float TREE_PERCENT = 0; // REMOVED ... ?
-    float ORE_PERCENT = 40;
+    int FOLIAGE_ATTEMPTS_PER_CHUNK = 2000;
 
-    std::vector<MainBlockCode> SURFACE_ORE_POOL = { MainBlockCode::main_Stone, MainBlockCode::main_CopperOre, MainBlockCode::main_Clay};
-    std::vector<MainBlockCode> CAVERN_ORE_POOL = { MainBlockCode::main_Dirt, MainBlockCode::main_CopperOre, MainBlockCode::main_IronOre, MainBlockCode::main_GoldOre };
+    float TREE_PERCENT = 0; // REMOVED ... ?
+    float ORE_PERCENT = 78;
+    int MAX_ORES_PER_CHUNK = 20;
+
+    std::vector<MainBlockCode> SURFACE_ORE_POOL = { MainBlockCode::main_Stone, MainBlockCode::main_Stone, MainBlockCode::main_Stone, MainBlockCode::main_CopperOre, MainBlockCode::main_Clay};
+    std::vector<MainBlockCode> CAVERN_ORE_POOL = {MainBlockCode::main_Stone, MainBlockCode::main_Dirt, MainBlockCode::main_Clay, MainBlockCode::main_Dirt, MainBlockCode::main_CopperOre, MainBlockCode::main_IronOre, MainBlockCode::main_GoldOre };
 };

@@ -1,7 +1,7 @@
 #include "UtilityStation.h"
 
-void UtilityStation::Start(){
-    auto sr = AddComponent<SpriteRenderer>();
+void UtilityStation::OnStart(){
+    AddComponent<SpriteRenderer>();
 
     slot_set = chunk->AddUIToChunk<SlotSet>();
     slot_set->DefineGrid(8,2, SlotType::OPEN);
@@ -35,6 +35,8 @@ void UtilityStation::Update(){
             hovered = true;
         }
     }
+
+    GetComponent<SpriteRenderer>()->SetOutline(hovered);
 }
 
 void UtilityStation::CatchEvent(sf::Event event){
@@ -78,9 +80,12 @@ bool UtilityStation::CanBreak(){
         }
 
         case UtilityBreakingBehaviour::IF_EMPTY: {
-            if(slot_set->)
+            if(slot_set->IsEmpty()){
+                return true;
+            }
+            return false;
         }
     }
 
-    
+    return true;
 }

@@ -33,25 +33,28 @@ void SlotSet::DefineGrid(int width, int height, SlotType type){
     }
 }
 
-void SlotSet::DefineRecipeGrid(const std::vector<std::vector<Recipes>>& _recipes){
+void SlotSet::DefineRecipeGrid(const std::vector<Recipes>& _recipes){
 
-    if(_recipes.size() != slots.size()){
+    if(_recipes.size() != slots.size() * slots[0].size()){
         std::cout << "ERROR : recipe vector does not match the slots vector, SlotSet::DefineRecipeGrid\n";
         return;
     }
 
     recipes.clear();
-    recipes.resize(_recipes.size(), {});
+    recipes.resize(slots.size(), {});
 
-    for(int x = 0; x < _recipes.size(); x++){
-        for(int y = 0; y < _recipes.at(0).size(); y++){
+    for(int x = 0; x < slots.size(); x++){
+        for(int y = 0; y < slots.at(0).size(); y++){
             
-            recipes.at(x).push_back(_recipes[x][y]);
+            int index = x + y * slots.size();
+
+            recipes.at(x).push_back(_recipes.at(index));
+
             slots.at(x).at(y).type = SlotType::RECIPE;
             slots.at(x).at(y).sprite = SlotSprite::RECIPE;
 
-            slots.at(x).at(y).item_code = ItemDictionary::RECIPE_DATA[_recipes.at(x).at(y)].result.item_code;
-            slots.at(x).at(y).count = ItemDictionary::RECIPE_DATA[_recipes.at(x).at(y)].result.count;
+            slots.at(x).at(y).item_code = ItemDictionary::RECIPE_DATA[_recipes.at(index)].result.item_code;
+            slots.at(x).at(y).count = ItemDictionary::RECIPE_DATA[_recipes.at(index)].result.count;
         }
     }
 }

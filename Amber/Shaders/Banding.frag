@@ -7,5 +7,5 @@ void main()
 {
     vec4 samp = texture(texture, gl_TexCoord[0].xy);
     
-    gl_FragColor = round(samp / u_band_count) * u_band_count;
+    gl_FragColor = round(samp * u_band_count) / u_band_count;
 }

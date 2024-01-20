@@ -22,7 +22,9 @@ class AnimationRenderer : public Component{
         void SetFlip(bool state);
         bool GetFlip();
 
+
     private:
+
 
         int index = 0;
         float timer = 0;

@@ -108,9 +108,20 @@ void TileBehaviourManager::PropogateTile(int x, int y, signed_byte block, signed
     ForegroundBehaviour behaviour_below = ItemDictionary::FOREGROUND_BLOCK_DATA[entire_tile_below.foreground].behaviour;
     ForegroundBehaviour behaviour_above = ItemDictionary::FOREGROUND_BLOCK_DATA[entire_tile_above.foreground].behaviour;
 
+    // updating torches if necassary
+    UpdateTorch(x, y);
+    UpdateTorch(x - 1, y);
+    UpdateTorch(x + 1, y);
+    UpdateTorch(x, y - 1);
+    UpdateTorch(x, y + 1);
+
     // establishing light sources if needed
     if(set_location == SetLocation::FOREGROUND){
         
+        if(previous_block == foreground_Log){
+            CutdownTree(x, y);
+        }
+
         switch(previous_block){
 
             case foreground_Torch:
@@ -130,6 +141,12 @@ void TileBehaviourManager::PropogateTile(int x, int y, signed_byte block, signed
 
     // changing tiles depending on foreground tile behaviour
     if(set_location == SetLocation::MAIN){
+
+        UpdatePlatform(x, y);
+        UpdatePlatform(x - 1, y);
+        UpdatePlatform(x + 1, y);
+        UpdatePlatform(x, y - 1);
+        UpdatePlatform(x, y + 1);
 
         if(behaviour == ForegroundBehaviour::VINE){
             RemoveVine(x, y);
@@ -166,6 +183,7 @@ void TileBehaviourManager::PropogateTile(int x, int y, signed_byte block, signed
 
     }
 
+
 }
 
 void TileBehaviourManager::RemoveVine(int x, int y){
@@ -186,4 +204,90 @@ void TileBehaviourManager::RemoveVine(int x, int y){
         tile_found = world->GetTile(x, y, SetLocation::FOREGROUND);
     }
 
+}
+
+void TileBehaviourManager::CutdownTree(int x, int y){
+    signed_byte tile_found = world->GetTile(x, y - 1, SetLocation::FOREGROUND);
+
+    while(tile_found == foreground_Log){
+        
+        world->SetTile(-1, x, y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, true, true);
+
+        y--;
+        tile_found = world->GetTile(x, y, SetLocation::FOREGROUND);
+    }
+}
+
+void TileBehaviourManager::UpdatePlatform(int x, int y){
+
+    signed_byte tile_found = world->GetTile(x, y, SetLocation::MAIN);
+
+    if(tile_found <= -1){
+        return;
+    }
+
+    // is actually a platform
+    if(ItemDictionary::MAIN_BLOCK_DATA[tile_found].behaviour == ForegroundBehaviour::PLATFORM){
+        
+        // which platform sprite / tile should be shown?
+
+        bool left = false;
+        bool right = false;
+
+        signed_byte left_tile = world->GetTile(x - 1, y);
+        if(left_tile > -1 && ItemDictionary::MAIN_BLOCK_DATA[left_tile].behaviour != ForegroundBehaviour::PLATFORM){
+            left = true;
+        }
+        signed_byte right_tile = world->GetTile(x + 1, y);
+        if(right_tile > -1 && ItemDictionary::MAIN_BLOCK_DATA[right_tile].behaviour != ForegroundBehaviour::PLATFORM){
+            right = true;
+        }       
+
+        if(left && right){
+            world->SetTile(main_Platform, x, y, SetLocation::MAIN);
+        }
+        else if(left){
+            world->SetTile(main_PlatformLeftSupported, x, y, SetLocation::MAIN);
+        }
+        else if(right){
+            world->SetTile(main_PlatformRightSupported, x, y, SetLocation::MAIN);
+        }
+        else{
+            world->SetTile(main_Platform, x, y, SetLocation::MAIN);
+        }
+    }
+}
+
+void TileBehaviourManager::UpdateTorch(int x, int y){
+
+    signed_byte tile_found = world->GetTile(x, y, SetLocation::FOREGROUND);
+
+    if(ItemDictionary::FOREGROUND_BLOCK_DATA[tile_found].behaviour == ForegroundBehaviour::TORCH){
+
+        if(world->GetTile(x, y) == -1){
+
+            // left
+            if(world->GetTile(x - 1, y) > -1){
+                world->SetTile(foreground_TorchLeft, x, y, SetLocation::FOREGROUND);
+                return;
+            }
+            // right
+            else if(world->GetTile(x + 1, y) > -1){
+                world->SetTile(foreground_TorchRight, x, y, SetLocation::FOREGROUND);
+                return;
+            }
+            // has background or block below
+            else if(world->GetTile(x, y, SetLocation::BACKGROUND) > -1){
+                world->SetTile(foreground_Torch, x, y, SetLocation::FOREGROUND);
+                return;
+            }
+            else if(world->GetTile(x, y + 1) > -1){
+                world->SetTile(foreground_Torch, x, y, SetLocation::FOREGROUND);
+                return;
+            }
+        }
+
+        // torch position has become invalid, remove
+        world->SetTile(-1, x, y, SetLocation::FOREGROUND, SetMode::OVERRIDE, true, false, true);
+    }
 }

@@ -2,6 +2,7 @@
 #include "../Rendering/Tilemap.h"
 #include "../Object.h"
 #include <iostream>
+#include "TilemapCollisionTypeDivider.h"
 
 TilemapCollider::TilemapCollider(): tilemap(nullptr), reset(true){}
 
@@ -68,8 +69,13 @@ void TilemapCollider::CreateColliders(){
             if(tilemap->GetTile(x, y) == -1){
                 continue;
             }
+
+            ColliderType collision_mode = ColliderType::SOLID;
+            if(tilemap->GetTile(x, y) >= TilemapCollisionTypeDivider::platform_collider_begins_at){
+                collision_mode = ColliderType::PLATFORM;
+            }
             
-            AddRect(x * tile_size.x, y * tile_size.y, tile_size.x, tile_size.y);
+            AddRect(x * tile_size.x, y * tile_size.y, tile_size.x, tile_size.y, collision_mode);
         }
     }
 }
@@ -108,19 +114,40 @@ void TilemapCollider::CreateCollidersOptimized(){
 
                 block.width = 0;
                 tracing_block = false;
-
-                continue;
             }
-            else if(!tracing_block){
-                
-                block.x = x;
-                block.width = 0;
-                tracing_block = true;
-            }
-            else{ // tracing block
+            
+            else{
+                if(tracing_block){
+                    // solid cannot merge with platform or platform cannot merge with solid
+                    if((block.collision_mode == ColliderType::SOLID && tilemap->GetTile(x, y) >= TilemapCollisionTypeDivider::platform_collider_begins_at)
+                            || (block.collision_mode == ColliderType::PLATFORM && tilemap->GetTile(x, y) < TilemapCollisionTypeDivider::platform_collider_begins_at)){
 
-                block.width++;
-            }      
+                        block.width = x - block.x;
+                        
+                        if(tracing_block){
+                            blocks.at(y).push_back(block);
+                        }
+
+                        block.width = 0;
+                        tracing_block = false;
+
+                    }
+                }
+                if(!tracing_block){
+                    
+                    block.x = x;
+                    block.width = 0;
+                    // is this new rect a platform?
+                    if(tilemap->GetTile(x, y) >= TilemapCollisionTypeDivider::platform_collider_begins_at){
+                        block.collision_mode = ColliderType::PLATFORM;
+                    }
+                    tracing_block = true;
+                }
+                else{ // tracing block
+
+                    block.width++;
+                }    
+            }  
         }
 
         if(tracing_block){
@@ -163,6 +190,11 @@ void TilemapCollider::CreateCollidersOptimized_JoinRows(std::vector<std::vector<
                 for(int _x = 0; _x < block_refs.at(y - 1).size(); _x++){
                     
                     Rect* above = block_refs.at(y - 1).at(_x);
+
+                    // cannot merge platforms from above, treat them as one dimensional strips
+                    if(above->collision_mode == ColliderType::PLATFORM){
+                        break;
+                    }
                     
                     if(above->x == block_refs[y][x]->x && above->width == block_refs[y][x]->width){
                         block_refs[y][x] = above;
@@ -193,7 +225,8 @@ void TilemapCollider::CreateCollidersOptimized_FilterAndAddReferences(std::vecto
                     block_refs[y][x]->x * tile_size.x, 
                     block_refs[y][x]->y * tile_size.y, 
                     block_refs[y][x]->width * tile_size.x, 
-                    block_refs[y][x]->height * tile_size.y);
+                    block_refs[y][x]->height * tile_size.y,
+                    block_refs[y][x]->collision_mode);
                 
                 added_rects.push_back(block_refs[y][x]);
             }

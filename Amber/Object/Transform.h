@@ -14,7 +14,7 @@ class Transform : public Component{
         /*
             the position of the object in world space, applying its parents position
         */
-        sf::Vector2f GetGlobalPosition();
+        sf::Vector2f GetGlobalPosition() const;
 
         sf::Vector2f position;
         float rotation;
