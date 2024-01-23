@@ -46,6 +46,7 @@ void AnimationRenderer::Draw(sf::RenderTarget& surface){
 void AnimationRenderer::SetAnimationSet(const char* label){
     set = AssetManager::GetAnimationSet(label);
     current_animation = set->GetDefaultState();
+    state_index = set->GetDefaultStateIndex();
     sprite.setTexture(*current_animation->GetTexture());
 
     index = 0;
@@ -59,9 +60,25 @@ void AnimationRenderer::SetState(const char* label){
     }
     
     current_state = label;
-
-
+    state_index = set->GetStateIndex(label);
     current_animation = set->GetState(label);
+
+    sprite.setTexture(*current_animation->GetTexture());
+
+    index = 0;
+    timer = 0;
+}
+
+void AnimationRenderer::SetStateByIndex(int state_index){
+    
+    if(state_index == this->state_index){
+        return;
+    }
+
+    this->state_index = state_index;
+    current_state = set->GetStateLabelByIndex(state_index);
+    current_animation = set->GetStateByIndex(state_index);
+
     sprite.setTexture(*current_animation->GetTexture());
 
     index = 0;

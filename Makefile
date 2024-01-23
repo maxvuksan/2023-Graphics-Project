@@ -13,7 +13,11 @@ run: compile execute
 
 
 compile:
-# -g is for debugging
 	g++ -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME) $(LIBS) 
 
+network:
+	g++ -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME) $(LIBS) 
+	g++ -o server.exe -Isrc/include main_server.cpp  $(AMBER) $(GAME) $(LIBS) 
 
+server:
+	g++ -o server.exe -Isrc/include main_server.cpp  $(AMBER) $(GAME) $(LIBS) 

@@ -22,6 +22,9 @@ class Component{
         virtual void CatchEvent(sf::Event event){}
         virtual void UpdateSecondary(){} // in case of inheritance using up functions
 
+        virtual void OnSetActive(){}
+        virtual void OnDisable(){}
+
         virtual void Draw(sf::RenderTarget& surface){}
         virtual void DrawDebug(sf::RenderTarget& surface){}
 

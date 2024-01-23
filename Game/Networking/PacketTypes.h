@@ -1,5 +1,6 @@
 #pragma once
 #include "../../Amber/Framework.h"
+#include <array>
 
 #define PACKET_STRING_SIZE 50
 
@@ -10,6 +11,9 @@ enum PACKET{
         we communicate a heartbeat to all clients, by tracking this heartbeat on the client side we can determine if the server is still alive
     */
     PACKET_ServerHeartbeat,
+    // allows expensive operations, like loading the world pause timing out
+    PACKET_DisableTimeout,
+    PACKET_EnableTimeout,
     /*
         When a client first joins the server they are assigned a client_id
     */
@@ -36,9 +40,11 @@ struct PacketHeader{
     All packets are required to start with packet header
 */
 
+
 struct p_PlayerControl{
     PacketHeader header;
     bool flip_sprite;
+    int animation_state_index;
     float pos_x;
     float pos_y;
 };
@@ -57,7 +63,8 @@ struct p_ChatMessage{
 
 struct p_SetChunk{
     PacketHeader header;
-    bool target_client_id; // who should recieve this chunk?
-    short foreground_grid[16][16];
-    short background_grid[16][16];
+    
+    std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> main_grid;
+    std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> background_grid;
+    std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> foreground_grid;
 };

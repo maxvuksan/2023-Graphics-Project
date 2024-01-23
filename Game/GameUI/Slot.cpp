@@ -16,7 +16,6 @@ void Slot::Construct(){
     slot_rectangle_shape.setFillColor(sf::Color::Transparent);
     slot_rectangle_shape.setOutlineThickness(1);
 
-
     sf::Texture* tiles_texture = AssetManager::GetTexture("tiles");
     sf::Font* font = AssetManager::GetFont("m3x6");
     

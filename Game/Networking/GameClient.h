@@ -25,6 +25,8 @@ class GameClient : public Client {
 
         void CreateObjects();
 
+        void SetAllowTimeout(bool allow_timeout);
+
         void SendPlayerControl();
         void SendSetBlock(short tile_index, int x, int y);
         void SendChatMessage(const std::string& message);
@@ -42,10 +44,12 @@ class GameClient : public Client {
 
     private:
         
-        int timeout_limit = 300;
-        int time_since_last_packet;
+        bool allow_timeout = true;
 
-        bool playing_online = false;
+        float timeout_limit = 1000;
+        float time_since_last_packet;
+
+        bool playing_online = true;
 
         Scene* scene;
 

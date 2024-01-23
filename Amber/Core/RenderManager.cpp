@@ -83,6 +83,9 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         background_sprite->setColor(Scene::GetActiveCamera()->background_colour);
         render_textures[COMPOSITE]->draw(*background_sprite);
     }
+    else{
+        render_textures[COMPOSITE]->clear(Scene::GetActiveCamera()->background_colour);
+    }
     render_textures[COMPOSITE]->display();
 
     // rescaling our final image to fit window

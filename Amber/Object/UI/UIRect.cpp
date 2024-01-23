@@ -10,6 +10,8 @@ void UIRect::Align(){
     float _height = object->GetTransform()->scale.y * height;
 
     Align(object->GetTransform(), _width, _height, screen_location_x, screen_location_y);
+
+    this->OnAlign();
 }
 
 void UIRect::Align(Transform* transform, int _width, int _height, ScreenLocationX align_x, ScreenLocationY align_y){

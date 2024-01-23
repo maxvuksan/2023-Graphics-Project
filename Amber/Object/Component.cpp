@@ -17,7 +17,18 @@ Object* Component::GetThisObject(){
 }
 
 void Component::SetActive(bool state){
+
+    if(state != this->active){
+        if(state){
+            OnSetActive();
+        }
+        else{
+            OnDisable();
+        }
+    }
+
     this->active = state;
+
 
 }
 

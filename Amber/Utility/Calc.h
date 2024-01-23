@@ -14,19 +14,6 @@ class Calc{
             return 1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2);
         }
 
-        static float EaseOutElastic(float x) {
-
-            if(x == 0){
-                return 0;
-            }
-            if(x == 1){
-                return 0;
-            }
-
-            // otherwise
-            float c4 = (2 * 3.1415) / 3;
-            return pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1;
-        }
 
 
         // @returns true if @param val is within the min and max value (inclusive)

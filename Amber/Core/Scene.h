@@ -11,6 +11,9 @@ class Tilemap;
 class Core;
 class BoxCollider;
 
+class Client;
+class Server;
+
 /*
     A way to divide sections of content, 
     
@@ -155,7 +158,18 @@ class Scene {
         // deletes all objects from the scene
         void ClearAll();
 
+        /*
+            allows references of client server objects to be accessed within a scene
+        */
+        void SetClient(Client* client){this->set_client = client;}
+        void SetServer(Server* server){this->set_server = server;}
+        Client* GetClient(){return this->set_client;}
+        Server* GetServer(){return this->set_server;}
+
     private:
+
+        Client* set_client;
+        Server* set_server;
 
         void UpdateObjectArray(std::vector<Object*>& array);
         void CatchEventObjectArray(std::vector<Object*>& array, sf::Event event);

@@ -2,14 +2,11 @@
 #include "../../Core/Globals.h"
 #include <iostream>
 
-std::vector<std::vector<signed_byte>>& TilemapPrimitive::GetGrid(){
+std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH>& TilemapPrimitive::GetGrid(){
     return grid;
 }
 
 bool TilemapPrimitive::Load(sf::Texture* texture, TilemapProfile* tilemap_profile, int default_tile){
-    
-    grid.clear();
-    grid.resize(tilemap_profile->width);
     
     this->tilemap_profile = tilemap_profile;
 
@@ -19,9 +16,6 @@ bool TilemapPrimitive::Load(sf::Texture* texture, TilemapProfile* tilemap_profil
 
     // populate the vertex array, with two triangles per tile
     for (unsigned int x = 0; x < tilemap_profile->width; ++x){
-        
-        grid[x].resize(tilemap_profile->height);
-        
         for (unsigned int y = 0; y < tilemap_profile->height; ++y)
         {
             SetTile(default_tile, x, y);

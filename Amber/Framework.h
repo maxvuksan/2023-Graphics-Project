@@ -4,6 +4,7 @@
 #include "Utility/PerlinNoise.h"
 #include "Utility/Calc.h"
 #include "Utility/Mouse.h"
+#include "Utility/Datafile.h"
 
 #include "Networking/Client.h"
 #include "Networking/Server.h"
@@ -31,6 +32,10 @@
 
 #include "Object/UI/UIImage.h"
 #include "Object/UI/UIPixelGrid.h"
+#include "Object/UI/UIButton.h"
+#include "Object/UI/UIRectArray.h"
+#include "Object/UI/UIInputField.h"
+
 
 #include "Core/Scene.h"
 #include "Core/AssetManager.h"

@@ -1,14 +1,21 @@
+#pragma once
+
 #include "../Amber/Framework.h"
 #include "Networking/GameServer.h"
 #include "Networking/GameClient.h"
 #include "WorldScene.h"
+#include "MenuScene.h"
+
+#include "GameUI/SlotSet.h"
 
 class Game : public Core{
 
     public:
-        Game(bool is_server = false) : Core(1600, 800, 800, 400, "My Game")
+        Game(bool _is_server = false) : Core(800, 400, 800, 400, "My Game")
         {
-            if(is_server){
+            this->is_server = _is_server;
+
+            if(_is_server){
                server.Run(6868); 
             }
         }
@@ -75,11 +82,43 @@ class Game : public Core{
 
             // Scenes ---------------------------------------------------------------------
 
-            AssetManager::CreateScene<WorldScene>("WorldScene");
+            AssetManager::CreateScene<MenuScene>("MenuScene");
 
-            LoadScene("WorldScene");
+            // config ui button
+            UIButton::GetText().setFont(*AssetManager::GetFont("m3x6"));
+            UIButton::GetText().setString("Play");
+            UIButton::GetText().setCharacterSize(32);
 
+           // Scene* world_scene = AssetManager::CreateScene<WorldScene>("WorldScene");
+           // world_scene->SetClient(&client);
+
+            if(is_server){
+           //     world_scene->SetServer(&server);
+            }
+
+            //client.Connect("127.0.0.1", 6868);
+
+            // Static Constructions --------------------------------------------------
+
+            Slot::Construct();
+            SlotSet::Construct();
+
+            // ----------------------------------------------------------------------
+
+            LoadScene("MenuScene");
+            //LoadScene("WorldScene");
+        }
+        
+        // dynamically casts a scenes generic client pointer to a GameClient pointer
+        static GameClient* GetGameClientFromScene(Scene* scene){
+            return dynamic_cast<GameClient*>(scene->GetClient());
         }
 
+        static GameServer* GetGameServerFromScene(Scene* scene){
+            return dynamic_cast<GameServer*>(scene->GetServer());
+        }
+
+        bool is_server;
+        GameClient client;
         GameServer server;
 };   

@@ -27,6 +27,7 @@ class UIRect : public Component {
         // snap the rect into different screen locations
         void SetAlign(ScreenLocationX align_x, ScreenLocationY align_y);
         void Align();
+        virtual void OnAlign(){}
 
         // allows one time alignments for objects which dont have the attached component
         static void Align(Transform* transform, int width, int height, ScreenLocationX align_x, ScreenLocationY align_y); 

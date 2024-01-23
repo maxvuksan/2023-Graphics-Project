@@ -4,6 +4,7 @@
 #include "../../Core/Scene.h"
 #include "../Camera.h"
 #include <math.h>
+#include <array>
 
 
 void Tilemap::Start(){
@@ -42,11 +43,11 @@ void Tilemap::ClearVertexArray(){
 
 
 signed_byte Tilemap::GetTile(int x, int y){
-    std::vector<std::vector<signed_byte>>& grid = tilemap_primitive.GetGrid();
+    std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH>& grid = tilemap_primitive.GetGrid();
 
     if(x < tilemap_profile->width && x >= 0){
         if(y < tilemap_profile->height && y >= 0){
-            return grid[x][y];
+            return grid.at(x).at(y);
         }
     }
     return -1;

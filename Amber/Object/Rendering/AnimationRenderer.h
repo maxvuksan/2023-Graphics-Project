@@ -17,7 +17,14 @@ class AnimationRenderer : public Component{
         sf::Sprite& GetSprite(){return sprite;}
 
         void SetAnimationSet(const char* label);
+        
         void SetState(const char* label);
+
+        // rather than setting by state name we can set directly by the states index in its array
+        void SetStateByIndex(int state_index);
+
+        const char* GetState(){return current_state;}
+        int GetStateIndex(){return state_index;}
 
         void SetFlip(bool state);
         bool GetFlip();
@@ -31,6 +38,7 @@ class AnimationRenderer : public Component{
         
         int flip_factor;
 
+        int state_index = 0;
         const char* current_state;
 
         sf::Sprite sprite;

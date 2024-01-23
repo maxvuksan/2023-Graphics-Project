@@ -12,7 +12,12 @@ class AnimationSet {
 
         // @returns a reference to animation at label, nullptr if no animation exists
         Animation* GetState(const char* label);
+        int GetStateIndex(const char* label);
+        const char* GetStateLabelByIndex(int state_index);
+        Animation* GetStateByIndex(int state_index);
+        
         Animation* GetDefaultState();
+        int GetDefaultStateIndex();
 
     private:
         std::unordered_map<const char*, Animation> states; 

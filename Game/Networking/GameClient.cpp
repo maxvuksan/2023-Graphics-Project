@@ -76,6 +76,27 @@ void GameClient::CreateObjects(){
 
 }
 
+
+void GameClient::SetAllowTimeout(bool _allow_timeout){
+
+
+    if(this->allow_timeout == _allow_timeout){
+        return;
+    }
+
+    this->allow_timeout = _allow_timeout;
+
+    IF_ONLINE
+
+    if(allow_timeout){
+        SendPacket<PacketHeader>(server, {PACKET_EnableTimeout, client_id});
+    }
+    else{
+        SendPacket<PacketHeader>(server, {PACKET_DisableTimeout, client_id});
+    }
+}
+
+
 void GameClient::SendPlayerControl(){
 
     player_pos = player->GetTransform()->position;
@@ -85,7 +106,8 @@ void GameClient::SendPlayerControl(){
     if(player->GetTransform()->position != previous_player_position){
         
         previous_player_position = player->GetTransform()->position;
-        SendPacket<p_PlayerControl>(server, {{PACKET_PlayerControl, client_id}, player->GetComponent<SpriteRenderer>()->GetFlip(), previous_player_position.x, previous_player_position.y });
+        auto anim = player->GetComponent<AnimationRenderer>();
+        SendPacket<p_PlayerControl>(server, {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), previous_player_position.x, previous_player_position.y });
     }
 }
 
@@ -112,12 +134,16 @@ void GameClient::Update(){
 
     IF_ONLINE
 
-    // if the server hasn't responded in a while, timeout / drop connection
-    if(time_since_last_packet > timeout_limit){
-        Disconnect();
-    }
 
-    time_since_last_packet++;
+    if(allow_timeout){
+
+        // if the server hasn't responded in a while, timeout / drop connection
+        if(time_since_last_packet > timeout_limit){
+            Disconnect();
+        }
+
+        time_since_last_packet++;
+    }
 }
 
 void GameClient::CatchPeerEvent(ENetEvent event){
@@ -160,35 +186,61 @@ void GameClient::InterpretPacket(ENetEvent& event){
 
     switch(packet_type){
 
+        case PACKET_ServerHeartbeat: {
+            std::cout << "propogate heartbeat\n";
+            SendPacket<PacketHeader>(server, {PACKET_PlayerControl, client_id});
+            break;
+        }
+
         case PACKET_SetClientId: {
-            
             client_id = header.client_id;
+            std::cout << "packet: set client id :" << header.client_id << "\n";
+
             break;
         }
         case PACKET_CreatePlayer: {
+            std::cout << "packet: player created :" << header.client_id << "\n";
             connected_clients[header.client_id] = scene->AddObject<Player>();
             break;
         }
 
         case PACKET_DeletePlayer: {
-
+            std::cout << "packet: player deleted :" << header.client_id << "\n";
             scene->DeleteObject(connected_clients[header.client_id]);
             connected_clients.erase(header.client_id);
             break;
         }
 
+        /*
+        
+            #define WIDTH 50
+            #define HEIGHT 50
+        
+        */
+
         case PACKET_PlayerControl: {
+
+            std::cout << "packet: player control :" << header.client_id << "\n";
 
             p_PlayerControl body;
             memcpy(&body, event.packet->data, sizeof(p_PlayerControl));
 
-            connected_clients[header.client_id]->GetComponent<SpriteRenderer>()->SetFlip(body.flip_sprite);
+            // apply appropriate animation data
+            auto anim = connected_clients[header.client_id]->GetComponent<AnimationRenderer>();
+            anim->SetFlip(body.flip_sprite);
+            anim->SetStateByIndex(0);
+            
+            // set position
             connected_clients[header.client_id]->GetTransform()->position = sf::Vector2f(body.pos_x, body.pos_y);
 
             break;
         }
 
         case PACKET_SetBlock : {
+
+            std::cout << "packet: set block :" << header.client_id << "\n";
+
+
             p_SetBlock body;
             memcpy(&body, event.packet->data, sizeof(p_SetBlock));
 

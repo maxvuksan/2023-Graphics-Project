@@ -45,9 +45,13 @@ class Inventory : public Object {
         Slot* GetHoveredSlot();
 
 
+        // width
+        static int GetRowLength(){return row_length;}
+        // height
+        static int GetRowCount(){return row_count;}
+
+
     private:
-
-
 
         /*
             @param slot_set the slot set we are searching through

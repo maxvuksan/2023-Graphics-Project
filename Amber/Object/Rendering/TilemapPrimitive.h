@@ -2,6 +2,11 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include "TilemapProfile.h"
+#include <array>
+
+
+#define TILEMAP_WIDTH 50
+#define TILEMAP_HEIGHT 50
 
 /*
     allows the range -128 -> 127
@@ -21,7 +26,9 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         /*
             @returns A 2D vector of integer values representing the tilemap
         */
-        std::vector<std::vector<signed_byte>>& GetGrid();
+        //std::vector<std::vector<signed_byte>>& GetGrid();
+        std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH>& GetGrid();
+
         void SetTile(signed_byte tile_index, unsigned int x, unsigned int y);
         /*
             swaps back to the tilemap texture
@@ -42,7 +49,9 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         
     private:
 
-        std::vector<std::vector<signed_byte>> grid;
+        //std::vector<std::vector<signed_byte>> grid;
+
+        std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> grid;
 
         sf::VertexArray m_vertices;
         

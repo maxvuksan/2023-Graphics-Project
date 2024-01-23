@@ -3,12 +3,22 @@
 #include "PacketTypes.h"
 #include "../World/World.h"
 
+
+// infomation that server holds about a client
+struct ClientData{
+    ENetPeer* peer;
+    bool allow_timeout = true;
+    int time_since_last_packet = 0; // how long has it been since we've heard from this client
+};
+
 class GameServer : public Server {
 
     public:
         GameServer();
 
         void Update() override;
+
+        void DisconnectClient(int client_id);
 
         void CatchPeerEvent(ENetEvent event) override;
 
@@ -19,7 +29,7 @@ class GameServer : public Server {
         void SendPacketToAll(T packet){
             
             for(auto& client : connected_clients){
-                SendPacket<T>(client.second, packet);
+                SendPacket<T>(client.second.peer, packet);
             }
         }
 
@@ -34,7 +44,7 @@ class GameServer : public Server {
                 // dont send position back to originally sender
                 if(client_id != client.first){
                     
-                    SendPacket<T>(client.second, packet);
+                    SendPacket<T>(client.second.peer, packet);
                 }
 
             }
@@ -42,21 +52,31 @@ class GameServer : public Server {
         // send packet to specific client
         template <typename T>
         void SendPacketToSpecific(T packet, int client_id){
-            SendPacket<T>(connected_clients[client_id], packet);
+            SendPacket<T>(connected_clients[client_id].peer, packet);
         }
 
-        
         // similarly, passing packets without casting...
         void ForwardPacketToAll(ENetPacket* enet_packet);
         void ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id);
         void ForwardPacketButExclude(ENetPacket* enet_packet, int client_id);
 
+
+        void SetWorld(World* world){this->world = world;}
+        World* GetWorld(){return world;}
+
+
     private:
 
+    
+
         // how often the server sends a heartbeat to the client
-        int heartbeat_delay = 150;
-        int heartbeat_delay_tracked;
+        float heartbeat_delay = 30;
+        float heartbeat_delay_tracked;
+
+        int timeout_time = 1000;
 
         int client_id_tracked; // increments for every connection,
-        std::map<int, ENetPeer*> connected_clients;
+        std::map<int, ClientData> connected_clients;
+
+        World* world;
 };
