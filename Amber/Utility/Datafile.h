@@ -43,6 +43,17 @@ class Datafile{
             return vec_objects[map_objects[name]].second;
         }
 
+        
+        inline void AssignChild(const std::string& new_node_name, const Datafile& new_datafile_child){
+            
+            // check if nodes map already contains this name
+            if(map_objects.count(new_node_name) == 0){
+
+                // name does not exist, create it
+                map_objects[new_node_name] = vec_objects.size();
+                vec_objects.push_back({new_node_name, new_datafile_child});
+            }
+        }
 
 
         inline static bool Read(
@@ -164,9 +175,6 @@ class Datafile{
                 return false;
             }
         }
-
-        
-
 
         // writes a "Datafile" node and all of its child nodes recursivley into a file
         inline static bool Write(

@@ -18,6 +18,7 @@ class UtilityStation : public Object {
 
         // sets the type of station, only utility item codes should be provided
         void SetItemType(ItemCode item);
+        ItemCode GetItemCode(){return item_code;}
         
         void Update() override;
 
@@ -40,9 +41,9 @@ class UtilityStation : public Object {
         bool FootprintOver(sf::Vector2i other_position, sf::Vector2i other_footprint);
 
         const UtilityBlockData* GetUtilityData(){return utility_data;}
-
     protected:
         Chunk* chunk;
+        ItemCode item_code;
         const UtilityBlockData* utility_data;
         SlotSet* slot_set;
 

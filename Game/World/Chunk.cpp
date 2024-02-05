@@ -8,6 +8,8 @@ void Chunk::Init(World* world){
 
     this->world = world;
 
+    saving_dirty = false;
+
     SetRenderLayer(7);
 
     main_tilemap = this->AddComponent<Tilemap>(5);
@@ -175,6 +177,12 @@ EntireTile Chunk::GetEntireTile(int x, int y){
 void Chunk::AddFoliage(Foliage foliage_index, int x, int y){
     foliage_map.insert(std::make_pair(x + y * world->tilemap_profile->width, foliage_index));
     foliage_map_dirty = true;
+    saving_dirty = true;
+}
+
+void Chunk::AddFoliageViaMapIndex(Foliage foliage_index, int map_index){
+    foliage_map.insert(std::make_pair(map_index, foliage_index));
+    foliage_map_dirty = true;
 }
 
 void Chunk::RemoveFoliage(int x, int y){
@@ -194,6 +202,7 @@ void Chunk::RemoveFoliage(int x, int y){
     // erase 
     foliage_map.erase(x + y * world->tilemap_profile->width);
     foliage_map_dirty = true;
+    saving_dirty = true;
 
 }
 
@@ -258,6 +267,8 @@ void Chunk::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     else{ //water
         water_tilemap->SetTileSafe(tile_index, x, y);
     }
+
+    saving_dirty = true;
 }
 
 void Chunk::ClearLightmap(){
@@ -369,7 +380,6 @@ void Chunk::RemoveTileFromSkylight(int x, int y){
 }
 */
 void Chunk::PropogateTorches(){
-    
 
     // sky light
     for(int i = 0; i < sky_tiles.size(); i++){
@@ -387,7 +397,6 @@ void Chunk::PropogateTorches(){
     for(int i = 0; i < torch_positions.size(); i++){
         LightingManager::PropogateLighting(coord + torch_positions[i], ItemDictionary::torch_colour, ItemDictionary::torch_propogate_decay);
     }
-
 }
 
 
@@ -398,8 +407,25 @@ void Chunk::RefreshSkylight(){
     }
 }
 
+void Chunk::RecalculateTorchPositions(){
+
+    torch_positions.clear();
+
+    for(int x = 0; x < world->tilemap_profile->width; x++){
+        for(int y = 0; y < world->tilemap_profile->height; y++){
+            
+            if(foreground_tilemap->GetTile(x, y) >= foreground_Torch && foreground_tilemap->GetTile(x, y) <= foreground_TorchRight ){
+                torch_positions.push_back(sf::Vector2i(x,y));
+            }
+
+        }
+    }
+}
+
 void Chunk::OnSetActive(){
     
+
+    RecalculateTorchPositions();
     
     lighting_closed_grid.resize(world->tilemap_profile->width);
     for(int i = 0; i < lighting_closed_grid.size(); i++){
@@ -457,7 +483,6 @@ Chunk::~Chunk(){
 
 void Chunk::SetAwakeForWaterSim(short new_awake_value)
 {   
-
     if(new_awake_value > 0 && this->awake_decay_tracked <= 0){
     
         WaterManager::AddNewAwakeChunk(chunk_coordinate);

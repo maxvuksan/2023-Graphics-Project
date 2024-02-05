@@ -1,5 +1,7 @@
 #include "Settings.h"
 
+std::string Settings::SAVE_PATH = "Data"; //where things are saved
+
 float Settings::LIGHT_BLUR_FACTOR = 5.0f;
 int Settings::LIGHT_REFRESH_RATE = 15; // values could range from say 5 - 100 
 

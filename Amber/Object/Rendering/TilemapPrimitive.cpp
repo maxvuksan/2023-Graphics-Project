@@ -24,6 +24,19 @@ bool TilemapPrimitive::Load(sf::Texture* texture, TilemapProfile* tilemap_profil
     return true;
 }
 
+void TilemapPrimitive::CopyGrid(const std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH>& grid_to_copy){
+    
+    // TO DO : optimize with memset
+
+    // looping manually is probably slow
+
+    for(int x = 0; x < TILEMAP_WIDTH; x++){
+        for(int y = 0; y < TILEMAP_HEIGHT; y++){
+            SetTile(grid_to_copy[x][y], x, y);
+        }
+    }
+}
+
 void TilemapPrimitive::ConstructVertexArray(){
 
     m_vertices.clear();

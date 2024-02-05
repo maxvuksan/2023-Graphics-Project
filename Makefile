@@ -12,12 +12,15 @@ GAME = Game/Items/*.cpp Game/Networking/*.cpp Game/Player/*.cpp Game/World/*.cpp
 run: compile execute
 
 
+
 compile:
 	g++ -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME) $(LIBS) 
 
-network:
-	g++ -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME) $(LIBS) 
-	g++ -o server.exe -Isrc/include main_server.cpp  $(AMBER) $(GAME) $(LIBS) 
-
 server:
 	g++ -o server.exe -Isrc/include main_server.cpp  $(AMBER) $(GAME) $(LIBS) 
+
+
+# testing Datafile.h
+datafile:
+	g++ main_data.cpp -o datafile.exe Amber/Utility/Datafile.cpp Amber/Utility/Time.cpp
+	./datafile.exe

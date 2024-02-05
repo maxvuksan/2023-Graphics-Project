@@ -26,12 +26,13 @@ class World : public Object{
         ~World();
 
         void LinkClient(GameClient* client);
-        void LinkWorldScene(WorldScene* world_scene);
 
         /*
-            initalizes all data and generates the world
+            initalizes all data
+            @param minimal if true all lighting, time of day and other managers will not be created
         */
-        void Create();
+        void Create(bool minimal = false, int width = -1, int height = -1);
+        void Generate();
         void Update() override;
 
         /*
@@ -161,10 +162,10 @@ class World : public Object{
 
         // @returns the coordinate of the world spawnpoint
         sf::Vector2i GetSpawnCoordinate(){return world_spawn_coord;}
+        void SetSpawnCoordinate(int coord_x, int coord_y);
     private:
         GameClient* client;
         Transform* focus;
-        WorldScene* world_scene;
 
         // storing tiles within specified radii, calculating via CalculateOFfsetsInRadius()
         std::unordered_map<int, std::vector<sf::Vector2i>> radius_offsets;

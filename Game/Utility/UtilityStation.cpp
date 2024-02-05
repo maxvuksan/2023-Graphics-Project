@@ -14,6 +14,8 @@ void UtilityStation::LinkChunk(Chunk* chunk){
 
 void UtilityStation::SetItemType(ItemCode item) {
 
+    this->item_code = item;
+
     if(ItemDictionary::ITEM_DATA[item].type != ItemType::type_Utility){
         std::cout << "ERROR : Attempted to set a UtilityStation to a non utility item index, UtilityStation::SetItemType()\n";
         return;

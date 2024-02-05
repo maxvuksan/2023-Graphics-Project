@@ -11,20 +11,16 @@
 class Game : public Core{
 
     public:
-        Game(bool _is_server = false) : Core(800, 400, 800, 400, "My Game")
+        Game() : Core(900, 900, 300, 300, "My Game")
         {
-            this->is_server = _is_server;
 
-            if(_is_server){
-               server.Run(6868); 
-            }
         }
 
         ~Game() override{ 
             server.Close();
         }
 
-        void Start() override{
+       void Start() override{
 
             // Fonts ---------------------------------------------------------------------
 
@@ -68,6 +64,7 @@ class Game : public Core{
                                                         }, {"idle", "run", "fallup", "falldown", "onwall"});
 
             AssetManager::CreateAnimationSet("tool_slash", { Animation("tool_slash", 28, 0, 4, {50, 100, 50, 50}, false)}, {"default"});
+            
             // Sounds ---------------------------------------------------------------------
 
             AssetManager::CreateSound("hit", "Sounds/FX/hit.wav");
@@ -82,21 +79,20 @@ class Game : public Core{
 
             // Scenes ---------------------------------------------------------------------
 
-            AssetManager::CreateScene<MenuScene>("MenuScene");
+            Scene* menu_scene = AssetManager::CreateScene<MenuScene>("MenuScene");
+            menu_scene->SetClient(&client);
+            menu_scene->SetServer(&server);
+
+            Scene* world_scene = AssetManager::CreateScene<WorldScene>("WorldScene");
+            world_scene->SetClient(&client);
+            world_scene->SetServer(&server);
+
 
             // config ui button
             UIButton::GetText().setFont(*AssetManager::GetFont("m3x6"));
             UIButton::GetText().setString("Play");
             UIButton::GetText().setCharacterSize(32);
 
-           // Scene* world_scene = AssetManager::CreateScene<WorldScene>("WorldScene");
-           // world_scene->SetClient(&client);
-
-            if(is_server){
-           //     world_scene->SetServer(&server);
-            }
-
-            //client.Connect("127.0.0.1", 6868);
 
             // Static Constructions --------------------------------------------------
 
@@ -117,6 +113,7 @@ class Game : public Core{
         static GameServer* GetGameServerFromScene(Scene* scene){
             return dynamic_cast<GameServer*>(scene->GetServer());
         }
+
 
         bool is_server;
         GameClient client;

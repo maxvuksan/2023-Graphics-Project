@@ -4,11 +4,16 @@
 #include "../World/World.h"
 
 
+
+
 // infomation that server holds about a client
 struct ClientData{
     ENetPeer* peer;
     bool allow_timeout = true;
     int time_since_last_packet = 0; // how long has it been since we've heard from this client
+    
+    std::vector<ENetPacket*> held_packets; // some events must wait for the world to be loaded, thus we hold this packets and send them later
+    bool loading_world = false;
 };
 
 class GameServer : public Server {
@@ -60,10 +65,8 @@ class GameServer : public Server {
         void ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id);
         void ForwardPacketButExclude(ENetPacket* enet_packet, int client_id);
 
-
         void SetWorld(World* world){this->world = world;}
         World* GetWorld(){return world;}
-
 
     private:
 

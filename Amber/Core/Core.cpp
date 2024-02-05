@@ -68,6 +68,10 @@ void Core::Run(){
         
         window.clear();
 
+        // performing updates
+        this->Update();
+        current_scene->InternalUpdate();
+
         // catch events
         sf::Event event;
         while (window.pollEvent(event))
@@ -99,10 +103,6 @@ void Core::Run(){
         sf::Time dt = delta_clock.restart();
         Time::SetDeltaTime(dt.asSeconds());
 
-
-        // performing updates
-        this->Update();
-        current_scene->InternalUpdate();
 
         // calculate mouse positions
         Mouse::SetWindowPosition(sf::Mouse::getPosition(window));

@@ -660,3 +660,14 @@ bool Inventory::AddItemToSlot(SlotSet* slot_set, ItemCode item, int x, int y, in
     }
     return true;
 }
+
+Slot* Inventory::GetSlot(int x, int y){
+
+    if(y == 0){
+        return hotbar_slot_set->GetSlot(x, 0);
+    }
+    else{
+        return backpack_slot_set->GetSlot(x, y - 1);
+    }
+
+}

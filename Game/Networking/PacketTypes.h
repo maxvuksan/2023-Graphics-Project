@@ -28,6 +28,16 @@ enum PACKET{
     PACKET_SetBlock,
     PACKET_ChatMessage,
     
+    /*
+        We are asking a client to send the world header
+    */
+    PACKET_RequestWorldHeader,
+    PACKET_WorldHeader,
+    /*
+        when we have recieved the world header we request each individual chunk
+    */
+    PACKET_RequestChunk,
+    PACKET_WorldLoadedSuccessfully,
     PACKET_SetChunk,
 };
 
@@ -42,11 +52,14 @@ struct PacketHeader{
 
 
 struct p_PlayerControl{
+
     PacketHeader header;
     bool flip_sprite;
     int animation_state_index;
     float pos_x;
     float pos_y;
+    float velocity_x;
+    float velocity_y;
 };
 
 struct p_SetBlock{
@@ -61,8 +74,22 @@ struct p_ChatMessage{
     char message;
 };
 
+struct p_WorldHeader{
+
+    PacketHeader header;
+    int target_client_id; // who is this world header for
+
+    // in chunks
+    int width;
+    int height;
+};
+
 struct p_SetChunk{
     PacketHeader header;
+
+    // location of chunk
+    int chunk_coordinate_x;
+    int chunk_coordinate_y;
     
     std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> main_grid;
     std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> background_grid;

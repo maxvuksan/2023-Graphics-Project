@@ -26,11 +26,12 @@ void UIButton::CatchEvent(sf::Event event){
 
 void UIButton::SetString(std::string string){
     this->text_string = string;
-    previous_position = sf::Vector2f(-99,-99);
+    previous_position = sf::Vector2f(-9999,-9999);
+    text_position = sf::Vector2f(-9999,-9999);
 
 }
 
-void UIButton::Update(){
+void UIButton::Update(){ 
     if(!IsActive()){
         return;
     }

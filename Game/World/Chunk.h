@@ -89,6 +89,7 @@ class Chunk : public Object {
             @param y component of tilemap offset
         */
         void AddFoliage(Foliage foliage_index, int x, int y);
+        void AddFoliageViaMapIndex(Foliage foliage_index, int map_index);
         /*
             removes a foliage object at local position x, y
             @param x component of tilemap offset
@@ -143,6 +144,7 @@ class Chunk : public Object {
         // @returns map structured as... key (x offset + y offset * width) : foliage id
         const std::map<int, Foliage>& GetFoliageMap(){return foliage_map;}
 
+        void RecalculateTorchPositions();
         void RemoveTorchPosition(int  coord_x, int coord_y);
         void AddTorchPosition(int coord_x, int coord_y);
 
@@ -163,7 +165,15 @@ class Chunk : public Object {
         Tilemap* water_tilemap;
         std::vector<std::vector<bool>> water_updated;
         
+        // saving dirty determines if a chunk has changed since it was last saved, only dirty chunks need to be scanned and written into the save file
+        bool GetSavingDirty(){return saving_dirty;} 
+        void SetSavingDirty(bool saving_dirty){this->saving_dirty = saving_dirty;}
+
+        Datafile save_datafile;
+
     private:
+
+        bool saving_dirty;
 
         sf::Vector2i chunk_coordinate;
 

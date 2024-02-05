@@ -12,7 +12,7 @@ class UIInputField : public UIButton {
 
         // @returns the users character input
         std::string GetInput(){return tracked_string;}
-
+        void SetInput(std::string string){tracked_string=string;}
 
     private:
         bool selected = true;

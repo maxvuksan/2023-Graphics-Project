@@ -5,6 +5,7 @@
 
 void Player::Start(){
 
+    AddComponent<PhysicsBody>();
     auto ar = AddComponent<AnimationRenderer>();
 
     ar->SetAnimationSet("player");

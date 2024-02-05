@@ -29,6 +29,9 @@ class TilemapPrimitive : public sf::Drawable, public sf::Transformable
         //std::vector<std::vector<signed_byte>>& GetGrid();
         std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH>& GetGrid();
 
+        // copies a provided grid into this primitive
+        void CopyGrid(const std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH>& grid_to_copy);
+
         void SetTile(signed_byte tile_index, unsigned int x, unsigned int y);
         /*
             swaps back to the tilemap texture

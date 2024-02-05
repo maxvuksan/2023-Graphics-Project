@@ -10,12 +10,17 @@
 #include "Lighting/LightingManager.h"
 #include "Lighting/BackgroundShadowManager.h"
 
-void World::LinkWorldScene(WorldScene* world_scene){
-    this->world_scene = world_scene;
-}
+
+void World::Create(bool minimal, int width, int height) {
 
 
-void World::Create() {
+    if(width != -1){
+        world_profile.width = width;
+    }
+    if(height != -1){
+        world_profile.height = height;
+    }
+
 
     world_needs_pathfinding_recalculating = true;
     tilemap_profile = &world_profile.tilemap_profile;
@@ -23,17 +28,18 @@ void World::Create() {
     world_profile.width_in_tiles = world_profile.width * tilemap_profile->width;
     world_profile.height_in_tiles = world_profile.height * tilemap_profile->height;
 
-    GetScene()->AddObject<LightingManager>(50);
-    GetScene()->AddObject<RotatedRectManager>();
-    GetScene()->AddObject<WaterManager>();
-    GetScene()->AddObject<BackgroundShadowManager>(1);
-    
-    TilemapCollisionTypeDivider::platform_collider_begins_at = main_Platform;
-    LightingManager::LinkWorld(this);
-    TileBehaviourManager::LinkWorld(this);
-    RotatedRectManager::LinkWorld(this);
-    WaterManager::LinkWorld(this);
-    
+    if(!minimal){
+        GetScene()->AddObject<LightingManager>(50);
+        GetScene()->AddObject<RotatedRectManager>();
+        GetScene()->AddObject<WaterManager>();
+        GetScene()->AddObject<BackgroundShadowManager>(1);
+        
+        TilemapCollisionTypeDivider::platform_collider_begins_at = main_Platform;
+        LightingManager::LinkWorld(this);
+        TileBehaviourManager::LinkWorld(this);
+        RotatedRectManager::LinkWorld(this);
+        WaterManager::LinkWorld(this);
+    }
     // creating each tilemap...
 
     half_tilemap_width = floor(tilemap_profile->width * 0.5f);
@@ -62,17 +68,17 @@ void World::Create() {
             // instead we keep it in a seperate 2d array and move ONLY nearby chunks into the scenes simulation
             // this allows disabled chunks to have little to no CPU involement, essentially being idle in RAM
             chunks[x][y] = Memory::New<Chunk>(__FUNCTION__);
-            chunks[x][y]->LinkScene(world_scene);
+            chunks[x][y]->LinkScene(GetScene());
             chunks[x][y]->Init(this);
             chunks[x][y]->SetActive(false); 
             chunks[x][y]->SetChunkCoordinate(x, y);
         }
     }
+}
 
+void World::Generate(){
     WorldGenerator::Bind(this);
     WorldGenerator::Generate();
-
-    CalculateMinimap();
 }
 
 
@@ -428,8 +434,8 @@ void World::Update(){
     }
     
 
-    std::vector<Object*>* objects_additional = world_scene->GetThisObjectsAdditional();
-    std::vector<Object*>* ui_additional = world_scene->GetUIAdditional();
+    std::vector<Object*>* objects_additional = GetScene()->GetThisObjectsAdditional();
+    std::vector<Object*>* ui_additional = GetScene()->GetUIAdditional();
     objects_additional->clear();
     ui_additional->clear();
     
@@ -566,6 +572,11 @@ bool World::CoordIsConnectedToOtherTiles(int x, int y){
 
 void World::SetWorldNeedsPathfindingRecalculating(bool state){
     world_needs_pathfinding_recalculating = state;
+}
+
+void World::SetSpawnCoordinate(int coord_x, int coord_y){
+    this->world_spawn_coord.x = coord_x;
+    this->world_spawn_coord.y = coord_y;
 }
 
 World::~World(){

@@ -37,7 +37,7 @@ void PlayerController::Start(){
     right->SetSize(sf::Vector2f(2, 8));
     right->SetOffset(sf::Vector2f(6,-4));
     
-    pb = object->AddComponent<PhysicsBody>();
+    pb = object->GetComponent<PhysicsBody>();
 
     animation = object->GetComponent<AnimationRenderer>();
 

@@ -39,9 +39,7 @@ void GameServer::CatchPeerEvent(ENetEvent event){
     {   
         case ENET_EVENT_TYPE_CONNECT: {
 
-            if(Core::DEBUG_MODE){
-                std::cout << "New connection " << event.peer->address.host << ":" << event.peer->address.port << "\n";
-            }
+            std::cout << "New connection " << event.peer->address.host << ":" << event.peer->address.port << "\n";
 
             // giving the new client a new client_id
             SendPacket<PacketHeader>(event.peer, {PACKET_SetClientId, client_id_tracked});
@@ -57,7 +55,14 @@ void GameServer::CatchPeerEvent(ENetEvent event){
             // define the new player on exisiting players
             SendPacketButExclude<PacketHeader>({PACKET_CreatePlayer, client_id_tracked}, client_id_tracked);
 
-     
+            std::cout << "Connection Complete\n";
+
+            if(client_id_tracked != 0){
+                connected_clients[client_id_tracked].loading_world = true;
+                // ask the host world to world header
+                SendPacketToSpecific<PacketHeader>({PACKET_RequestWorldHeader, client_id_tracked}, 0);
+            }
+
             // increment client_id counter
             client_id_tracked++;
             
@@ -128,6 +133,14 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
         }
         case PACKET_DisableTimeout: {
             connected_clients[header.client_id].allow_timeout = false;
+        }
+
+        case PACKET_WorldHeader:{
+    
+            p_WorldHeader body;
+            memcpy(&body, event.packet->data, sizeof(p_WorldHeader));
+            
+            ForwardPacketToSpecific(event.packet, body.target_client_id);  
         }
 
 

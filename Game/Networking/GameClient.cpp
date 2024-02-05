@@ -7,13 +7,14 @@
 #include "../Pathfinding/Fly.h"
 #include "../Pathfinding/NoodleCreature.h"
 #include "../Player/HealthBar.h"
+#include "../../Amber/Framework.h"
 
 sf::Vector2f GameClient::player_pos;
 
 /*
     blocks multiplayer based code, when playing in single player
 */
-#define IF_ONLINE if(!playing_online){return;}
+#define IF_ONLINE if(play_mode == PlayMode::OFFLINE){return;}
 
 void GameClient::LinkScene(Scene* scene){
     this->scene = scene;
@@ -48,9 +49,6 @@ void GameClient::CreateObjects(){
 
     player_world_interactions = player->AddComponent<PlayerWorldInteractions>();
     inventory = scene->AddUI<Inventory>();
-    inventory->PickupItem(item_Copper_Picaxe);
-    inventory->PickupItem(item_Copper_Axe);
-    inventory->PickupItem(item_Copper_Sword);
 
     player_world_interactions->LinkInventory(inventory);    
     player_world_interactions->LinkHealthBar(health_bar);
@@ -76,6 +74,13 @@ void GameClient::CreateObjects(){
 
 }
 
+
+void GameClient::SetCurrentPlayer(Serilizer::DataPair player){
+    this->current_player = player;
+}
+void GameClient::SetCurrentWorld(Serilizer::DataPair world){
+    this->current_world = world;
+}
 
 void GameClient::SetAllowTimeout(bool _allow_timeout){
 
@@ -103,12 +108,12 @@ void GameClient::SendPlayerControl(){
 
     IF_ONLINE
 
-    if(player->GetTransform()->position != previous_player_position){
+    //if(player->GetTransform()->position != previous_player_position){
         
         previous_player_position = player->GetTransform()->position;
         auto anim = player->GetComponent<AnimationRenderer>();
-        SendPacket<p_PlayerControl>(server, {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), previous_player_position.x, previous_player_position.y });
-    }
+        SendPacket<p_PlayerControl>(server, {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), player->GetTransform()->position.x, player->GetTransform()->position.y });
+    //}
 }
 
 void GameClient::SendSetBlock(short tile_index, int x, int y){
@@ -187,27 +192,46 @@ void GameClient::InterpretPacket(ENetEvent& event){
     switch(packet_type){
 
         case PACKET_ServerHeartbeat: {
-            std::cout << "propogate heartbeat\n";
-            SendPacket<PacketHeader>(server, {PACKET_PlayerControl, client_id});
+            SendPacket<PacketHeader>(server, {PACKET_ServerHeartbeat, client_id});
             break;
         }
 
         case PACKET_SetClientId: {
             client_id = header.client_id;
-            std::cout << "packet: set client id :" << header.client_id << "\n";
-
             break;
         }
         case PACKET_CreatePlayer: {
-            std::cout << "packet: player created :" << header.client_id << "\n";
             connected_clients[header.client_id] = scene->AddObject<Player>();
             break;
         }
 
         case PACKET_DeletePlayer: {
-            std::cout << "packet: player deleted :" << header.client_id << "\n";
             scene->DeleteObject(connected_clients[header.client_id]);
             connected_clients.erase(header.client_id);
+            break;
+        }
+
+        case PACKET_RequestWorldHeader: {
+            SendPacket<p_WorldHeader>(server, {PACKET_WorldHeader, header.client_id, world->GetWorldProfile()->width, world->GetWorldProfile()->height} );
+        }
+
+        case PACKET_WorldHeader : {
+            
+            p_WorldHeader body;
+            memcpy(&body, event.packet->data, sizeof(p_WorldHeader));
+            
+            world->Create(false, body.width, body.height);
+        }
+        
+        case PACKET_SetChunk : {
+
+            p_SetChunk body;
+            memcpy(&body, event.packet->data, sizeof(p_SetChunk));
+
+            world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->CopyGrid(body.main_grid);
+            world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::FOREGROUND)->GetPrimitive()->CopyGrid(body.foreground_grid);
+            world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::BACKGROUND)->GetPrimitive()->CopyGrid(body.background_grid);
+
             break;
         }
 
@@ -220,7 +244,6 @@ void GameClient::InterpretPacket(ENetEvent& event){
 
         case PACKET_PlayerControl: {
 
-            std::cout << "packet: player control :" << header.client_id << "\n";
 
             p_PlayerControl body;
             memcpy(&body, event.packet->data, sizeof(p_PlayerControl));
@@ -232,13 +255,12 @@ void GameClient::InterpretPacket(ENetEvent& event){
             
             // set position
             connected_clients[header.client_id]->GetTransform()->position = sf::Vector2f(body.pos_x, body.pos_y);
+            connected_clients[header.client_id]->GetComponent<PhysicsBody>()->velocity = sf::Vector2f(body.velocity_x, body.velocity_y);
 
             break;
         }
 
         case PACKET_SetBlock : {
-
-            std::cout << "packet: set block :" << header.client_id << "\n";
 
 
             p_SetBlock body;
@@ -248,6 +270,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             
             break;
         }
+
 
         case PACKET_ChatMessage : {
             
@@ -263,4 +286,8 @@ void GameClient::OnDisconnect(){
     IF_ONLINE
      
     //scene->DeleteObject(world);
+}
+
+void GameClient::SetPlayMode(PlayMode play_mode){
+    this->play_mode = play_mode;
 }

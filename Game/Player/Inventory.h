@@ -50,6 +50,8 @@ class Inventory : public Object {
         // height
         static int GetRowCount(){return row_count;}
 
+        Slot* GetSlot(int x, int y);
+
 
     private:
 

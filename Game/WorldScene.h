@@ -6,7 +6,7 @@
 #include "World/World.h"
 #include <math.h>
 #include "Networking/GameClient.h"
-
+#include "Serilizer.h"
 
 /*
     The gameplay scene (where a world will be loaded)
@@ -19,7 +19,11 @@ class WorldScene : public Scene {
 
         void Update() override;
 
+        void CatchEvent(sf::Event event) override;
+
     private:
+
+
 
         World* world;
         GameClient* client;

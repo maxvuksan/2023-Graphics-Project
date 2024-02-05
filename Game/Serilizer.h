@@ -1,32 +1,45 @@
 #pragma once
 #include "../Amber/Framework.h"
+#include "Items/ItemDictionary.h"
+#include "Settings.h"
+#include <filesystem>
+
+
+class World;
+class GameClient;
 
 class Serilizer {
 
     public:
 
-        static void CreateNewPlayer(std::string name){
+        struct DataPair{
+            std::string name;
+            std::string filepath;
+        };
 
-            // player data
-            Datafile pd;
-            pd["name"].SetString(name);
+        /*
+            @param target_name the ideal name for the file, is incremented with each collision (e.g. john, john(1), john(2))
+            @param extension the extension of the new file (e.g. .txt, .png, .something)
+            @returns a filename which will not colliding with any exisiting filenames in a directory
 
+        */
+        static std::string GetCollisionFreeFilename(std::string target_name, std::string extension, std::string directory);
 
-            std::string coord_string;
+        // @returns a string extracted from a directory entry
+        static std::string FilepathFromDirectoryEntry(std::filesystem::__cxx11::directory_entry entry);
+        static std::string ExtractExtension(std::string filename);
 
-            for(int y = 0; y < Inventory::GetRowCount(); y++){
-                for(int x = 0; x < Inventory::GetRowLength(); x++){
-                    
-                    coord_string = "[" + std::to_string(x) + "]" + "[" + std::to_string(y) + "]";
-                    
+        static void LoadPlayer(std::string filepath, GameClient* client);
+        static void CreateNewPlayer(std::string name);
+        static void CreateNewWorld(std::string name, World* world_to_write);
 
-                    pd["inventory"][coord_string]["item_code"].SetInt(0, 0);                    
-                    pd["inventory"][coord_string]["count"].SetInt(0, 0);    
-                }
-            }
+        static void SaveWorld(DataPair world_datapair, World* world);
+        static void LoadWorldIntoMemory(std::string filename, World* world);
 
-            Datafile::Write(pd, "Data/Players/" + name);
-        }
-        
+        // @returns a vector of DataPairs for each player in the Players/ directory
+        static std::vector<DataPair> LoadPlayerList();
+        // @returns a vector of DataPairs for each world in the Worlds/ directory
+        static std::vector<DataPair> LoadWorldList();
+
 
 };

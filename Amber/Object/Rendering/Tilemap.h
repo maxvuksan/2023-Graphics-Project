@@ -46,6 +46,8 @@ class Tilemap : public Component
         int GetHeight();
         sf::Vector2i GetTileSize();
 
+        TilemapPrimitive* GetPrimitive(){return &tilemap_primitive;}
+
         void SetRow(signed_byte tile_index, unsigned int row);
         void SetColumn(signed_byte tile_index, unsigned int column);
         void SetArea(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);

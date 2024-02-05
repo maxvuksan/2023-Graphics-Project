@@ -1,26 +1,21 @@
-#include "Datafile.h"
+#include "Amber/Utility/Datafile.h"
+#include "Amber/Utility/Time.h"
 #include <iostream>
 
 
-// testing datafile class
+// testing datafile speed
 
 int main(){
 
-    Datafile df;
-    df["node"]["name"].SetString("max");
-    df["node"]["age"].SetInt(20);
-    
-    df["node"]["chunk"]["width"].SetInt(50);
-    df["node"]["chunk"]["height"].SetInt(50); 
-    
-    Datafile::Write(df, "save_test.txt");
 
-    Datafile df2;
-    Datafile::Read(df2, "save_test.txt");
-    
-    df2["test"].SetString("1");
-    
-    Datafile::Write(df2, "save_2.txt");
+    Time::StartRecord();
+
+    Datafile df;
+    Datafile::Read(df, "Data/Worlds/my_world.txt");
+
+    Datafile::Write(df, "Data/Worlds/my_world.txt");
+
+    Time::EndRecord();
 
     return 0;
 }
