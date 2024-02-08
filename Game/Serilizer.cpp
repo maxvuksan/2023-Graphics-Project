@@ -145,20 +145,21 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
     Datafile::Write(wd, world_datapair.filepath);
     Time::EndRecord();
 
-    std::cout << sizeof(wd) << "\n";
 
-    // loop through each chunk
+    // loop through each chunk, saving tiles + other chunk specifics
     for(int chunk_x = 0; chunk_x < world->GetChunks()->size(); chunk_x++){
         for(int chunk_y = 0; chunk_y < world->GetChunks()->at(chunk_x).size(); chunk_y++){
             
             
             Chunk* chunk = world->GetChunks()->at(chunk_x).at(chunk_y);
 
+            /*
             // ignore untouched chunks
             if(!chunk->GetSavingDirty()){
                 continue;
             }
             chunk->SetSavingDirty(false);
+            */
 
             std::string chunk_string = "chunk[" + std::to_string(chunk_x) + "]" + "[" + std::to_string(chunk_y) + "]";
 
@@ -185,15 +186,10 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
             // save each tile layer
             for(int i = 0; i < 3; i++){
                 // select the correct tilemap
-                Tilemap* tilemap;
-                std::string tilemap_name;
+                Tilemap* tilemap = tilemap = chunk->GetTilemap(SetLocation::MAIN);
+                std::string tilemap_name = "m";
 
                 switch(i){
-                    case 0: {
-                        tilemap_name = "m";
-                        tilemap = chunk->GetTilemap(SetLocation::MAIN);
-                        break;
-                    }
                     case 1: {
                         tilemap_name = "b";
                         tilemap = chunk->GetTilemap(SetLocation::BACKGROUND);
@@ -249,6 +245,50 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
         }
     }
 
+    // saving minimap explored layer 
+    for(int chunk_y = 0; chunk_y < world->GetChunks()->at(0).size(); chunk_y++){
+
+        // loop through each tile
+        for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+            
+            std::string row_name = "[" + std::to_string(y + chunk_y * world->GetWorldProfile()->tilemap_profile.height) + "]";
+
+            int type_counter = 1;
+            int array_index = 0;
+            int current_alpha = world->GetMinimap()->GetExploredPixelGrid()->GetPixel(0, y + chunk_y * world->GetWorldProfile()->tilemap_profile.height).a;
+
+            for(int chunk_x = 0; chunk_x < world->GetChunks()->size(); chunk_x++){
+                for(int x = 0; x < world->GetWorldProfile()->tilemap_profile.width; x++){
+
+                    if(chunk_x == 0 && x == 0){
+                        continue;
+                    }
+
+                    int new_alpha = world->GetMinimap()->GetExploredPixelGrid()->GetPixel(x + chunk_x * world->GetWorldProfile()->tilemap_profile.width, 
+                                                                                                y + chunk_y * world->GetWorldProfile()->tilemap_profile.height).a;
+                
+                    if(new_alpha == current_alpha){
+                        type_counter++;
+                    }
+                    
+                    // right set
+                    if(new_alpha != current_alpha || x + chunk_x * world->GetWorldProfile()->tilemap_profile.width == world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->width - 1){
+
+                        std::string encoded_set = std::to_string(type_counter) + "*" + std::to_string(current_alpha);
+                        
+                        wd["minimap"]["rows"][row_name].SetString(encoded_set, array_index);
+
+                        type_counter = 1;
+                        array_index++;
+                    }
+
+                    current_alpha = new_alpha;
+
+                }
+            }
+        }
+
+    }
 
     Datafile::Write(wd, world_datapair.filepath);
 }
@@ -267,6 +307,7 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
     
     if(!Datafile::Read(wd, filepath)){
         std::cout << "ERROR : Failed to read world from " << filepath << " Serilizer::LoadWorldIntoMemory()\n"; 
+        return;
     };
 
     int width = wd["header"]["width"].GetInt();
@@ -278,6 +319,9 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
 
     world->Create(false, width, height);
     world->SetSpawnCoordinate(spawn_x, spawn_y);
+
+
+    std::cout << "world created, looking at chunks\n";
 
     // loop through each chunk
     for(int chunk_x = 0; chunk_x < width; chunk_x++){
@@ -312,18 +356,13 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
             }
 */
 
-
             // for each layer
             for(int i = 0; i < 3; i++){
                 
-                Tilemap* tilemap;
-                std::string tilemap_name;
+
+                Tilemap* tilemap = chunk->GetTilemap(SetLocation::MAIN);
+                std::string tilemap_name = "m";
                 switch(i){
-                    case 0: {
-                        tilemap_name = "m";
-                        tilemap = chunk->GetTilemap(SetLocation::MAIN);
-                        break;
-                    }
                     case 1: {
                         tilemap_name = "b";
                         tilemap = chunk->GetTilemap(SetLocation::BACKGROUND);
@@ -336,9 +375,14 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
                     }
                 }
 
+                if(tilemap == nullptr){
+                    std::cout << "ERROR: tilemap variable is nullptr, Serilizer::LoadWorldIntoMemory\n";
+                }
+
+
                 // loop through each row
                 for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
-                    
+
                     std::string row_name = "[" + std::to_string(y) + "]";
 
                     int index = 0;
@@ -346,10 +390,16 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
                     index++;
                     int x_step = 0;
 
+
                     while(result != "" && index < 50 && x_step < 50){
 
                         int length_of_type = std::stoi(result.substr(0, result.find("*")));
                         int type = std::stoi(result.substr(result.find("*") + 1, result.length()));
+
+                        if(x_step + length_of_type > 50){
+                            std::cout << "row length overflow, skipping remaining row\n";
+                            break;
+                        }
 
                         tilemap->SetArea((signed_byte)type, x_step, x_step + length_of_type, y, y + 1);
 
@@ -357,14 +407,59 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
                         
                         x_step += length_of_type;
                         index++;
+
                     }
+
                 }
             }
 
         }
     }
 
-    world->CalculateMinimap();
+
+    // loading minimap explored layer 
+    for(int chunk_y = 0; chunk_y < world->GetChunks()->at(0).size(); chunk_y++){
+
+
+        // loop through each row
+        for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+            
+            int _real_y = y + chunk_y * world->GetWorldProfile()->tilemap_profile.height;
+
+            std::string row_name = "[" + std::to_string(_real_y) + "]";
+
+            int index = 0;
+            std::string result = wd["minimap"]["rows"][row_name].GetString(index);
+            index++;
+            int x_step = 0;
+
+            while(result != ""){
+
+
+                int length_of_type = std::stoi(result.substr(0, result.find("*")));
+                int alpha = std::stoi(result.substr(result.find("*") + 1, result.length()));
+
+                for(int i = 0; i < length_of_type; i++){
+
+                    if(x_step + i >= world->GetWorldProfile()->width * world->GetWorldProfile()->tilemap_profile.width){
+                        std::cout << "minimap x overflow?\n";
+                        break;
+                    }
+
+                    world->GetMinimap()->GetExploredPixelGrid()->SetPixel(x_step + i, _real_y, sf::Color(0,0,0,alpha));
+                }
+
+                result = wd["minimap"]["rows"][row_name].GetString(index);
+                
+                x_step += length_of_type;
+                index++;
+            }
+
+        }
+
+    }
+
+
 }
 
 std::vector<Serilizer::DataPair> Serilizer::LoadPlayerList(){
@@ -379,7 +474,7 @@ std::vector<Serilizer::DataPair> Serilizer::LoadPlayerList(){
 
             Datafile pd;
 
-            if(!Datafile::Read(pd, filepath)){
+            if(!Datafile::Read(pd, filepath, "header")){
                 std::cout << "ERROR : Could not read from file: " << filepath << " Serilizer::LoadPlayerList\n";
             };
 
@@ -402,7 +497,7 @@ std::vector<Serilizer::DataPair> Serilizer::LoadWorldList(){
 
             Datafile wd;
 
-            if(!Datafile::Read(wd, filepath)){
+            if(!Datafile::Read(wd, filepath, "header")){
                 std::cout << "ERROR : Could not read from file: " << filepath << " Serilizer::LoadWorldList\n";
             };
 

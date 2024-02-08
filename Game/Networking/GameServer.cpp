@@ -39,7 +39,7 @@ void GameServer::CatchPeerEvent(ENetEvent event){
     {   
         case ENET_EVENT_TYPE_CONNECT: {
 
-            std::cout << "New connection " << event.peer->address.host << ":" << event.peer->address.port << "\n";
+            std::cout << "[SERVER]: new connection" << event.peer->address.host << ":" << event.peer->address.port << "\n";
 
             // giving the new client a new client_id
             SendPacket<PacketHeader>(event.peer, {PACKET_SetClientId, client_id_tracked});
@@ -55,17 +55,18 @@ void GameServer::CatchPeerEvent(ENetEvent event){
             // define the new player on exisiting players
             SendPacketButExclude<PacketHeader>({PACKET_CreatePlayer, client_id_tracked}, client_id_tracked);
 
-            std::cout << "Connection Complete\n";
-
+            // we are not the host
             if(client_id_tracked != 0){
                 connected_clients[client_id_tracked].loading_world = true;
-                // ask the host world to world header
+                // ask the host for the world header
                 SendPacketToSpecific<PacketHeader>({PACKET_RequestWorldHeader, client_id_tracked}, 0);
             }
 
             // increment client_id counter
             client_id_tracked++;
             
+            std::cout << "[SERVER]: connection complete\n";
+
             break;
         }
 
@@ -102,7 +103,8 @@ void GameServer::CatchPeerEvent(ENetEvent event){
 
 
         case ENET_EVENT_TYPE_DISCONNECT: {
-            std::cout << event.peer->address.host << ":" << event.peer->address.port << " Disconnected\n";
+
+            std::cout << "[SERVER]: disconnected " << event.peer->address.host << ":" << event.peer->address.port;
 
             // get client id of disconnection
             int disconnecting_id = 0;
@@ -133,6 +135,7 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
         }
         case PACKET_DisableTimeout: {
             connected_clients[header.client_id].allow_timeout = false;
+            break;
         }
 
         case PACKET_WorldHeader:{
@@ -140,29 +143,73 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
             p_WorldHeader body;
             memcpy(&body, event.packet->data, sizeof(p_WorldHeader));
             
+            std::cout << "[SERVER]: sending PACKET_WorldHeader to client" << body.target_client_id << "\n";
+
             ForwardPacketToSpecific(event.packet, body.target_client_id);  
+            break;
+        }   
+        case PACKET_RequestChunks: {
+            
+            // request chunks from host
+            ForwardPacketToSpecific(event.packet, 0);  
+            break;
+        }
+        case PACKET_SetChunk: {
+
+
+            p_SetChunk body;
+            memcpy(&body, event.packet->data, sizeof(p_WorldHeader));
+
+            std::cout << "[SERVER]: sending chunk " << body.chunk_coordinate_x << ", " << body.chunk_coordinate_y << " to client " << body.target_client_id << "\n";
+
+            ForwardPacketToSpecific(event.packet, body.target_client_id);
+            break;
+        }
+        case PACKET_RequestSpecificChunk: {
+            // forward request to host
+            ForwardPacketToSpecific(event.packet, 0);
+        }
+        case PACKET_WorldLoadedSuccessfully: {
+            connected_clients[header.client_id].loading_world = false;
+
+            std::cout << "[SERVER]: client " << header.client_id << " loaded world successfully, sending all queued packets\n";
+
+            // forward all queued packets to the client
+            for(int i = 0; i < connected_clients[header.client_id].held_packets.size(); i++){
+                ForwardPacketToSpecific(connected_clients[header.client_id].held_packets[i], header.client_id);
+            }
+            connected_clients[header.client_id].held_packets.clear();
+            break;
         }
 
 
-        case PACKET_PlayerControl: 
-        case PACKET_SetBlock: 
-        case PACKET_ChatMessage:       
-            ForwardPacketButExclude(event.packet, header.client_id);  
+        case PACKET_PlayerControl: {
+            ForwardPacketButExclude(event.packet, header.client_id, DISCARD);  
             break;
+        }
+        case PACKET_SetBlock: {
+            ForwardPacketButExclude(event.packet, header.client_id, QUEUE);  
+            break;
+        }
+        case PACKET_ChatMessage:       
+            ForwardPacketButExclude(event.packet, header.client_id, DISCARD);  
+            break;
+
+        
         
     }
 }
 
 
  // broadcasts a packet to all clients
-void GameServer::ForwardPacketToAll(ENetPacket* enet_packet){
+void GameServer::ForwardPacketToAll(ENetPacket* enet_packet, PacketLoadingMode packet_loading_mode){
     
     for(auto& client : connected_clients){
-        ForwardPacket(client.second.peer, enet_packet);
+        ForwardPacketToSpecific(enet_packet, client.first, packet_loading_mode);
     }
 }
 
-void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id){
+void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id, PacketLoadingMode packet_loading_mode){
     
     // sending new position to all clients besides the one which sent it
     for(auto& client : connected_clients){
@@ -170,11 +217,35 @@ void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id)
         // dont send position back to originally sender
         if(client_id != client.first){
             
-            ForwardPacket(client.second.peer, enet_packet);
+            ForwardPacketToSpecific(enet_packet, client_id, packet_loading_mode);
         }
     }
 }
 
-void GameServer::ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id){
-    ForwardPacket(connected_clients[client_id].peer, enet_packet);
+void GameServer::ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id, PacketLoadingMode packet_loading_mode){
+
+    if(connected_clients[client_id].loading_world){
+
+        switch(packet_loading_mode){
+
+            case SEND_ANYWAY:{
+                ForwardPacket(connected_clients[client_id].peer, enet_packet);
+                break;
+            }
+            case QUEUE: {
+                connected_clients[client_id].held_packets.push_back(enet_packet);
+                break;
+            }
+            case DISCARD:{
+                // do nothing, lose the packet...
+                break;
+            }
+
+        }
+
+    }
+    else{
+        ForwardPacket(connected_clients[client_id].peer, enet_packet);
+    }
+
 }

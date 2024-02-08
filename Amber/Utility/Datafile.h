@@ -6,6 +6,7 @@
 #include <fstream>
 #include <functional>
 #include <stack>
+#include <iostream>
 /*
     a custom format for saving and reading from files
     (similar to json and YAML)
@@ -43,23 +44,19 @@ class Datafile{
             return vec_objects[map_objects[name]].second;
         }
 
+
+        /*
+            @param n the Datafile we are saving to 
+            @param file_name the file path we are reading from
+            @param node_to_stop_at will terminate all reading when this node is reached, allows us to not read the whole file
         
-        inline void AssignChild(const std::string& new_node_name, const Datafile& new_datafile_child){
-            
-            // check if nodes map already contains this name
-            if(map_objects.count(new_node_name) == 0){
-
-                // name does not exist, create it
-                map_objects[new_node_name] = vec_objects.size();
-                vec_objects.push_back({new_node_name, new_datafile_child});
-            }
-        }
-
-
+        */
         inline static bool Read(
             Datafile& n,
             const std::string& file_name,
-            const char list_seperator = ',')
+            const std::string& node_to_stop_at = "",
+            const char list_seperator = ','
+            )
         {
 
             // open the file
@@ -97,6 +94,7 @@ class Datafile{
                             // trim possible white space
                             prop_name = line.substr(0, x);
                             trim_whitespace(prop_name);
+
 
                             prop_value = line.substr(x + 1, line.size());
                             trim_whitespace(prop_value);
@@ -160,6 +158,11 @@ class Datafile{
                                     }
                                 */
                                 prop_name = line;
+
+                                if(prop_name == node_to_stop_at){
+                                    std::cout << "early exit found, node_to_stop_at, Datafile::Read()\n";
+                                    break;
+                                }
                             }
 
                         }

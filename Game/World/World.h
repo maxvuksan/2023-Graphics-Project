@@ -163,7 +163,13 @@ class World : public Object{
         // @returns the coordinate of the world spawnpoint
         sf::Vector2i GetSpawnCoordinate(){return world_spawn_coord;}
         void SetSpawnCoordinate(int coord_x, int coord_y);
+
+        Minimap* GetMinimap(){return minimap;}
     private:
+
+        // has Create() been called?
+        bool world_has_been_created = false;
+    
         GameClient* client;
         Transform* focus;
 

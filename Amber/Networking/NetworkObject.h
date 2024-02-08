@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <iostream>
 #include "../Utility/Memory.h"
+
 /*
     class abstraction on top of the enet networking libary 
 
@@ -25,9 +26,9 @@ class NetworkObject{
         virtual void Update(){}
 
         template <typename T>
-        void SendPacket(ENetPeer* peer, T packet){
+        void SendPacket(ENetPeer* peer, T packet, ENetPacketFlag packet_flag = ENET_PACKET_FLAG_RELIABLE){
 
-            ENetPacket* enet_packet = enet_packet_create((void*)&packet, sizeof(packet), ENET_PACKET_FLAG_RELIABLE);
+            ENetPacket* enet_packet = enet_packet_create((void*)&packet, sizeof(packet), packet_flag);
             enet_peer_send(peer, 0, enet_packet);
         }
 

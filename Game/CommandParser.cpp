@@ -83,7 +83,16 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {""};
     }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /SUMMON, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /W", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /W", Globals::DEBUG_COLOUR};
+    }
+    else if(tokens[0] == "LIGHTBLUR"){
+        if(Settings::_ACTIVE_LIGHT_BLUR_FACTOR == 0){
+            Settings::_ACTIVE_LIGHT_BLUR_FACTOR = Settings::LIGHT_BLUR_FACTOR;
+        }
+        else{
+            Settings::_ACTIVE_LIGHT_BLUR_FACTOR = 0;
+        }
+        return {""};
     }
     else if(tokens[0] == "GIVE"){
         if(tokens.size() <= 1){

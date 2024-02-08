@@ -10,46 +10,61 @@ void WorldScene::Start(){
 
     client = Game::GetGameClientFromScene(this);
     client->LinkScene(this);
+
     world = AddObject<World>();
     world->LinkClient(client);
-    world->Create(false, 10,10);
 
+    client->LinkWorld(world);
 
 
     // singleplayer
-    if(client->GetPlayMode() == PlayMode::OFFLINE){
-        client->SetAllowTimeout(false);
-        Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
+    switch(client->GetPlayMode()){
+
+        case PlayMode::OFFLINE : {
+
+            client->SetAllowTimeout(false);
+            Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
+
+            client->CreateObjects();
+//            world->CalculateMinimap();
+
+            break;
+        }
+
+        case PlayMode::HOSTING : {
+
+            Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
+            
+            client->Connect("127.0.0.1", 6868);
+            client->SetAllowTimeout(false);
+
+            client->CreateObjects();
+  //          world->CalculateMinimap();
+
+
+            break;
+        }
+
+        case PlayMode::JOINING: {
+
+            // stop the world from updating while it has not fully loaded
+            world->SetActive(false);
+
+            client->Connect("127.0.0.1", 6868);
+            client->SetAllowTimeout(false);
+            break;
+        }
     }
-
-
-    // multiplayer
-    else if(client->GetPlayMode() == PlayMode::HOSTING || client->GetPlayMode() == PlayMode::JOINING){
-
-
-        client->Connect("127.0.0.1", 6868);
-        client->SetAllowTimeout(false);
-
-
-
-        //Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
-        //Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
-    }
-
-
 
     client->SetAllowTimeout(true);
-
-    client->LinkWorld(world);
-    client->CreateObjects();
-
-    Serilizer::LoadPlayer(client->GetCurrentPlayer().filepath, client);
+    world->CalculateMinimap();
 }
 
 void WorldScene::Update(){
 
    client->SendPlayerControl();
 }
+
 
 void WorldScene::CatchEvent(sf::Event event){
 

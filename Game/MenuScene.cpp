@@ -136,7 +136,6 @@ void MenuScene::Start(){
     create_world_button->SetString("Create");
     create_world_button->SetOnClickCallback([this](){
         
-        // create new player save file
         if(create_world_input->GetInput() != ""){
 
 
@@ -160,7 +159,17 @@ void MenuScene::Start(){
     create_world_rect_array->AddUIRect(create_world_input);
     create_world_rect_array->AddUIRect(create_world_button);
 
+
+
+    new_world_button->SetActive(false);
+    new_player_button->SetActive(false);
+    create_world_button->SetActive(false);
+    create_player_button->SetActive(false);
+
+
     this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+
+
 }
 
 void MenuScene::EnterWorld(){

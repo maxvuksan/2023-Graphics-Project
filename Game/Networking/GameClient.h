@@ -6,6 +6,8 @@
 #include "../Pathfinding/PathfindingGraph.h"
 #include "../Serilizer.h"
 #include "../PlayMode.h"
+#include <queue>
+#include <vector>
 
 class World;
 class Player;
@@ -63,6 +65,25 @@ class GameClient : public Client {
 
     private:
         
+
+        // how long the user should wait before asking for chunks again
+        float chunk_retry_delay = 300;
+        float chunk_retry_delay_tracked;
+        std::vector<std::vector<bool>> chunks_success_grid; // what chunks have been successfully retrieved
+
+        // a queue of clients that are requesting chunk data
+        std::queue<int> players_to_transfer_chunks_to;
+        // the current chunk coordinate being sent, is only relevant to the host (distrubuting chunks to the server)
+        bool transfer_chunks = false;
+        int current_transfer_client_id;
+        int chunk_transfer_x;
+        int chunk_transfer_y;
+
+        
+
+        bool world_loaded = false;
+
+
         PlayMode play_mode;
 
         bool allow_timeout = true;
@@ -71,6 +92,8 @@ class GameClient : public Client {
         float time_since_last_packet;
 
         Scene* scene;
+
+        int chunks_recieved = 0; // how many chunks this client has been sent, is used to determine if all chunks have been sent
 
         int client_id = -1;
         std::map<int, Player*> connected_clients;

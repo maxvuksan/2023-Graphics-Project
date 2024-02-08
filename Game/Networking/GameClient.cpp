@@ -28,6 +28,7 @@ void GameClient::CreateObjects(){
 
     // create world
     world->LinkClient(this);
+
     // pathfinding 
     //pathfinding_graph = scene->AddObject<PathfindingGraph>();
     //pathfinding_graph->LinkWorld(world);
@@ -57,6 +58,9 @@ void GameClient::CreateObjects(){
     player_controller->LinkWorld(world);
     player_controller->Respawn();
 
+    // loading our player save file
+    Serilizer::LoadPlayer(GetCurrentPlayer().filepath, this);
+
     scene->GetActiveCamera()->SetBackgroundTexture("background");
 
     // tell the world we want to focus around the player
@@ -66,12 +70,8 @@ void GameClient::CreateObjects(){
     CommandParser::LinkClient(this);
     console_visual = scene->AddUI<ConsoleVisual>();
 
-/*
-    for(int i = 0; i < 40; i++){
-       // Fly* fly = scene->AddObject<Fly>();
-     //   fly->GetTransform()->position = sf::Vector2f(50,50);
-    }*/
 
+    world_loaded = true;
 }
 
 
@@ -103,6 +103,10 @@ void GameClient::SetAllowTimeout(bool _allow_timeout){
 
 
 void GameClient::SendPlayerControl(){
+
+    if(!world_loaded){
+        return;
+    }
 
     player_pos = player->GetTransform()->position;
 
@@ -140,10 +144,88 @@ void GameClient::Update(){
     IF_ONLINE
 
 
+    // we are sending chunks to a specific client
+    if(transfer_chunks){
+
+        chunk_transfer_x++;
+
+        if(chunk_transfer_x >= world->GetWorldProfile()->width){
+            chunk_transfer_x = 0;
+            chunk_transfer_y++;
+        }
+        if(chunk_transfer_y < world->GetWorldProfile()->height){
+        
+            std::cout << "sent chunk " << chunk_transfer_x << " " << chunk_transfer_y << "\n";
+
+            SendPacket<p_SetChunk>(server,  {{PACKET_SetChunk, client_id}, current_transfer_client_id, chunk_transfer_x, chunk_transfer_y, 
+                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+            });
+        }
+        else{
+            transfer_chunks = false;
+        }
+    }
+    else{
+        // pick new client for transfer
+        if(!players_to_transfer_chunks_to.empty()){
+
+            current_transfer_client_id = players_to_transfer_chunks_to.front();
+            players_to_transfer_chunks_to.pop();
+
+            transfer_chunks = true;
+            chunk_transfer_x = 0;
+            chunk_transfer_y = 0;
+        }
+    }
+
+
+    // if the world is not active we are yet not recieve all chunks, ask for the ones we missed
+    // reuses the chunk_transfer_x and chunk_transfer_y variables, knowing the host will never have an inactive world
+    if(!world_loaded){
+
+        return;
+        chunk_retry_delay_tracked++;
+
+        if(chunk_retry_delay_tracked >= chunk_retry_delay){
+
+            bool search_for_missing_chunk = true;
+
+            while(search_for_missing_chunk) {
+
+                if(chunk_transfer_x >= world->GetWorldProfile()->width){
+                    chunk_transfer_x = 0;
+                    chunk_transfer_y++;
+                }
+                if(chunk_transfer_y < world->GetWorldProfile()->height){
+                
+                    if(!chunks_success_grid[chunk_transfer_x][chunk_transfer_y]){
+
+                        std::cout << "[CLIENT]: requesting chunk " << chunk_transfer_x << "," << chunk_transfer_y << "\n";
+
+                        SendPacket<p_RequestSpecificChunk>(server, {{PACKET_RequestSpecificChunk, client_id}, chunk_transfer_x, chunk_transfer_y});
+                        search_for_missing_chunk = false;
+                    }
+                }
+                else{
+                    search_for_missing_chunk = false;
+                    chunk_retry_delay_tracked = 0;
+                }
+            }
+        }
+
+    }
+
+
+
+
     if(allow_timeout){
 
         // if the server hasn't responded in a while, timeout / drop connection
         if(time_since_last_packet > timeout_limit){
+            std::cout << "[CLIENT]: timed out, disconnecting\n";
+
             Disconnect();
         }
 
@@ -168,7 +250,6 @@ void GameClient::CatchPeerEvent(ENetEvent event){
 
             break;        
         }
-
     }
 }
 
@@ -212,35 +293,108 @@ void GameClient::InterpretPacket(ENetEvent& event){
         }
 
         case PACKET_RequestWorldHeader: {
-            SendPacket<p_WorldHeader>(server, {PACKET_WorldHeader, header.client_id, world->GetWorldProfile()->width, world->GetWorldProfile()->height} );
+            std::cout << "[CLIENT]: requesting world header, PACKET_RequestWorldHeader\n";
+            SendPacket<p_WorldHeader>(server, {{PACKET_WorldHeader, client_id}, header.client_id, world->GetWorldProfile()->width, world->GetWorldProfile()->height} );
+            break;
         }
+        
 
         case PACKET_WorldHeader : {
+            
+            std::cout << "[CLIENT]: recieved world header, PACKET_WorldHeader\n";
             
             p_WorldHeader body;
             memcpy(&body, event.packet->data, sizeof(p_WorldHeader));
             
+            std::cout << "[CLIENT]: world size " << body.width << ", " << body.height << "\n";
+
             world->Create(false, body.width, body.height);
+
+            chunks_success_grid.resize(body.width, {});
+            for(int x = 0; x < body.width; x++){
+                chunks_success_grid[x].resize(body.height, false);
+            }
+
+            chunk_retry_delay_tracked = 0;
+            chunk_transfer_x = 0;
+            chunk_transfer_y = 0;
+
+            // we are now ready to recieve chunks
+            SendPacket<PacketHeader>(server, {PACKET_RequestChunks, client_id});
+
+            std::cout << "send request\n";
+            break;
         }
-        
+
+        case PACKET_RequestSpecificChunk: {
+
+            std::cout << "sending back requested chunk\n";
+
+            p_RequestSpecificChunk body;
+            memcpy(&body, event.packet->data, sizeof(p_RequestSpecificChunk));
+            
+
+            SendPacket<p_SetChunk>(server,  {{PACKET_SetChunk, client_id}, header.client_id, body.chunk_coordinate_x, body.chunk_coordinate_y, 
+                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+            });
+
+            std::cout << "chunk sent\n";
+
+            break;
+        }
+
         case PACKET_SetChunk : {
+
 
             p_SetChunk body;
             memcpy(&body, event.packet->data, sizeof(p_SetChunk));
+
+            std::cout << "setting chunk " << body.chunk_coordinate_x << " " << body.chunk_coordinate_y << "\n";
+
 
             world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->CopyGrid(body.main_grid);
             world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::FOREGROUND)->GetPrimitive()->CopyGrid(body.foreground_grid);
             world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::BACKGROUND)->GetPrimitive()->CopyGrid(body.background_grid);
 
+
+
+            if(world->ChunkInBounds(body.chunk_coordinate_x, body.chunk_coordinate_y)){
+                
+                // we have not recieved this chunk before
+                if(!chunks_success_grid[body.chunk_coordinate_x][body.chunk_coordinate_y]){
+                    chunks_recieved++;
+                    chunks_success_grid[body.chunk_coordinate_x][body.chunk_coordinate_y] = true;
+                }
+            }
+
+
+            std::cout << "recieved: " << chunks_recieved << "\n";
+
+            // tell the server the world is loaded
+            if(chunks_recieved == world->GetWorldProfile()->width * world->GetWorldProfile()->height){
+                SendPacket<PacketHeader>(server, {PACKET_WorldLoadedSuccessfully, client_id});
+                
+                std::cout << "successfully recieved all chunks\n";
+
+                world->SetActive(true);
+
+                // we can now create game objects, with the world successfully loaded
+                this->CreateObjects();
+                world->CalculateMinimap();
+                
+                chunks_success_grid.clear();
+            }
+
             break;
         }
 
-        /*
-        
-            #define WIDTH 50
-            #define HEIGHT 50
-        
-        */
+        case PACKET_RequestChunks: {
+            
+            players_to_transfer_chunks_to.emplace(header.client_id);       
+            break;
+        }
 
         case PACKET_PlayerControl: {
 
@@ -261,7 +415,6 @@ void GameClient::InterpretPacket(ENetEvent& event){
         }
 
         case PACKET_SetBlock : {
-
 
             p_SetBlock body;
             memcpy(&body, event.packet->data, sizeof(p_SetBlock));

@@ -44,7 +44,6 @@ class MenuScene : public Scene {
         UIButton* settings_button;
         UIButton* quit_button;
 
-
         UIButton* offline_button;
         UIButton* join_button;
         UIButton* host_button;

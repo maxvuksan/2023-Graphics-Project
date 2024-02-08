@@ -4,7 +4,13 @@
 #include "../World/World.h"
 
 
+// how should a packet be treated if the client is still loading the world
+enum PacketLoadingMode {
 
+    SEND_ANYWAY,
+    QUEUE, // holds onto the packet and sends when the client is no longer loading
+    DISCARD, 
+};
 
 // infomation that server holds about a client
 struct ClientData{
@@ -61,9 +67,10 @@ class GameServer : public Server {
         }
 
         // similarly, passing packets without casting...
-        void ForwardPacketToAll(ENetPacket* enet_packet);
-        void ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id);
-        void ForwardPacketButExclude(ENetPacket* enet_packet, int client_id);
+        void ForwardPacketToAll(ENetPacket* enet_packet, PacketLoadingMode loading_mode = SEND_ANYWAY);
+        void ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id, PacketLoadingMode loading_mode = SEND_ANYWAY);
+        void ForwardPacketButExclude(ENetPacket* enet_packet, int client_id, PacketLoadingMode loading_mode = SEND_ANYWAY);
+        
 
         void SetWorld(World* world){this->world = world;}
         World* GetWorld(){return world;}

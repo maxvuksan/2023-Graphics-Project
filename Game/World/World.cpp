@@ -28,18 +28,7 @@ void World::Create(bool minimal, int width, int height) {
     world_profile.width_in_tiles = world_profile.width * tilemap_profile->width;
     world_profile.height_in_tiles = world_profile.height * tilemap_profile->height;
 
-    if(!minimal){
-        GetScene()->AddObject<LightingManager>(50);
-        GetScene()->AddObject<RotatedRectManager>();
-        GetScene()->AddObject<WaterManager>();
-        GetScene()->AddObject<BackgroundShadowManager>(1);
-        
-        TilemapCollisionTypeDivider::platform_collider_begins_at = main_Platform;
-        LightingManager::LinkWorld(this);
-        TileBehaviourManager::LinkWorld(this);
-        RotatedRectManager::LinkWorld(this);
-        WaterManager::LinkWorld(this);
-    }
+
     // creating each tilemap...
 
     half_tilemap_width = floor(tilemap_profile->width * 0.5f);
@@ -51,6 +40,20 @@ void World::Create(bool minimal, int width, int height) {
     chunks.resize(world_profile.width);
     for(int x = 0; x < world_profile.width; x++){
         chunks[x].resize(world_profile.height, nullptr);
+    }
+
+
+    if(!minimal){
+        GetScene()->AddObject<LightingManager>(50);
+        GetScene()->AddObject<RotatedRectManager>();
+        GetScene()->AddObject<WaterManager>();
+        GetScene()->AddObject<BackgroundShadowManager>(1);
+        
+        TilemapCollisionTypeDivider::platform_collider_begins_at = main_Platform;
+        LightingManager::LinkWorld(this);
+        TileBehaviourManager::LinkWorld(this);
+        RotatedRectManager::LinkWorld(this);
+        WaterManager::LinkWorld(this);
     }
 
     minimap = GetScene()->AddUI<Minimap>();
@@ -74,6 +77,10 @@ void World::Create(bool minimal, int width, int height) {
             chunks[x][y]->SetChunkCoordinate(x, y);
         }
     }
+
+
+    world_has_been_created = true;
+
 }
 
 void World::Generate(){
@@ -89,8 +96,9 @@ void World::LinkClient(GameClient* client){
 
 
 void World::CalculateMinimap(){
-    for(int x = 0; x < world_profile.width; x++){
-        for(int y = 0; y < world_profile.height; y++){
+
+    for(int x = 0; x < chunks.size(); x++){
+        for(int y = 0; y < chunks.at(x).size(); y++){
 
             for(int t_x = 0; t_x < tilemap_profile->width; t_x++){
                 for(int t_y = 0; t_y < tilemap_profile->height; t_y++){
@@ -111,6 +119,7 @@ void World::CalculateMinimap(){
 
         }
     }
+
 }
 
 bool World::SetTileWorld(signed_byte tile_index, float world_x, float world_y, SetLocation set_location, bool send_packet){
@@ -221,6 +230,15 @@ void World::DrawTileToMinimap(signed_byte tile_index, int x, int y, SetLocation 
 
     switch(set_location){
 
+        case SetLocation::MAIN:
+            
+            if(tile_index == -1){                      
+                minimap->GetMainPixelGrid()->SetPixel(x, y,  sf::Color::Transparent);
+            }
+            else{
+                minimap->GetMainPixelGrid()->SetPixel(x, y, ItemDictionary::MAIN_BLOCK_DATA[tile_index].base_colour);
+            }
+            break;
         case SetLocation::BACKGROUND:
             
             if(tile_index == -1){                           // a nice sky colour
@@ -239,15 +257,7 @@ void World::DrawTileToMinimap(signed_byte tile_index, int x, int y, SetLocation 
                 minimap->GetForegroundPixelGrid()->SetPixel(x, y, ItemDictionary::FOREGROUND_BLOCK_DATA[tile_index].base_colour);
             }
             break;
-        case SetLocation::MAIN:
-            
-            if(tile_index == -1){                      
-                minimap->GetMainPixelGrid()->SetPixel(x, y,  sf::Color::Transparent);
-            }
-            else{
-                minimap->GetMainPixelGrid()->SetPixel(x, y, ItemDictionary::MAIN_BLOCK_DATA[tile_index].base_colour);
-            }
-            break;
+
     }
 }
 
@@ -428,6 +438,11 @@ void World::SetFocus(Transform* focus){
 
 void World::Update(){
     
+    if(!world_has_been_created){
+        return;
+    }
+
+
     if(focus == nullptr){
         std::cout << "ERROR : The world has no focus, use World::SetFocus()\n";
         return;

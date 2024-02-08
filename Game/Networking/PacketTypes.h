@@ -36,9 +36,11 @@ enum PACKET{
     /*
         when we have recieved the world header we request each individual chunk
     */
-    PACKET_RequestChunk,
-    PACKET_WorldLoadedSuccessfully,
+    PACKET_RequestChunks, // the client is ready to be sent chunks
     PACKET_SetChunk,
+    PACKET_RequestSpecificChunk,
+    PACKET_WorldLoadedSuccessfully,
+
 };
 
 struct PacketHeader{
@@ -86,6 +88,7 @@ struct p_WorldHeader{
 
 struct p_SetChunk{
     PacketHeader header;
+    int target_client_id; // who is this chunk for
 
     // location of chunk
     int chunk_coordinate_x;
@@ -95,3 +98,17 @@ struct p_SetChunk{
     std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> background_grid;
     std::array<std::array<signed_byte, TILEMAP_HEIGHT>, TILEMAP_WIDTH> foreground_grid;
 };
+
+
+// server should respond with a p_SetChunk packet 
+struct p_RequestSpecificChunk{
+
+    PacketHeader header;
+    // location of chunk
+    int chunk_coordinate_x;
+    int chunk_coordinate_y;
+};
+
+
+
+

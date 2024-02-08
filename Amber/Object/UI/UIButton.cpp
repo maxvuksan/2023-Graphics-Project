@@ -8,6 +8,8 @@ sf::Text UIButton::text;
 UIButton::UIButton(): on_click_function([](){}){
 
     outline_shape.setFillColor(sf::Color::Transparent);
+    previous_position = sf::Vector2f(-9999,-9999);
+    text_position = sf::Vector2f(-9999,-9999);
 
 }
 

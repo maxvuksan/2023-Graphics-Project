@@ -47,8 +47,8 @@ void LightingManager::Draw(sf::RenderTarget& surface){
         std::vector<std::vector<Chunk*>>* chunks = world->GetChunks();
 
         // blur
-        AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_strength", Settings::LIGHT_BLUR_FACTOR);
-        AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_strength", Settings::LIGHT_BLUR_FACTOR);
+        AssetManager::GetShader("Amber_BlurVertical")->setUniform("u_strength", Settings::_ACTIVE_LIGHT_BLUR_FACTOR);
+        AssetManager::GetShader("Amber_BlurHorizontal")->setUniform("u_strength", Settings::_ACTIVE_LIGHT_BLUR_FACTOR);
 
         // blurring! ----------------------
         back_lighting_texture.draw(sf::Sprite(lighting_texture.getTexture()), AssetManager::GetShader("Amber_BlurVertical"));
@@ -153,8 +153,6 @@ void LightingManager::ResetClosedTileVectorForChunk(sf::Vector2i chunk_pos){
 
 
 void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color& _colour, float decay){
-
-    decay *= 0.3f;
 
     struct LightTile {
         sf::Vector2i coord;
