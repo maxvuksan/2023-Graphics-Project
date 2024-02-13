@@ -29,6 +29,7 @@ class LightingManager : public Object{
 
         static void AddLightSource(LightSource* light_source);
         static void DeleteLightSource(LightSource* light_source);
+        static void ClearLightSources();
 
         static sf::RenderTexture& GetLightTexture(){return lighting_texture;}
 

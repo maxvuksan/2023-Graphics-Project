@@ -13,6 +13,8 @@ void TileBehaviourManager::PerformTileUpdatePass(){
     int width = world->world_profile.width * world->world_profile.tilemap_profile.width;
     int height = world->world_profile.height * world->world_profile.tilemap_profile.height;
 
+    return;
+
     for(int i = 0; i < round(tickrate * Time::Dt()); i++){
         UpdateTile(rand() % width, rand() % height);
     }

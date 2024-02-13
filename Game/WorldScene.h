@@ -24,6 +24,9 @@ class WorldScene : public Scene {
     private:
 
 
+        UIRectArray* pause_rect_array;
+        UIButton* return_button;
+        UIButton* quit_button;
 
         World* world;
         GameClient* client;

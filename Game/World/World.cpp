@@ -56,6 +56,8 @@ void World::Create(bool minimal, int width, int height) {
         WaterManager::LinkWorld(this);
     }
 
+    LightingManager::ClearLightSources();
+
     minimap = GetScene()->AddUI<Minimap>();
     minimap->GetMainPixelGrid()->Create(world_profile.width_in_tiles, world_profile.height_in_tiles, sf::Color::Transparent);
     minimap->GetBackgroundPixelGrid()->Create(world_profile.width_in_tiles, world_profile.height_in_tiles, sf::Color::Transparent);

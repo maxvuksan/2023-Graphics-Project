@@ -4,6 +4,13 @@
 #include "Networking/GameClient.h"
 #include "Utility/UtilityStation.h"
 
+Datafile Serilizer::current_save;
+bool Serilizer::autosaving = false;
+int Serilizer::autosaving_chunk_x = 0;
+int Serilizer::audosaving_chunk_y = 0;
+
+
+
 std::string Serilizer::GetCollisionFreeFilename(std::string target_name, std::string extension, std::string directory){
     
     
@@ -256,6 +263,7 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
             int type_counter = 1;
             int array_index = 0;
             int current_alpha = world->GetMinimap()->GetExploredPixelGrid()->GetPixel(0, y + chunk_y * world->GetWorldProfile()->tilemap_profile.height).a;
+            int total_type = 0;
 
             for(int chunk_x = 0; chunk_x < world->GetChunks()->size(); chunk_x++){
                 for(int x = 0; x < world->GetWorldProfile()->tilemap_profile.width; x++){
@@ -277,6 +285,11 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
                         std::string encoded_set = std::to_string(type_counter) + "*" + std::to_string(current_alpha);
                         
                         wd["minimap"]["rows"][row_name].SetString(encoded_set, array_index);
+                        total_type += type_counter;
+
+                        if(total_type > world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->width){
+                            std::cout << "type overflow: " << total_type << "\n";
+                        }
 
                         type_counter = 1;
                         array_index++;
@@ -433,7 +446,7 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
             index++;
             int x_step = 0;
 
-            while(result != ""){
+            while(result != "" && x_step < world->GetWorldProfile()->width * world->GetWorldProfile()->tilemap_profile.width){
 
 
                 int length_of_type = std::stoi(result.substr(0, result.find("*")));
@@ -442,6 +455,7 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
                 for(int i = 0; i < length_of_type; i++){
 
                     if(x_step + i >= world->GetWorldProfile()->width * world->GetWorldProfile()->tilemap_profile.width){
+                        std::cout << _real_y << "\n";
                         std::cout << "minimap x overflow?\n";
                         break;
                     }

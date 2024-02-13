@@ -26,7 +26,7 @@ void WorldScene::Start(){
             Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
 
             client->CreateObjects();
-//            world->CalculateMinimap();
+            world->CalculateMinimap();
 
             break;
         }
@@ -39,8 +39,7 @@ void WorldScene::Start(){
             client->SetAllowTimeout(false);
 
             client->CreateObjects();
-  //          world->CalculateMinimap();
-
+            world->CalculateMinimap();
 
             break;
         }
@@ -57,8 +56,36 @@ void WorldScene::Start(){
     }
 
     client->SetAllowTimeout(true);
-    world->CalculateMinimap();
+    
+    // pause menu setup
+
+    return_button = AddUI<Object>()->AddComponent<UIButton>();
+    return_button->SetString("Return");
+    return_button->SetOnClickCallback([this](){
+        
+        pause_rect_array->GetThisObject()->SetActive(false);
+
+    });
+
+    quit_button = AddUI<Object>()->AddComponent<UIButton>();
+    quit_button->SetString("Save & Quit");
+    quit_button->SetOnClickCallback([this](){
+        
+        Serilizer::SaveWorld(client->GetCurrentWorld(), world);
+        Core::LoadScene("MenuScene");
+    });
+
+    pause_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
+    pause_rect_array->SetElementSize(150, 50);
+    pause_rect_array->SetGap(UIRect::padding);
+    pause_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    
+    pause_rect_array->AddUIRect(quit_button);
+    pause_rect_array->AddUIRect(return_button);
+
+    pause_rect_array->SetActive(false);
 }
+
 
 void WorldScene::Update(){
 
@@ -69,8 +96,25 @@ void WorldScene::Update(){
 void WorldScene::CatchEvent(sf::Event event){
 
     if(event.type == sf::Event::KeyPressed){
-        if(event.key.scancode == sf::Keyboard::Scancode::Escape){
-            Serilizer::SaveWorld(client->GetCurrentWorld(), world);
+        if(event.key.scancode == sf::Keyboard::Scancode::S){ 
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+            {
+                Serilizer::SaveWorld(client->GetCurrentWorld(), world);
+            }
+        }
+
+        if(event.key.scancode == sf::Keyboard::Scancode::Escape){ 
+
+            if(pause_rect_array->GetThisObject()->IsActive()){
+                pause_rect_array->GetThisObject()->SetActive(false);
+                Scene::GetActiveCamera()->ui_overlay_colour = sf::Color(0,0,0,0);
+            }
+            else{
+                pause_rect_array->GetThisObject()->SetActive(true);
+                Scene::GetActiveCamera()->ui_overlay_colour = sf::Color(0,0,0,150);
+            }
         }
     }
+
 }

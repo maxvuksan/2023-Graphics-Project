@@ -33,6 +33,7 @@ void Component::SetActive(bool state){
 }
 
 void Component::SetRenderLayer(int _render_layer){
+
     if(this->render_layer != _render_layer){
         this->render_layer = _render_layer;
         GetThisObject()->GetScene()->DefineNewRenderLayer(_render_layer, GetThisObject()->IsUI());

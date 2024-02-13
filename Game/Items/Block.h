@@ -24,6 +24,8 @@ enum MainBlockCode{
     main_AncientStoneBricks,
 
     main_WoodPlanks,
+    main_CourseDirt,
+    main_BlackStone,
 
     main_Platform,
     main_PlatformLeftSupported,

@@ -11,7 +11,9 @@ class Inventory : public Object {
         void Start() override;
         void Draw(sf::RenderTarget& surface) override;
         
-        void CatchEvent(sf::Event event);
+        void CatchEvent(sf::Event event) override;
+        void CatchEventEventFocusBounded(sf::Event event) override;
+
         void LeftClickOnSlot();
         void RightClickOnSlot();
         void ShiftClickOnSlot();

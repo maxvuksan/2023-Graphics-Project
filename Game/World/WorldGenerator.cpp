@@ -367,8 +367,10 @@ void WorldGenerator::IdentifySurface(){
 }
 
 void WorldGenerator::VegetationPass(){
+    return;
 
     for(int i = 0; i < 500 * world->world_profile.width * world->world_profile.height; i++){
+
         world->SetTile(ForegroundBlockCode::foreground_Leaves, 
             rand() % (world->world_profile.width * world->world_profile.tilemap_profile.width),
             rand() % (world->world_profile.height * world->world_profile.tilemap_profile.height), SetLocation::FOREGROUND, SetMode::ONLY_BLOCK);

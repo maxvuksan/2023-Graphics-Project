@@ -41,6 +41,11 @@ void Object::SetActive(bool new_active){
 
 }
 
+void Object::SetUI(bool state)
+{ 
+    deleted_from_ui_map = state;
+}
+
 Object* Object::AddObjectToScene(Object* object, int render_layer){
     scene->AddExisitingObject(object, render_layer);
     return object;

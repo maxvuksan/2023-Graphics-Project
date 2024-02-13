@@ -157,6 +157,9 @@ class Scene {
         std::vector<int>* GetUIRenderLayers(){ return &ui_render_layers_in_use;}
         // deletes all objects from the scene
         void ClearAll();
+        // SetEventFocus allows objects to only update or catch events while in said focus
+        void SetEventFocus(Object* object);
+        void ClearEventFocus();
 
         /*
             allows references of client server objects to be accessed within a scene
@@ -166,6 +169,9 @@ class Scene {
         Client* GetClient(){return this->set_client;}
         Server* GetServer(){return this->set_server;}
 
+    
+
+
     private:
 
         Client* set_client;
@@ -174,6 +180,7 @@ class Scene {
         void UpdateObjectArray(std::vector<Object*>& array);
         void CatchEventObjectArray(std::vector<Object*>& array, sf::Event event);
         void ClearObjectArray(std::vector<Object*>& array);
+        void OnResizeObjectArray(std::vector<Object*>& array);
 
         std::vector<Object*> objects;
         std::vector<Object*> ui;
@@ -193,8 +200,8 @@ class Scene {
         Core* core;
         static Camera* active_camera;
 
-        bool object_holds_event_focus;
-        Object* event_focus;
+        // if no object is focused, this is nullptr
+        Object* event_focus_object;
 
         int bounds_min_x;
         int bounds_min_y;

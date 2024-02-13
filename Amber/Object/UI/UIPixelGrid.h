@@ -28,6 +28,7 @@ class UIPixelGrid : public UIRect {
         */
         void SetPixel(int x, int y, sf::Color colour);
 
+
         /* 
             calls the create method on the underlying image
             @param width of the image
@@ -41,6 +42,8 @@ class UIPixelGrid : public UIRect {
         void RefreshTexture();
         // @returns a texture holding the current state of image
         sf::Texture& GetTexture(){return texture;}
+        sf::Image& GetImage(){return image;}
+
 
     private:
         sf::Texture texture;

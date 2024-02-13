@@ -8,16 +8,26 @@
 
 #include "GameUI/SlotSet.h"
 
+#include "../steam/isteamfriends.h"
+#include "../steam/steam_api.h"
+
 class Game : public Core{
 
     public:
-        Game() : Core(900, 900, 300, 300, "My Game")
+        Game() : Core(600, 800, 300, 400, "My Game")
         {
-
+            if(!SteamAPI_Init()){
+                std::cout << "ERROR: Failed to call SteamAPI_Init, Game::Game()\n";
+            }
+            // when accessed through steam we should include the function...
+            // SteamAPI_RestartAppIfNecessary()
         }
 
         ~Game() override{ 
             server.Close();
+
+            // cleanup any resources associated with steam
+            SteamAPI_Shutdown();
         }
 
        void Start() override{

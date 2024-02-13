@@ -24,10 +24,14 @@ class Minimap : public Object{
         void Start();
         void LinkWorld(World* world);
         void CatchEvent(sf::Event) override;
+        void CatchEventEventFocusBounded(sf::Event) override;
+
         void OnSetActive() override;
+
 
         void Update() override;
         void Draw(sf::RenderTarget& surface);
+        void DrawMarker(int type, sf::Vector2f position, sf::RenderTarget& surface);
 
         UIPixelGrid* GetMainPixelGrid(){return main_pixel_grid;}
         UIPixelGrid* GetForegroundPixelGrid(){return foreground_pixel_grid;}
@@ -37,13 +41,36 @@ class Minimap : public Object{
         // how much over the map is revealed around the player
         static int exploring_radius;
         
+
+        sf::Vector2f ScreenToMinimapPosition(sf::Vector2i screen_position);
+
     
     private:
 
+        void ToggleMap(bool state);
         // assigned the map_outline size property, should be called when zooming occurs
         void RecalculateMapOutline();
 
+        struct MapMarker{
+
+            int type;
+            sf::Vector2f position;
+        };
+
+
+
+        UIButton* marker1_button;
+        UIButton* marker2_button;
+        UIButton* marker3_button;
+        UIButton* remove_markers;
+        UIRectArray* button_rect_array;
+        std::vector<MapMarker> map_markers;
+
+        bool placing_marker;
+        int marker_type_to_place;
+
         static float default_map_zoom;
+        static int map_icon_size;
 
         World* world;
 
@@ -52,6 +79,7 @@ class Minimap : public Object{
 
         sf::Vector2f focus_coord;
 
+        UIPanel* ui_panel;
         UIPixelGrid* main_pixel_grid;
         UIPixelGrid* foreground_pixel_grid;
         UIPixelGrid* background_pixel_grid;

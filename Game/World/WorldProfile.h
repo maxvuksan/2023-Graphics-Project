@@ -2,7 +2,7 @@
 
 struct WorldProfile{
 
-    int width = 10;
+    int width = 30;
     int height = 50;
 
     TilemapProfile tilemap_profile = {

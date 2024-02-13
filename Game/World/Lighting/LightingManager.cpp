@@ -282,3 +282,6 @@ void LightingManager::DeleteLightSource(LightSource* light_source){
     }
 }
 
+void LightingManager::ClearLightSources(){
+    light_sources.clear();
+}

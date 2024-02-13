@@ -41,5 +41,14 @@ class Serilizer {
         // @returns a vector of DataPairs for each world in the Worlds/ directory
         static std::vector<DataPair> LoadWorldList();
 
+        // @returns true if the Serilizer is currently performing an outsave
+        static bool GetAutoSaving(){return autosaving;}
 
+    private:
+        static Datafile current_save;
+        // is the Serilizer autosaving?
+        static bool autosaving;
+        // what chunk are we up to 
+        static int autosaving_chunk_x;
+        static int audosaving_chunk_y;
 };

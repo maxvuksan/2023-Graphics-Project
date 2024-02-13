@@ -29,19 +29,24 @@ class Object{
 
         virtual void Start(){}
         virtual void Update(){}
+        
         // updates only when the scene has no event focus or this object is the focus
         virtual void UpdateEventFocusBounded(){}
+        // catches events only when the scene has no event focus or this object is the focus
+        virtual void CatchEventEventFocusBounded(sf::Event){}
+
         virtual void DrawDebug(sf::RenderTarget&){}
         virtual void Draw(sf::RenderTarget&){} // drawing the scene
         virtual void CatchEvent(sf::Event){}
         virtual void OnSetActive(){} // is called when SetActive(true) occurs
         virtual void OnDisable(){}
+        virtual void OnResize(){}
         
         bool IsActive();
         // @param state the state the object is being set to
         void SetActive(bool state);
         // should only be set by Scene::AddUI()
-        void SetUI(bool state){ deleted_from_ui_map = state;}
+        void SetUI(bool state);
         bool IsUI(){ return deleted_from_ui_map; }
 
         // An objects render layer is determined when it is initally added to the scene, Scene::AddObject<>( render_Layer )

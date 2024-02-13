@@ -1,5 +1,6 @@
 #include "UIButton.h"
 #include "../../Utility/Mouse.h"
+#include "../../Core/AssetManager.h"
 
 
 sf::Text UIButton::text;
@@ -33,6 +34,14 @@ void UIButton::SetString(std::string string){
 
 }
 
+void UIButton::SetTexture(const char* label){
+    sprite.setTexture(*AssetManager::GetTexture(label));
+}
+void UIButton::SetTextureRect(int left, int top, int width, int height){
+    sprite.setTextureRect(sf::IntRect(left, top, width, height));
+}
+
+
 void UIButton::Update(){ 
     if(!IsActive()){
         return;
@@ -53,6 +62,11 @@ void UIButton::Draw(sf::RenderTarget& surface){
 
     if(!IsActive()){
         return;
+    }
+
+    if(sprite.getTexture() != nullptr){
+        sprite.setPosition(object->GetTransform()->position);
+        surface.draw(sprite);
     }
 
     if(mouse_over){

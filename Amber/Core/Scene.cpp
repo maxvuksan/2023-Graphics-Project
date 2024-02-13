@@ -8,7 +8,7 @@
 
 Camera* Scene::active_camera = nullptr;
 
-Scene::Scene() : bounds_min_x(INT_MIN), bounds_min_y(INT_MIN), bounds_max_x(INT_MAX), bounds_max_y(INT_MAX), event_focus(nullptr), object_holds_event_focus(false){
+Scene::Scene() : bounds_min_x(INT_MIN), bounds_min_y(INT_MIN), bounds_max_x(INT_MAX), bounds_max_y(INT_MAX), event_focus_object(nullptr){
     render_layers_in_use.push_back(0);
     ui_render_layers_in_use.push_back(0);
 }
@@ -63,6 +63,25 @@ void Scene::InternalUpdate(){
     UpdateObjectArray(ui_additional);
 }
 
+void Scene::InternalOnResize(){
+    
+    OnResizeObjectArray(objects);
+    OnResizeObjectArray(objects_additional);
+    OnResizeObjectArray(ui);
+    OnResizeObjectArray(ui_additional);
+}
+
+void Scene::OnResizeObjectArray(std::vector<Object*>& array){
+    // iterate over each object in said layer
+    for(auto obj : array){
+
+        for(auto comp : *obj->GetComponents()){
+            comp->OnResize();
+        }
+        obj->OnResize();
+    }
+}
+
 void Scene::InternalCatchEvent(sf::Event event){
 
     this->CatchEvent(event);
@@ -83,7 +102,10 @@ void Scene::UpdateObjectArray(std::vector<Object*>& array){
             continue;
         }
 
-        obj->UpdateEventFocusBounded();
+
+        if(obj == event_focus_object || event_focus_object == nullptr){
+            obj->UpdateEventFocusBounded();
+        }
 
         for(auto comp : *obj->GetComponents()){
             // ignore disabled comps
@@ -101,11 +123,22 @@ void Scene::UpdateObjectArray(std::vector<Object*>& array){
 
 void Scene::CatchEventObjectArray(std::vector<Object*>& array, sf::Event event){
 
+    // for some reason occasionally objects which are nullptrs slip into the array, remove all of these
+
     for(auto obj : array){
+
+        if(obj == nullptr){
+            break;
+        }
+
 
         // skip disabled objects
         if(!obj->IsActive()){
             continue;
+        }
+
+        if(obj == event_focus_object || event_focus_object == nullptr){
+            obj->CatchEventEventFocusBounded(event);
         }
 
         obj->CatchEvent(event);
@@ -159,14 +192,27 @@ void Scene::ClearObjectArray(std::vector<Object*>& array){
 
 void Scene::ClearAll(){
     
+    event_focus_object = nullptr;
     active_camera = nullptr;
 
     tilemaps.clear();
     box_colliders.clear();
+    render_layers_in_use.clear();
+    ui_render_layers_in_use.clear();
 
     // objects_additonal should be managed and deleted! by any inherited scene that uses it
+    ClearObjectArray(objects_additional);
     ClearObjectArray(objects);
     ClearObjectArray(ui);
+    ClearObjectArray(ui_additional);
+}
+
+// SetEventFocus allows objects to only update or catch events while in said focus
+void Scene::SetEventFocus(Object* object){
+    event_focus_object = object;
+}
+void Scene::ClearEventFocus(){
+    event_focus_object = nullptr;
 }
 
 void Scene::DefineNewRenderLayer(int render_layer, bool is_ui){

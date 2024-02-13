@@ -25,7 +25,11 @@ class Component{
         virtual void OnSetActive(){}
         virtual void OnDisable(){}
 
+        // is called when the window size changes
+        virtual void OnResize(){}
+
         virtual void Draw(sf::RenderTarget& surface){}
+        // is drawn as the topmost render layer no matter the components set render layer, should be used for debug graphics
         virtual void DrawDebug(sf::RenderTarget& surface){}
 
         virtual ~Component(){}

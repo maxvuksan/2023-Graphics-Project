@@ -13,7 +13,6 @@ void Inventory::Start() {
     SetRenderLayer(1);
 
 
-
     sf::Font* font = AssetManager::GetFont("m3x6");
     
     if(font == nullptr){
@@ -78,28 +77,50 @@ Slot* Inventory::GetHoveredSlot(){
 
 void Inventory::CatchEvent(sf::Event event) {
 
-  int previous_selected = selected_slot;
 
   if (event.type == sf::Event::KeyPressed) {
 
 
     switch (event.key.scancode){ 
 
-        // open inventory
-        case sf::Keyboard::Scan::E:
-
-            SlotSpace::Clear();
-            SlotSpace::Include(inventory_crafting_slot_set);
-            SlotSpace::SetOpen(!SlotSpace::Open());
-
-            break;
-
-        // close inventory
-        case sf::Keyboard::Scan::Escape:
+        // minimap open, close inventory
+        case sf::Keyboard::Scan::M:
             SlotSpace::Clear();
             SlotSpace::SetOpen(false);
             break;
+
+        // open/close inventory 
+        case sf::Keyboard::Scan::E:
+
+            SlotSpace::Clear();
+            if(!SlotSpace::Open()){
+                SlotSpace::Include(inventory_crafting_slot_set);
+            }
+            SlotSpace::SetOpen(!SlotSpace::Open());
+            
+            if(SlotSpace::Open){
+                GetScene()->SetEventFocus(this);
+            }   
+            else{
+                GetScene()->SetEventFocus(nullptr);
+            }
+
+            break;
+            
+    }
+  }
+}
+
+void Inventory::CatchEventEventFocusBounded(sf::Event event){
+
+    int previous_selected = selected_slot;
+
+  if (event.type == sf::Event::KeyPressed) {
     
+
+
+    switch (event.key.scancode){ 
+
         // choose selected slot
         case sf::Keyboard::Scan::Num1:
         case sf::Keyboard::Scan::Num2:
@@ -111,7 +132,6 @@ void Inventory::CatchEvent(sf::Event event) {
         case sf::Keyboard::Scan::Num8:
             selected_slot = event.key.scancode - 26;
             break;
-
 
             
     }
@@ -174,7 +194,9 @@ void Inventory::CatchEvent(sf::Event event) {
         break;
     }
   }
+
 }
+
 void Inventory::MiddleClickOnSlot(){
     if(GetHoveredSlot()->type == SlotType::RECIPE){
         ClickOnRecipeSlot();

@@ -35,7 +35,7 @@
 #include "Object/UI/UIButton.h"
 #include "Object/UI/UIRectArray.h"
 #include "Object/UI/UIInputField.h"
-
+#include "Object/UI/UIPanel.h"
 
 #include "Core/Scene.h"
 #include "Core/AssetManager.h"

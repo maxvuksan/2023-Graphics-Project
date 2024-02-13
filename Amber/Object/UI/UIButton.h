@@ -13,6 +13,9 @@ class UIButton : public UIRect{
         void Draw(sf::RenderTarget& surface) override;
 
         void SetString(std::string string);
+        void SetTexture(const char* label);
+        void SetTextureRect(int left, int top, int width, int height);
+
 
         // @param on_click_function lambda callback to be called when the button is clicked
         void SetOnClickCallback(const std::function<void()>& callback_function);
@@ -28,6 +31,8 @@ class UIButton : public UIRect{
     private:
 
         std::function<void()> on_click_function;
+
+        sf::Sprite sprite;
 
         std::string text_string;
         sf::Vector2f text_position;

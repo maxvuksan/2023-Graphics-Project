@@ -124,6 +124,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
     std::vector<int>* ui_render_layers = scene->GetUIRenderLayers();
     
     for(int i = 0; i < ui_render_layers->size(); i++){
+
         RenderLayer(*render_textures[COMPOSITE], *ui, false, ui_render_layers->at(i));
         RenderLayer(*render_textures[COMPOSITE], *ui_additional, false, ui_render_layers->at(i));
     }
@@ -224,11 +225,11 @@ void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>&
 
     for(auto obj : objects_at_layer){
 
-        if(!obj->IsActive()){
+        if(!obj->IsActive() || obj->GetRenderAtWindowSize() != render_at_window_size){
             continue;
         }
-        if(obj->GetRenderAtWindowSize() != render_at_window_size || render_layer != obj->GetRenderLayer()){
-            continue;
+        else if(render_layer == obj->GetRenderLayer()){
+            obj->Draw(surface);       
         }
 
         for(auto comp : *obj->GetComponents()){
@@ -238,7 +239,7 @@ void RenderManager::RenderLayer(sf::RenderTarget& surface, std::vector<Object*>&
             }
             comp->Draw(surface);       
         }
-        obj->Draw(surface);       
+
     }
 
 }
