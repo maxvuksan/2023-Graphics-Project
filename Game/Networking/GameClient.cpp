@@ -26,6 +26,8 @@ void GameClient::LinkWorld(World* world){
 void GameClient::CreateObjects(){
     
 
+    std::cout << "[CLIENT] created inital objects\n";
+
     // create world
     world->LinkClient(this);
 
@@ -112,12 +114,15 @@ void GameClient::SendPlayerControl(){
 
     IF_ONLINE
 
-    //if(player->GetTransform()->position != previous_player_position){
-        
-        previous_player_position = player->GetTransform()->position;
-        auto anim = player->GetComponent<AnimationRenderer>();
-        SendPacket<p_PlayerControl>(server, {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), player->GetTransform()->position.x, player->GetTransform()->position.y });
-    //}
+    std::cout << "[CLIENT] PACKET_PlayerControl broadcasted from client " << client_id << "\n";
+
+    previous_player_position = player->GetTransform()->position;
+    auto anim = player->GetComponent<AnimationRenderer>();
+
+    SendPacket<p_PlayerControl>(
+        server, 
+        {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), player->GetTransform()->position.x, player->GetTransform()->position.y },
+        ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
 }
 
 void GameClient::SendSetBlock(short tile_index, int x, int y){
@@ -147,8 +152,6 @@ void GameClient::Update(){
     // we are sending chunks to a specific client
     if(transfer_chunks){
 
-        chunk_transfer_x++;
-
         if(chunk_transfer_x >= world->GetWorldProfile()->width){
             chunk_transfer_x = 0;
             chunk_transfer_y++;
@@ -159,9 +162,11 @@ void GameClient::Update(){
 
             SendPacket<p_SetChunk>(server,  {{PACKET_SetChunk, client_id}, current_transfer_client_id, chunk_transfer_x, chunk_transfer_y, 
                 world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
-                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
-                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::BACKGROUND)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(chunk_transfer_x).at(chunk_transfer_y)->GetTilemap(SetLocation::FOREGROUND)->GetPrimitive()->GetGrid(),
             });
+
+            chunk_transfer_x++;
         }
         else{
             transfer_chunks = false;
@@ -185,7 +190,6 @@ void GameClient::Update(){
     // reuses the chunk_transfer_x and chunk_transfer_y variables, knowing the host will never have an inactive world
     if(!world_loaded){
 
-        return;
         chunk_retry_delay_tracked++;
 
         if(chunk_retry_delay_tracked >= chunk_retry_delay){
@@ -193,6 +197,7 @@ void GameClient::Update(){
             bool search_for_missing_chunk = true;
 
             while(search_for_missing_chunk) {
+
 
                 if(chunk_transfer_x >= world->GetWorldProfile()->width){
                     chunk_transfer_x = 0;
@@ -207,10 +212,15 @@ void GameClient::Update(){
                         SendPacket<p_RequestSpecificChunk>(server, {{PACKET_RequestSpecificChunk, client_id}, chunk_transfer_x, chunk_transfer_y});
                         search_for_missing_chunk = false;
                     }
+
+                    chunk_transfer_x++;
+
                 }
                 else{
                     search_for_missing_chunk = false;
                     chunk_retry_delay_tracked = 0;
+                    chunk_transfer_x = 0;
+                    chunk_transfer_y = 0;
                 }
             }
         }
@@ -294,7 +304,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
 
         case PACKET_RequestWorldHeader: {
             std::cout << "[CLIENT]: requesting world header, PACKET_RequestWorldHeader\n";
-            SendPacket<p_WorldHeader>(server, {{PACKET_WorldHeader, client_id}, header.client_id, world->GetWorldProfile()->width, world->GetWorldProfile()->height} );
+            SendPacket<p_WorldHeader>(server, {{PACKET_WorldHeader, client_id}, header.client_id, world->GetSpawnCoordinate().x, world->GetSpawnCoordinate().y, world->GetWorldProfile()->width, world->GetWorldProfile()->height} );
             break;
         }
         
@@ -309,6 +319,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             std::cout << "[CLIENT]: world size " << body.width << ", " << body.height << "\n";
 
             world->Create(false, body.width, body.height);
+            world->SetSpawnCoordinate(body.spawnpoint_x, body.spawnpoint_y);
 
             chunks_success_grid.resize(body.width, {});
             for(int x = 0; x < body.width; x++){
@@ -322,13 +333,11 @@ void GameClient::InterpretPacket(ENetEvent& event){
             // we are now ready to recieve chunks
             SendPacket<PacketHeader>(server, {PACKET_RequestChunks, client_id});
 
-            std::cout << "send request\n";
             break;
         }
 
         case PACKET_RequestSpecificChunk: {
 
-            std::cout << "sending back requested chunk\n";
 
             p_RequestSpecificChunk body;
             memcpy(&body, event.packet->data, sizeof(p_RequestSpecificChunk));
@@ -336,11 +345,11 @@ void GameClient::InterpretPacket(ENetEvent& event){
 
             SendPacket<p_SetChunk>(server,  {{PACKET_SetChunk, client_id}, header.client_id, body.chunk_coordinate_x, body.chunk_coordinate_y, 
                 world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
-                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
-                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::BACKGROUND)->GetPrimitive()->GetGrid(),
+                world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::FOREGROUND)->GetPrimitive()->GetGrid(),
             });
 
-            std::cout << "chunk sent\n";
+            std::cout << "[CLIENT] chunk sent to new client\n";
 
             break;
         }
@@ -351,7 +360,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             p_SetChunk body;
             memcpy(&body, event.packet->data, sizeof(p_SetChunk));
 
-            std::cout << "setting chunk " << body.chunk_coordinate_x << " " << body.chunk_coordinate_y << "\n";
+            std::cout << " [CLIENT] setting chunk " << body.chunk_coordinate_x << " " << body.chunk_coordinate_y << "\n";
 
 
             world->GetChunks()->at(body.chunk_coordinate_x).at(body.chunk_coordinate_y)->GetTilemap(SetLocation::MAIN)->GetPrimitive()->CopyGrid(body.main_grid);
@@ -373,7 +382,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             std::cout << "recieved: " << chunks_recieved << "\n";
 
             // tell the server the world is loaded
-            if(chunks_recieved == world->GetWorldProfile()->width * world->GetWorldProfile()->height){
+            if(chunks_recieved >= world->GetWorldProfile()->width * world->GetWorldProfile()->height){
                 SendPacket<PacketHeader>(server, {PACKET_WorldLoadedSuccessfully, client_id});
                 
                 std::cout << "successfully recieved all chunks\n";
@@ -385,6 +394,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
                 world->CalculateMinimap();
                 
                 chunks_success_grid.clear();
+                world_loaded = true;
             }
 
             break;
@@ -398,6 +408,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
 
         case PACKET_PlayerControl: {
 
+            std::cout << "[CLIENT] PACKET_PlayerControl from client " << header.client_id << '\n';
 
             p_PlayerControl body;
             memcpy(&body, event.packet->data, sizeof(p_PlayerControl));
@@ -415,6 +426,8 @@ void GameClient::InterpretPacket(ENetEvent& event){
         }
 
         case PACKET_SetBlock : {
+
+            std::cout << "[CLIENT] PACKET_SetBlock from client " << header.client_id << '\n';
 
             p_SetBlock body;
             memcpy(&body, event.packet->data, sizeof(p_SetBlock));

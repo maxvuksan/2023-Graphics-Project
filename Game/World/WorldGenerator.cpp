@@ -94,84 +94,15 @@ void WorldGenerator::Sculpt(int chunk_x, int chunk_y){
             }
         }
 
-        background_tilemap->SetArea(BackgroundBlockCode::background_Dirt, x, x + 1, Calc::Clamp(y_set_area_start + 3, 0, world->tilemap_profile->height), world->tilemap_profile->height);
-        main_tilemap->SetArea(MainBlockCode::main_Dirt, x, x + 1, Calc::Clamp(y_set_area_start, 0, world->tilemap_profile->height), world->tilemap_profile->height);
-    }
+        for(int i = Calc::Clamp(y_set_area_start + 3, 0, world->tilemap_profile->height); i <  world->tilemap_profile->height; i++){
+            background_tilemap->SetTile(ItemDictionary::GetIndexFromPool(pool_SurfaceLayerBackground), x, i);
+        }
 
-    /*
-    // air
-    if(y <= settings.LEVEL_AIR){
-        main_tilemap->SetAll(-1);
-    }
-    // surface
-    else if(y <= settings.LEVEL_DIRT){
-
-        for(int tile_x = 0; tile_x < world->tilemap_profile->width; tile_x++){
-            
-            int _x = tile_x + (x * world->tilemap_profile->width);
-
-            float noise_val = perlin.octave1D_01((_x * 0.04), 1, 2);
-            float noise_val2 = perlin.octave1D_01((_x * 0.015), 1, 3);
-            //float noise_val3 = perlin.octave1D_01((_x * 0.008), 3, 1);
-                                    
-            float final_height_float = noise_val * world->tilemap_profile->height - ((y - settings.LEVEL_AIR) * world->tilemap_profile->height);
-
-            int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_profile->height));
-            int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_profile->height); // makes backgrounds 3 tiles below surface
-
-            background_tilemap->SetArea(MainBlockCode::main_Dirt, tile_x, tile_x + 1, final_height_background, world->tilemap_profile->height);
-            main_tilemap->SetArea(MainBlockCode::main_Dirt, tile_x, tile_x + 1, final_height, world->tilemap_profile->height);
+        for(int i = Calc::Clamp(y_set_area_start, 0, world->tilemap_profile->height); i < world->tilemap_profile->height; i++){
+            main_tilemap->SetTile(ItemDictionary::GetIndexFromPool(pool_SurfaceLayer), x, i);
         }
     }
-    // dirt pass ( shallow underground )
-    else if(y <= settings.LEVEL_DIRT){
-        main_tilemap->SetAll(MainBlockCode::main_Dirt);
-        main_tilemap->SetAll(MainBlockCode::main_Stone);
-    }
-    // dirt -> stone 
-    else if(y <= settings.LEVEL_DIRT_TO_STONE){
 
-        main_tilemap->SetAll(MainBlockCode::main_Dirt);
-        background_tilemap->SetAll(MainBlockCode::main_Dirt);
-
-        for(int tile_x = 0; tile_x < world->tilemap_profile->width; tile_x++){
-            
-            int _x = tile_x + (x * world->tilemap_profile->width);
-
-            float noise_val = perlin.octave1D_01((_x * 0.03), 1, 2);
-            float noise_val2 = perlin.octave1D_01((_x * 0.005), 1, 3);
-                                    
-            float final_height_float = (noise_val + noise_val2) * world->tilemap_profile->height - ((y - settings.LEVEL_DIRT) * world->tilemap_profile->height);
-
-            int final_height = round(Calc::Clamp(final_height_float, 0, world->tilemap_profile->height));
-            int final_height_background = Calc::Clamp(final_height_float + 3, 0, world->tilemap_profile->height); // makes backgrounds 3 tiles below surface
-
-            background_tilemap->SetArea(MainBlockCode::main_Stone, tile_x, tile_x + 1, final_height_background, world->tilemap_profile->height);
-            main_tilemap->SetArea(MainBlockCode::main_Stone, tile_x, tile_x + 1, final_height, world->tilemap_profile->height);
-        }
-    }
-    // stone pass (deep underground, introducing caverns )
-    else{
-        main_tilemap->SetAll(MainBlockCode::main_Stone);
-        background_tilemap->SetAll(MainBlockCode::main_Stone);
-
-        for(int tile_y = 0; tile_y < world->tilemap_profile->height; tile_y++){
-            for(int tile_x = 0; tile_x < world->tilemap_profile->width; tile_x++){
-                
-                int _y = tile_y + (y * world->tilemap_profile->height);
-                int _x = tile_x + (x * world->tilemap_profile->width);
-
-                float noise_val = perlin.octave2D_01((_x * 0.04), (_y * 0.04), 2);
-                noise_val += perlin.octave2D_01((_x * 0.1), (_y * 0.1), 1);
-                noise_val += perlin.octave2D_01((_x * 0.013), (_y * 0.013), 1);
-
-                if(noise_val > 1.8){
-                    main_tilemap->SetTile(-1, tile_x, tile_y);
-                }
-            }
-        }
-    }
-    */
 }
 
 void WorldGenerator::CoverCavernLayerInStone(){
@@ -182,21 +113,23 @@ void WorldGenerator::CoverCavernLayerInStone(){
         int cavern_start = settings.SURFACE_THRESHOLD * world->tilemap_profile->height * world->world_profile.height;
         int deep_surface_start = cavern_start - settings.DEEP_SURFACE_AMOUNT * settings.SURFACE_THRESHOLD * world->tilemap_profile->height * world->world_profile.height;
 
+        // cavern
+        for(int y = cavern_start + surface_y_vector.at(x); y < world->tilemap_profile->height * world->world_profile.height; y++){
+            world->SetTile(ItemDictionary::GetIndexFromPool(pool_CavernLayer), x, y, SetLocation::MAIN);
+            world->SetTile(ItemDictionary::GetIndexFromPool(pool_CavernLayerBackground), x, y, SetLocation::BACKGROUND);
+        }
+
+    /*
         // deep surface
         for(int y = deep_surface_start + surface_y_vector.at(x); y < cavern_start + surface_y_vector.at(x); y++){
             
             float noise_val = perlin.octave2D_01((x * 0.04), (y * 0.04), 2);
 
             if(noise_val < settings.DEEP_SURFACE_STONE_AMOUNT){
-                world->SetTile(MainBlockCode::main_Stone, x, y, SetLocation::MAIN);
+                world->SetTile(ItemDictionary::GetIndexFromPool(pool_CavernLayer), x, y, SetLocation::MAIN);
             }
         }
-
-        // cavern
-        for(int y = cavern_start + surface_y_vector.at(x); y < world->tilemap_profile->height * world->world_profile.height; y++){
-            world->SetTile(MainBlockCode::main_Stone, x, y, SetLocation::MAIN);
-            world->SetTile(BackgroundBlockCode::background_Stone, x, y, SetLocation::BACKGROUND);
-        }
+    */
     }
 }
 

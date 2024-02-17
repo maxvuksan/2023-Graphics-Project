@@ -23,6 +23,8 @@ class WorldScene : public Scene {
 
     private:
 
+        std::vector<UIButton*> player_list_buttons;
+        UIRectArray* player_list_rect_array;
 
         UIRectArray* pause_rect_array;
         UIButton* return_button;

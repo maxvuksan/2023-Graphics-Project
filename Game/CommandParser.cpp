@@ -9,6 +9,7 @@
 #include "Pathfinding/NoodleCreature.h"
 #include "Settings.h"
 #include "World/TimeManager.h"
+#include "Items/Heavy.h"
 
 GameClient* CommandParser::client = nullptr;
 
@@ -72,11 +73,22 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {""};
     }
     else if(tokens[0] == "SUMMON"){
-        auto noodle = client->scene->AddObject<NoodleCreature>();
-        noodle->LinkWorld(client->world);
 
-        noodle->GetTransform()->position = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
-        return {""};
+        if(tokens.size() <= 1){
+            return {"'/SUMMON' requires additonal arguments, '/SUMMON HEAVY/CREATURE", debug_error}; 
+        }
+
+        if(tokens[1] == "HEAVY"){
+            auto heavy = client->scene->AddObject<Heavy>();
+            heavy->GetTransform()->position = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
+        }
+        else if(tokens[1] == "CREATURE"){
+            auto noodle = client->scene->AddObject<NoodleCreature>();
+            noodle->LinkWorld(client->world);
+
+            noodle->GetTransform()->position = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
+            return {""};
+        }
     }
     else if(tokens[0] == "OCCLUSION"){
         Settings::AMBIENT_OCCLUSION = !Settings::AMBIENT_OCCLUSION;

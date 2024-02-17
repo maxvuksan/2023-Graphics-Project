@@ -49,6 +49,7 @@ void GameServer::CatchPeerEvent(ENetEvent event){
                 SendPacket<PacketHeader>(event.peer, {PACKET_CreatePlayer, client.first});
             }
             
+            connected_clients[client_id_tracked].client_id = client_id_tracked;
             connected_clients[client_id_tracked].peer = event.peer;
             connected_clients[client_id_tracked].time_since_last_packet = 0;
 
@@ -168,6 +169,7 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
         case PACKET_RequestSpecificChunk: {
             // forward request to host
             ForwardPacketToSpecific(event.packet, 0);
+            break;
         }
         case PACKET_WorldLoadedSuccessfully: {
             connected_clients[header.client_id].loading_world = false;
@@ -188,6 +190,8 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
             break;
         }
         case PACKET_SetBlock: {
+            std::cout << "[SERVER]: PACKET_SetBlock broadcasted by client " << header.client_id << "\n";
+
             ForwardPacketButExclude(event.packet, header.client_id, QUEUE);  
             break;
         }
@@ -224,6 +228,10 @@ void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id,
 
 void GameServer::ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id, PacketLoadingMode packet_loading_mode){
 
+    if(!ClientIdExists(client_id)){
+        return;
+    }
+
     if(connected_clients[client_id].loading_world){
 
         switch(packet_loading_mode){
@@ -248,4 +256,13 @@ void GameServer::ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id,
         ForwardPacket(connected_clients[client_id].peer, enet_packet);
     }
 
+}
+
+bool GameServer::ClientIdExists(int client_id){
+    for(int i = 0; i < connected_clients.size(); i++){
+        if(connected_clients[i].client_id == client_id){
+            return true;
+        }
+    }
+    return false;
 }

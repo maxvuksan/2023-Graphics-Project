@@ -84,12 +84,22 @@ void WorldScene::Start(){
     pause_rect_array->AddUIRect(return_button);
 
     pause_rect_array->SetActive(false);
+
+    player_list_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
+    player_list_rect_array->SetElementSize(150, 25);
+    player_list_rect_array->SetGap(UIRect::padding);
+    player_list_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    player_list_rect_array->SetActive(false);
 }
 
 
 void WorldScene::Update(){
 
    client->SendPlayerControl();
+
+    // some other ui has focus, 
+   if(this->GetEventFocus() != nullptr){
+   }
 }
 
 
@@ -104,6 +114,7 @@ void WorldScene::CatchEvent(sf::Event event){
             }
         }
 
+        // opening pause
         if(event.key.scancode == sf::Keyboard::Scancode::Escape){ 
 
             if(pause_rect_array->GetThisObject()->IsActive()){
@@ -114,6 +125,49 @@ void WorldScene::CatchEvent(sf::Event event){
                 pause_rect_array->GetThisObject()->SetActive(true);
                 Scene::GetActiveCamera()->ui_overlay_colour = sf::Color(0,0,0,150);
             }
+        }
+
+        // opening player list
+        if(event.key.scancode == sf::Keyboard::Scancode::Tab){
+
+            std::cout << "tab presed\n";
+
+            // we are playing online
+            if(client->GetPlayMode() != PlayMode::OFFLINE){
+
+
+                UIButton* myself = AddUI<Object>()->AddComponent<UIButton>();
+                myself->SetString("me");
+                player_list_rect_array->AddUIRect(myself);
+
+                std::cout << "num of clients: " << client->GetConnectedClients().size() << "\n";
+                // add new rects
+                for(auto client : client->GetConnectedClients()){
+                    std::cout << client.first << "\n";
+
+                    UIButton* new_player = AddUI<Object>()->AddComponent<UIButton>();
+                    new_player->SetString("" + client.first);
+
+                    player_list_rect_array->AddUIRect(new_player);
+                }
+
+                player_list_rect_array->SetActive(true);
+            }
+
+        }
+    
+    }
+    if(event.type == sf::Event::KeyReleased){
+        
+        // closing player list
+        if(event.key.scancode == sf::Keyboard::Scancode::Tab){
+
+            for(auto rect : player_list_rect_array->GetUIRects()){
+                DeleteObject(rect->GetThisObject());
+            }
+            player_list_rect_array->ClearUIRects();
+
+            player_list_rect_array->SetActive(false);
         }
     }
 

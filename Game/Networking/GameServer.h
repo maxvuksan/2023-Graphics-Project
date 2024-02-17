@@ -15,6 +15,7 @@ enum PacketLoadingMode {
 // infomation that server holds about a client
 struct ClientData{
     ENetPeer* peer;
+    int client_id;
     bool allow_timeout = true;
     int time_since_last_packet = 0; // how long has it been since we've heard from this client
     
@@ -70,10 +71,12 @@ class GameServer : public Server {
         void ForwardPacketToAll(ENetPacket* enet_packet, PacketLoadingMode loading_mode = SEND_ANYWAY);
         void ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id, PacketLoadingMode loading_mode = SEND_ANYWAY);
         void ForwardPacketButExclude(ENetPacket* enet_packet, int client_id, PacketLoadingMode loading_mode = SEND_ANYWAY);
-        
 
         void SetWorld(World* world){this->world = world;}
         World* GetWorld(){return world;}
+
+        // @returns true if a client client id is currently connected (is a valid client)
+        bool ClientIdExists(int client_id);
 
     private:
 

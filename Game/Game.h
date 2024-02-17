@@ -62,6 +62,8 @@ class Game : public Core{
             AssetManager::CreateTexture("cursor", "Images/crosshair.png");
             AssetManager::CreateTexture("cursor_breaking", "Images/breaking.png");
 
+            AssetManager::CreateTexture("heavy", "Images/heavy.png");
+
             // Animations -----------------------------------------------------------------
 
             AssetManager::CreateAnimationSet("fly", { Animation("fly", 4, 0, 2, 25)}, {"default"});

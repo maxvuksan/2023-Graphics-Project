@@ -81,6 +81,9 @@ struct p_WorldHeader{
     PacketHeader header;
     int target_client_id; // who is this world header for
 
+    int spawnpoint_x;
+    int spawnpoint_y;
+
     // in chunks
     int width;
     int height;

@@ -17,9 +17,11 @@ run: compile execute
 compile:
 	g++ -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME) $(LIBS) 
 
+# compiles with debug symbols (allow gbd to see line numbers in its backtrace (bt) command)
 debug:
 	g++ -g -o client.exe -Isrc/include main.cpp  $(AMBER) $(GAME) $(LIBS) 
-	gdb ./client.exe
+
+#gdb ./client.exe
 
 server:
 	g++ -o server.exe -Isrc/include main_server.cpp  $(AMBER) $(GAME) $(LIBS) 

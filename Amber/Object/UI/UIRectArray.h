@@ -10,6 +10,7 @@ class UIRectArray : public UIRect {
 
         // pushes a new rect to the end of the container
         void AddUIRect(UIRect* rect);
+        std::vector<UIRect*>& GetUIRects(){return rects;}
         void ClearUIRects(){rects.clear();}
 
         void OnSetActive() override;

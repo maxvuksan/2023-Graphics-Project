@@ -207,6 +207,7 @@ void MenuScene::SwitchMenuState(MenuStates new_state){
 
         case MAIN : {
             main_rect_array->SetActive(true);
+            
             select_player_rect_array->SetActive(false);
             create_player_rect_array->SetActive(false);
             select_world_rect_array->SetActive(false);

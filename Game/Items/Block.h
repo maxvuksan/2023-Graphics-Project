@@ -5,7 +5,7 @@
 enum MainBlockCode{
     main_Dirt,
     main_Stone,
-    
+      
     main_Stone_Bricks,
     main_Stone_Plate,
     main_Stone_Plate_Cracked,
@@ -71,6 +71,9 @@ enum BackgroundBlockCode{
     background_StoneBricks,
     background_StonePlate,
     background_StonePlateCracked,
+
+    background_DirtWithRocks,
+    background_StoneWithCracks,
 
     background_NUMBER_OF_BLOCKS
 };

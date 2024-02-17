@@ -7,6 +7,7 @@
 #include "../Serilizer.h"
 #include "../PlayMode.h"
 #include <queue>
+#include <string>
 #include <vector>
 
 class World;
@@ -15,6 +16,8 @@ class PlayerController;
 class ConsoleVisual;
 class PlayerWorldInteractions;
 class HealthBar;
+
+
 
 class GameClient : public Client {
 
@@ -63,11 +66,14 @@ class GameClient : public Client {
 
         static sf::Vector2f player_pos;
 
+        // @returns a map of all the clients connected to the server
+        const std::map<int, Player*>& GetConnectedClients(){return connected_clients;}
+
     private:
         
 
         // how long the user should wait before asking for chunks again
-        float chunk_retry_delay = 300;
+        float chunk_retry_delay = 800;
         float chunk_retry_delay_tracked;
         std::vector<std::vector<bool>> chunks_success_grid; // what chunks have been successfully retrieved
 
@@ -80,20 +86,17 @@ class GameClient : public Client {
         int chunk_transfer_y;
 
         
-
+        // has this client recieved all chunk data, world header etc...
         bool world_loaded = false;
+        int chunks_recieved = 0; // how many chunks this client has been sent, is used to determine if all chunks have been sent
 
+        PlayMode play_mode; // are we online? hosting or joining someone
 
-        PlayMode play_mode;
-
-        bool allow_timeout = true;
-
+        bool allow_timeout = true; // can a connection timeout?
         float timeout_limit = 1000;
         float time_since_last_packet;
 
         Scene* scene;
-
-        int chunks_recieved = 0; // how many chunks this client has been sent, is used to determine if all chunks have been sent
 
         int client_id = -1;
         std::map<int, Player*> connected_clients;

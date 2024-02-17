@@ -159,6 +159,7 @@ class Scene {
         void ClearAll();
         // SetEventFocus allows objects to only update or catch events while in said focus
         void SetEventFocus(Object* object);
+        Object* GetEventFocus(){return event_focus_object;}
         void ClearEventFocus();
 
         /*

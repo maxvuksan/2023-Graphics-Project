@@ -43,7 +43,7 @@ void PlayerWorldInteractions::Draw(sf::RenderTarget& surface){
     }
 
     CalculateMouse(surface);
-    ManageToolInHand(surface);
+    //ManageToolInHand(surface);
 }
 
 void PlayerWorldInteractions::ManageToolInHand(sf::RenderTarget& surface){

@@ -1,14 +1,15 @@
 #pragma once
+#include <math.h>
 #include <SFML/Graphics.hpp>
-#include "../../Amber/Core/AssetManager.h"
-#include "../../Amber/Utility/Sound.h"
+#include "../../Amber/Framework.h"
+
 #include "Block.h"
 #include "Sprites.h"
 #include "Recipes.h"
-#include <math.h>
 #include "ItemSound.h"
 #include "Foliage.h"
 #include "Water.h"
+#include "IndexPools.h"
 
 /*
 
@@ -101,6 +102,40 @@ namespace ItemDictionary {
         "item_soft"
     };
 
+    /*
+        provide setting multiple blocks under one item code
+
+        e.g. placing dirt could place... providing a more textured enviroment
+
+        main_Dirt,
+        main_CourseDirt,
+        main_Stone,
+    */
+    const std::vector<signed_byte> INDEX_POOLS[pool_NUMBER_OF_INDEX_POOLS] = {
+        // pool_SurfaceLayer
+        { main_Dirt, main_Dirt, main_Dirt, main_Dirt, main_Dirt, main_Dirt,
+          main_CourseDirt, main_CourseDirt, main_CourseDirt, main_CourseDirt,
+          main_Stone, main_Stone,
+          main_CopperOre,
+        },
+        // pool_SurfaceLayerBackground
+        {
+            background_Dirt, background_Dirt, background_Dirt, background_Dirt, background_Dirt, background_Dirt, background_Dirt,
+            background_DirtWithRocks,
+        },
+
+        // pool_CavernLayer
+        { main_Stone, main_Stone, main_Stone, main_Stone, main_Stone, main_Stone,
+          main_Stone, main_Stone, main_Stone, main_Stone, main_CourseDirt,
+          main_CopperOre,
+        },
+        // pool_CavernLayerBackground
+        {
+            background_Stone, background_Stone, background_Stone, background_Stone,
+            background_StoneWithCracks,
+        },
+    };
+
     const FoliageData FOLIAGE_DATA[foliage_NUMBER_OF_FOLIAGE] = {
         {sf::Vector2i(48,48), sf::Vector2i(0,0), sf::Vector2i(23,47), item_Fibre},
         {sf::Vector2i(16,16), sf::Vector2i(48,0), sf::Vector2i(8,8)},
@@ -135,7 +170,10 @@ namespace ItemDictionary {
         {12, sf::Color(79,67,100), item_Main_AncientStonePlateChiseled},
         {12, sf::Color(79,67,100), item_Main_AncientStoneBricks},
 
+
         {8, sf::Color(186, 97, 81), item_Main_WoodPlanks},
+        {6, sf::Color(80,62,62), item_Main_Dirt}, 
+        {8, sf::Color(47,41,57), item_Main_Stone},
 
         // wooden platforms
         {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},
@@ -185,6 +223,9 @@ namespace ItemDictionary {
         {8, sf::Color(66,61,82), item_Background_StoneBricks},
         {6, sf::Color(66,61,82), item_Background_StonePlate},
         {8, sf::Color(66,61,82), item_Background_StonePlateCracked},
+
+        {6, sf::Color(89,42,42), item_Background_Dirt},
+        {8, sf::Color(67,61,87), item_Background_Stone},
     };
 
     const UtilityBlockData UTILITY_BLOCK_DATA[utility_NUMBER_OF_BLOCKS]{
@@ -442,6 +483,11 @@ namespace ItemDictionary {
             sprite.setOrigin(sf::Vector2f(sprite.getTextureRect().width / 2.0f, sprite.getTextureRect().height / 2.0f));
         }
     }   
+
+    // select a random index from the provided IndexPool 
+    inline signed_byte GetIndexFromPool(IndexPool pool_to_pick){
+        return INDEX_POOLS[pool_to_pick][rand() % INDEX_POOLS[pool_to_pick].size()];
+    }
 
     // players inventory sound of corrosponding item code
     inline void PlayInventorySound(ItemCode item, float pitch_offset = 0){
