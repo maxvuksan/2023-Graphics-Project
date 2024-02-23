@@ -23,9 +23,7 @@ void PlayerController::Start(){
     // set player camera as scene camera
     object->GetScene()->SetActiveCamera(object->AddComponent<Camera>());
 
-    body_collider = object->AddComponent<BoxCollider>();
-    body_collider->SetSize(sf::Vector2f(8, 16));
-    body_collider->SetOffset(sf::Vector2f(-4,-8));
+    body_collider = object->GetComponent<BoxCollider>();
 
     left = object->AddComponent<BoxCollider>();
     left->SetIsTrigger(true);
@@ -294,6 +292,7 @@ void PlayerController::Jump(){
 
 void PlayerController::LeftWallJump(){
 
+    return;
     pb->velocity.y = -wall_kickoff_height;
     forced_velocity_x = wall_kickoff_force; 
 
@@ -307,6 +306,7 @@ void PlayerController::LeftWallJump(){
 
 void PlayerController::RightWallJump(){
 
+    return;
     pb->velocity.y = -wall_kickoff_height;
     forced_velocity_x = -wall_kickoff_force; 
 
@@ -335,6 +335,8 @@ void PlayerController::SetHeightWhenGrounded(){
 }
 
 void PlayerController::ApplyFallDamage(){
+
+    return; // IGNORE FALL DAMAGE FOR NOW
 
     float height_travelled = object->GetTransform()->position.y - this->height_when_grounded;
 

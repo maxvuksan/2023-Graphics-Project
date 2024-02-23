@@ -14,7 +14,7 @@ UIButton::UIButton(): on_click_function([](){}){
 
 }
 
-void UIButton::CatchEvent(sf::Event event){
+void UIButton::CatchEventEventFocusBounded(sf::Event event){
 
     if(event.type == sf::Event::MouseButtonPressed){
 

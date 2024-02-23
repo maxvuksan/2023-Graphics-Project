@@ -14,26 +14,112 @@ void MenuScene::Start(){
 
     // Main --------------------------------------------------------------------------
 
-    play_button = AddUI<Object>()->AddComponent<UIButton>();
-    play_button->SetString("Play");
 
-    play_button->SetOnClickCallback([this](){
 
-        this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+
+    // Select Player ----------------------------------------------------------------
+
+    new_player_button = AddUI<Object>()->AddComponent<UIButton>();
+    new_player_button->SetString("+ New Player");
+    new_player_button->SetOnClickCallback([this](){
+        
+        this->SwitchMenuState(MenuStates::CREATE_PLAYER);
+    });       
+
+
+    // Create Player ----------------------------------------------------------------
+
+    create_player_input = AddUI<Object>()->AddComponent<UIInputField>();
+    create_player_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    create_player_input->SetPlaceholder("Enter Name...");
+    
+    create_player_button = AddUI<Object>()->AddComponent<UIButton>();
+    create_player_button->SetString("Create");
+    create_player_button->SetOnClickCallback([this](){
+        
+        // create new player save file
+        if(create_player_input->GetInput() != ""){
+            Serilizer::CreateNewPlayer(create_player_input->GetInput());
+            this->SwitchMenuState(MenuStates::SELECT_PLAYER);
+            create_player_input->SetInput("");
+        }
     });
 
-    settings_button = AddUI<Object>()->AddComponent<UIButton>();
-    settings_button->SetString("Settings");
-    settings_button->SetOnClickCallback([](){
-        std::cout << "settings pressed\n";
+    // Select World ------------------------------------------------------------------
+
+    new_world_button = AddUI<Object>()->AddComponent<UIButton>();
+    new_world_button->SetString("+ New World");
+    new_world_button->SetOnClickCallback([this](){
+        
+        this->SwitchMenuState(MenuStates::CREATE_WORLD);
+    });       
+
+    // Create World ------------------------------------------------------------------
+
+    create_world_input = AddUI<Object>()->AddComponent<UIInputField>();
+    create_world_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    create_world_input->SetPlaceholder("Enter World Name...");
+    
+    create_world_button = AddUI<Object>()->AddComponent<UIButton>();
+    create_world_button->SetString("Create");
+    create_world_button->SetOnClickCallback([this](){
+        
+        if(create_world_input->GetInput() != ""){
+
+
+            World* world = AddObject<World>();
+            world->Create(true);
+            world->Generate();
+
+            Serilizer::CreateNewWorld(create_world_input->GetInput(), world);
+
+            this->SwitchMenuState(MenuStates::SELECT_WORLD);
+            create_world_input->SetInput("");
+
+            DeleteObject(world);
+        }
+
     });
 
-    main_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
-    main_rect_array->AddUIRect(play_button);
-    main_rect_array->AddUIRect(settings_button);
-    main_rect_array->SetElementSize(100, 50);
-    main_rect_array->SetGap(UIRect::padding);
-    main_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+
+
+
+    // Select World ------------------------------------------------------------------
+
+    new_structure_button = AddUI<Object>()->AddComponent<UIButton>();
+    new_structure_button->SetString("+ New Structure");
+    new_structure_button->SetOnClickCallback([this](){
+        
+        this->SwitchMenuState(MenuStates::CREATE_STRUCTURE);
+    });       
+
+
+    // Create Structure ------------------------------------------------------------------
+
+    create_structure_input = AddUI<Object>()->AddComponent<UIInputField>();
+    create_structure_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    create_structure_input->SetPlaceholder("Enter Structure Name...");
+    
+    create_structure_button = AddUI<Object>()->AddComponent<UIButton>();
+    create_structure_button->SetString("Create");
+    create_structure_button->SetOnClickCallback([this](){
+        
+        if(create_structure_input->GetInput() != ""){
+
+            World* world = AddObject<World>();
+            world->Create(true, 1, 1);
+
+            Serilizer::CreateNewStructure(create_structure_input->GetInput(), world);
+
+            this->SwitchMenuState(MenuStates::SELECT_STRUCTURE);
+            create_structure_input->SetInput("");
+
+            DeleteObject(world);
+        }
+
+    });
+
+
 
     // select play mode -----------------------------------------------------------
 
@@ -64,111 +150,32 @@ void MenuScene::Start(){
         this->SwitchMenuState(MenuStates::SELECT_PLAYER);
     });
 
-    play_mode_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
-    play_mode_rect_array->AddUIRect(offline_button);
-    play_mode_rect_array->AddUIRect(join_button);
-    play_mode_rect_array->AddUIRect(host_button);
-    play_mode_rect_array->SetElementSize(100, 50);
-    play_mode_rect_array->SetGap(UIRect::padding);
-    play_mode_rect_array->SetAlign(ScreenLocationX::LEFT, ScreenLocationY::CENTER);
+    structure_button = AddUI<Object>()->AddComponent<UIButton>();
+    structure_button->SetString("Dev");
 
-
-    // Select Player ----------------------------------------------------------------
-
-    new_player_button = AddUI<Object>()->AddComponent<UIButton>();
-    new_player_button->SetString("+ New Player");
-    new_player_button->SetOnClickCallback([this](){
-        
-        this->SwitchMenuState(MenuStates::CREATE_PLAYER);
-    });       
-
-    select_player_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
-    select_player_rect_array->SetElementSize(150, 25);
-    select_player_rect_array->SetGap(UIRect::padding);
-    select_player_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
-
-    // Create Player ----------------------------------------------------------------
-
-    create_player_input = AddUI<Object>()->AddComponent<UIInputField>();
-    create_player_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
-    create_player_input->SetPlaceholder("Enter Name...");
-    
-    create_player_button = AddUI<Object>()->AddComponent<UIButton>();
-    create_player_button->SetString("Create");
-    create_player_button->SetOnClickCallback([this](){
-        
-        // create new player save file
-        if(create_player_input->GetInput() != ""){
-            Serilizer::CreateNewPlayer(create_player_input->GetInput());
-            this->SwitchMenuState(MenuStates::SELECT_PLAYER);
-            create_player_input->SetInput("");
-        }
+    structure_button->SetOnClickCallback([this](){
+        std::cout << "structure (dev mode) pressed\n";
+        play_mode = PlayMode::OFFLINE;
+        this->SwitchMenuState(MenuStates::SELECT_STRUCTURE);
     });
 
-    create_player_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
-    create_player_rect_array->SetElementSize(150, 50);
-    create_player_rect_array->SetGap(UIRect::padding);
-    create_player_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
-    create_player_rect_array->AddUIRect(create_player_input);
-    create_player_rect_array->AddUIRect(create_player_button);
-
-    // Select World ------------------------------------------------------------------
-
-    new_world_button = AddUI<Object>()->AddComponent<UIButton>();
-    new_world_button->SetString("+ New World");
-    new_world_button->SetOnClickCallback([this](){
-        
-        this->SwitchMenuState(MenuStates::CREATE_WORLD);
-    });       
-
-    select_world_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
-    select_world_rect_array->SetElementSize(150, 25);
-    select_world_rect_array->SetGap(UIRect::padding);
-    select_world_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
-
-    // Create World ------------------------------------------------------------------
-
-    create_world_input = AddUI<Object>()->AddComponent<UIInputField>();
-    create_world_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
-    create_world_input->SetPlaceholder("Enter World Name...");
-    
-    create_world_button = AddUI<Object>()->AddComponent<UIButton>();
-    create_world_button->SetString("Create");
-    create_world_button->SetOnClickCallback([this](){
-        
-        if(create_world_input->GetInput() != ""){
-
-
-            World* world = AddObject<World>();
-            world->Create(true);
-            world->Generate();
-
-            Serilizer::CreateNewWorld(create_world_input->GetInput(), world);
-
-            this->SwitchMenuState(MenuStates::SELECT_WORLD);
-            create_world_input->SetInput("");
-
-            DeleteObject(world);
-        }
-
-    });
-    create_world_rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
-    create_world_rect_array->SetElementSize(150, 50);
-    create_world_rect_array->SetGap(UIRect::padding);
-    create_world_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
-    create_world_rect_array->AddUIRect(create_world_input);
-    create_world_rect_array->AddUIRect(create_world_button);
-
+    rect_array = AddUI<Object>()->AddComponent<UIRectArray>();
+    rect_array->SetElementSize(150, 30);
+    rect_array->SetGap(UIRect::padding);
+    rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
 
 
     new_world_button->SetActive(false);
     new_player_button->SetActive(false);
     create_world_button->SetActive(false);
     create_player_button->SetActive(false);
-
+    create_player_input->SetActive(false);
+    create_world_input->SetActive(false);
+    new_structure_button->SetActive(false);
+    create_structure_button->SetActive(false);
+    create_structure_input->SetActive(false);
 
     this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
-
 
 }
 
@@ -178,7 +185,6 @@ void MenuScene::EnterWorld(){
 }
 
 void MenuScene::ClearFoundPlayersList(){
-    select_player_rect_array->ClearUIRects();
     found_players.clear();
 
     // deletes buttons
@@ -189,8 +195,18 @@ void MenuScene::ClearFoundPlayersList(){
     found_players_buttons.clear();
 }
 
+void MenuScene::ClearFoundStructuresList(){
+    found_structures.clear();
+
+    // deletes buttons
+    for(int i = 0; i < found_structures_buttons.size(); i++){
+        DeleteObject(found_structures_buttons[i]->GetThisObject());
+    }
+
+    found_structures_buttons.clear();
+}
+
 void MenuScene::ClearFoundWorldsList(){
-    select_world_rect_array->ClearUIRects();
     found_worlds.clear();
 
     // deletes buttons
@@ -203,32 +219,24 @@ void MenuScene::ClearFoundWorldsList(){
 
 void MenuScene::SwitchMenuState(MenuStates new_state){
 
+    rect_array->SetActive(false);
+
     switch(new_state){
 
-        case MAIN : {
-            main_rect_array->SetActive(true);
-            
-            select_player_rect_array->SetActive(false);
-            create_player_rect_array->SetActive(false);
-            select_world_rect_array->SetActive(false);
-            create_world_rect_array->SetActive(false);
-            play_mode_rect_array->SetActive(false);
-            break;
-        }
         case SELECT_PLAY_MODE: {
-            main_rect_array->SetActive(false);
-            select_player_rect_array->SetActive(false);
-            create_player_rect_array->SetActive(false);
-            select_world_rect_array->SetActive(false);
-            create_world_rect_array->SetActive(false);
-            play_mode_rect_array->SetActive(true);   
+            rect_array->ClearUIRects();
+            rect_array->AddUIRect(offline_button);
+            rect_array->AddUIRect(join_button);
+            rect_array->AddUIRect(host_button);
+            rect_array->AddUIRect(structure_button);
             break;
         }
         case SELECT_PLAYER : {
 
+            rect_array->ClearUIRects();
             ClearFoundPlayersList();
 
-            select_player_rect_array->AddUIRect(new_player_button);
+            rect_array->AddUIRect(new_player_button);
 
             // add a button for each player
 
@@ -251,33 +259,24 @@ void MenuScene::SwitchMenuState(MenuStates new_state){
                     }
                 });
 
-                select_player_rect_array->AddUIRect(button);
+                rect_array->AddUIRect(button);
                 found_players_buttons.push_back(button);
             }
 
-            select_player_rect_array->SetActive(true);
-            main_rect_array->SetActive(false);
-            create_player_rect_array->SetActive(false);
-            select_world_rect_array->SetActive(false);
-            create_world_rect_array->SetActive(false);
-            play_mode_rect_array->SetActive(false);
             break;
         }
         case CREATE_PLAYER : {
-            select_player_rect_array->SetActive(false);
-            main_rect_array->SetActive(false);
-            select_world_rect_array->SetActive(false);
-            create_world_rect_array->SetActive(false);
-
-            create_player_rect_array->SetActive(true);
-            play_mode_rect_array->SetActive(false);
+            rect_array->ClearUIRects();
+            rect_array->AddUIRect(create_player_input);
+            rect_array->AddUIRect(create_player_button);
             break;
         }
         case SELECT_WORLD : {
 
+            rect_array->ClearUIRects();
             ClearFoundWorldsList();
 
-            select_world_rect_array->AddUIRect(new_world_button);
+            rect_array->AddUIRect(new_world_button);
 
             // add a button for each player
 
@@ -305,31 +304,63 @@ void MenuScene::SwitchMenuState(MenuStates new_state){
                     
                 });
 
-                select_world_rect_array->AddUIRect(button);
+                rect_array->AddUIRect(button);
                 found_worlds_buttons.push_back(button);
             }
-
-            main_rect_array->SetActive(false);
-            select_player_rect_array->SetActive(false);
-            create_player_rect_array->SetActive(false);
-            create_world_rect_array->SetActive(false);
-
-            play_mode_rect_array->SetActive(false);
-            select_world_rect_array->SetActive(true);
 
             break;
         }
         case CREATE_WORLD : {
-            main_rect_array->SetActive(false);
-            select_player_rect_array->SetActive(false);
-            create_player_rect_array->SetActive(false);
-            create_world_rect_array->SetActive(true);
-            select_world_rect_array->SetActive(false);
-            play_mode_rect_array->SetActive(false);
+            rect_array->ClearUIRects();
+            rect_array->AddUIRect(create_world_input);
+            rect_array->AddUIRect(create_world_button);
             break;
         }
+    
+        case SELECT_STRUCTURE : {
+
+            rect_array->ClearUIRects();
+            ClearFoundStructuresList();
+
+            rect_array->AddUIRect(new_structure_button);
+
+            // add a button for each player
+
+            found_structures = Serilizer::LoadStructureList();
+            for(int i = 0; i < found_structures.size(); i++){
+
+                UIButton* button = AddObject<Object>()->AddComponent<UIButton>();
+                button->SetString(found_structures[i].name);
+
+                // join the world
+                button->SetOnClickCallback([this, i](){
+                    
+                    client->SetCurrentWorld(this->found_structures[i]);
+                    this->client->SetPlayMode(PlayMode::OFFLINE);
+
+                    Core::LoadScene("EditorScene");
+                    
+                });
+
+                rect_array->AddUIRect(button);
+                found_structures_buttons.push_back(button);
+            }
+
+            break;
+        }
+
+        case CREATE_STRUCTURE : {
+            rect_array->ClearUIRects();
+            rect_array->AddUIRect(create_structure_input);
+            rect_array->AddUIRect(create_structure_button);
+            break;
+        }
+    
+    
     }
     
+    rect_array->SetActive(true);
+
 
     this->menu_state = new_state;
 }

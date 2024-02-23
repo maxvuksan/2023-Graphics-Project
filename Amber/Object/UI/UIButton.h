@@ -7,7 +7,8 @@ class UIButton : public UIRect{
 
         UIButton();
         
-        void CatchEvent(sf::Event event) override;
+        void CatchEventEventFocusBounded(sf::Event event) override;  
+
         void Update() override;
 
         void Draw(sf::RenderTarget& surface) override;

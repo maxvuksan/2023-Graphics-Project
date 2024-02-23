@@ -5,6 +5,7 @@
 #include "Networking/GameClient.h"
 #include "WorldScene.h"
 #include "MenuScene.h"
+#include "EditorScene.h"
 
 #include "GameUI/SlotSet.h"
 
@@ -14,7 +15,7 @@
 class Game : public Core{
 
     public:
-        Game() : Core(600, 800, 300, 400, "My Game")
+        Game() : Core(1800, 1350, 600, 450, "My Game")
         {
             if(!SteamAPI_Init()){
                 std::cout << "ERROR: Failed to call SteamAPI_Init, Game::Game()\n";
@@ -68,8 +69,8 @@ class Game : public Core{
 
             AssetManager::CreateAnimationSet("fly", { Animation("fly", 4, 0, 2, 25)}, {"default"});
 
-            AssetManager::CreateAnimationSet("player", {Animation("player", 16, 0, 2, 200), // Idle
-                                                        Animation("player", 16, 2, 6, 100), // Run
+            AssetManager::CreateAnimationSet("player", {Animation("player", 16, 0, 2, 350), // Idle
+                                                        Animation("player", 16, 2, 6, {200, 130, 200, 130}), // Run
                                                         Animation("player", 16, 6, 7, 100), // FallUp
                                                         Animation("player", 16, 7, 8, 100),  // FallDown
                                                         Animation("player", 16, 8, 9, 100)  // OnWall
@@ -99,6 +100,9 @@ class Game : public Core{
             world_scene->SetClient(&client);
             world_scene->SetServer(&server);
 
+            Scene* editor_scene = AssetManager::CreateScene<EditorScene>("EditorScene");
+            editor_scene->SetClient(&client);
+            editor_scene->SetServer(&server);
 
             // config ui button
             UIButton::GetText().setFont(*AssetManager::GetFont("m3x6"));
@@ -114,7 +118,6 @@ class Game : public Core{
             // ----------------------------------------------------------------------
 
             LoadScene("MenuScene");
-            //LoadScene("WorldScene");
         }
         
         // dynamically casts a scenes generic client pointer to a GameClient pointer

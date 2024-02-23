@@ -31,6 +31,8 @@ enum MainBlockCode{
     main_PlatformLeftSupported,
     main_PlatformRightSupported,
 
+    main_WoodLadder,
+
     main_NUMBER_OF_BLOCKS,
 };
 
@@ -59,6 +61,8 @@ enum ForegroundBlockCode{
     foreground_VineBerry,
 
     foreground_Log,
+    foreground_ConcreteBack,
+    foreground_ConcreteFront,
 
     foreground_NUMBER_OF_BLOCKS
 };

@@ -51,6 +51,7 @@ class Tilemap : public Component
         void SetRow(signed_byte tile_index, unsigned int row);
         void SetColumn(signed_byte tile_index, unsigned int column);
         void SetArea(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
+        void SetAreaSafe(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max);
         void SetAll(signed_byte tile_index);
 
         void SetShowOverlayColour(bool show_overlay_colour);

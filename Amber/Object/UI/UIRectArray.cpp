@@ -1,5 +1,6 @@
 #include "UIRectArray.h"
 #include "../../Utility/Calc.h"
+#include "../../Core/Scene.h"
 
 void UIRectArray::AddUIRect(UIRect* rect){
 
@@ -7,6 +8,18 @@ void UIRectArray::AddUIRect(UIRect* rect){
     rect->SetAlign(ScreenLocationX::FREE, ScreenLocationY::FREE);
 
     CalculateTotalSize();
+}
+
+void UIRectArray::CatchEventEventFocusBounded(sf::Event event){
+
+    if(GetThisObject()->GetScene()->GetEventFocus() != nullptr){
+
+        // update all child rects
+
+        for(int i = 0; i < rects.size(); i++){
+            rects[i]->CatchEventEventFocusBounded(event);
+        }
+    }
 }
 
 void UIRectArray::SetGap(int gap){

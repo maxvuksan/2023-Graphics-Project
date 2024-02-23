@@ -18,8 +18,13 @@ class Component{
 
         virtual void Start(){}
         virtual void Update(){}
-        virtual void UpdateEventFocusBounded(){}
         virtual void CatchEvent(sf::Event event){}
+
+        // updates only when the scene has no event focus or this object is the focus
+        virtual void UpdateEventFocusBounded(){}
+        // catches events only when the scene has no event focus or this object is the focus
+        virtual void CatchEventEventFocusBounded(sf::Event){}
+
         virtual void UpdateSecondary(){} // in case of inheritance using up functions
 
         virtual void OnSetActive(){}

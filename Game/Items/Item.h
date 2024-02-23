@@ -83,6 +83,9 @@ enum ItemCode{
     item_Mushroom,
     item_Berries,
     item_BerryHandful,
+
+    item_Wood_Ladder,
+    
     
     item_NUMBER_OF_ITEMS,
 };

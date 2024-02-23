@@ -57,7 +57,7 @@ void WaterManager::RemoveAwakeChunk(const sf::Vector2i& chunk_coord){
 
 void WaterManager::Update(){
     
-
+/*
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Q)){
             sf::Vector2f world_pos = Scene::GetActiveCamera()->ScreenToWorldPosition(Mouse::DisplayPosition());
         sf::Vector2i coord = world->WorldToCoord(world_pos.x, world_pos.y);
@@ -68,7 +68,7 @@ void WaterManager::Update(){
         world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->water_tilemap->SetTile(water_full, chunk_offset.x, chunk_offset.y);
         world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->SetAwakeForWaterSim(awake_decay);
     }
-
+*/
 
 
     water_update_delay_tracked += Time::Dt();

@@ -103,8 +103,11 @@ void Scene::UpdateObjectArray(std::vector<Object*>& array){
         }
 
 
+        bool update_event_focus = false;
+
         if(obj == event_focus_object || event_focus_object == nullptr){
             obj->UpdateEventFocusBounded();
+            update_event_focus = true;
         }
 
         for(auto comp : *obj->GetComponents()){
@@ -116,6 +119,11 @@ void Scene::UpdateObjectArray(std::vector<Object*>& array){
             comp->UpdateEventFocusBounded();
             comp->Update();
             comp->UpdateSecondary();
+            
+            if(update_event_focus){
+                comp->UpdateEventFocusBounded();
+            }
+
         }
         obj->Update();
     }
@@ -137,8 +145,11 @@ void Scene::CatchEventObjectArray(std::vector<Object*>& array, sf::Event event){
             continue;
         }
 
+        bool update_event_focus = false;
+
         if(obj == event_focus_object || event_focus_object == nullptr){
             obj->CatchEventEventFocusBounded(event);
+            update_event_focus = true;
         }
 
         obj->CatchEvent(event);
@@ -149,6 +160,10 @@ void Scene::CatchEventObjectArray(std::vector<Object*>& array, sf::Event event){
                 continue;
             }
             comp->CatchEvent(event);
+
+            if(update_event_focus){
+                comp->CatchEventEventFocusBounded(event);
+            }
         }
     }
 }

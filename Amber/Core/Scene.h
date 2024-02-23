@@ -38,6 +38,7 @@ class Scene {
         virtual void Start(){}
         virtual void Update(){}
         virtual void CatchEvent(sf::Event){}
+        virtual void Draw(sf::RenderTarget&){}
 
         // Responsible for updating objects and object components
         void InternalUpdate();

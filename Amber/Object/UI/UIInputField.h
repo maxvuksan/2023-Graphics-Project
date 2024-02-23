@@ -7,7 +7,7 @@ class UIInputField : public UIButton {
 
         UIInputField(); 
 
-        void CatchEvent(sf::Event event) override;
+        void CatchEventEventFocusBounded(sf::Event event) override;
         void SetPlaceholder(std::string string);
 
         // @returns the users character input

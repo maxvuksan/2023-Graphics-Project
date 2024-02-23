@@ -4,7 +4,7 @@ UIInputField::UIInputField() : tracked_string(""){
     
 }
 
-void UIInputField::CatchEvent(sf::Event event){
+void UIInputField::CatchEventEventFocusBounded(sf::Event event){
 
     if(event.type == sf::Event::MouseButtonPressed){
 

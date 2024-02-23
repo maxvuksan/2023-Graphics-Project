@@ -98,8 +98,12 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
         RenderDebug(*render_textures[SCENE], scene->GetThisObjects());
         RenderDebug(*render_textures[SCENE], scene->GetThisObjectsAdditional());
     }
+
+    // allow scene to draw    
+    scene->Draw(*render_textures[SCENE]);
+
     render_textures[SCENE]->display();
-    
+
     // smoothing camera movement
     sf::Vector2f cam_pos = Scene::GetActiveCamera()->GetBoundedPosition();
     upscaled_image.setPosition(sf::Vector2f(
@@ -116,6 +120,7 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     render_textures[COMPOSITE]->clear(sf::Color::Transparent);
     render_textures[COMPOSITE]->draw(sf::Sprite(render_textures[SCENE]->getTexture()));
+
 
     // draw all ui
     auto ui = scene->GetUI();

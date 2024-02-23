@@ -50,7 +50,7 @@ class GameClient : public Client {
         void SetAllowTimeout(bool allow_timeout);
 
         void SendPlayerControl();
-        void SendSetBlock(short tile_index, int x, int y);
+        void SendSetBlock(signed_byte tile_index, int x, int y, SetLocation set_location);
         void SendChatMessage(const std::string& message);
 
         void CatchPeerEvent(ENetEvent event) override;

@@ -66,7 +66,9 @@ struct p_PlayerControl{
 
 struct p_SetBlock{
     PacketHeader header;
-    short tile_index;
+
+    signed_byte tile_index;
+    int set_location;
     int pos_x;
     int pos_y;
 };

@@ -34,7 +34,6 @@ void WorldScene::Start(){
         case PlayMode::HOSTING : {
 
             Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
-            
             client->Connect("127.0.0.1", 6868);
             client->SetAllowTimeout(false);
 

@@ -11,6 +11,14 @@ class LightingManager : public Object{
 
         static void LinkWorld(World* world);
 
+        /*
+            propogates a light source on the grid of the world 
+
+            @param coordinate of the light source
+            @param colour to tint the light
+            @param decay how fast the light drops off
+            @param decay_dropoff is multiplied by the decay each step
+        */
         static void PropogateLighting(sf::Vector2i coordinate, const sf::Color& colour, float decay = 0.1f);
 
         void Update() override;

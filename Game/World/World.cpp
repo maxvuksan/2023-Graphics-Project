@@ -218,12 +218,10 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     DrawTileToMinimap(tile_index, x, y, set_location);
 
     if(send_packet){
-        client->SendSetBlock(tile_index, x, y);
+        client->SendSetBlock(tile_index, x, y, set_location);
     }
 
     world_needs_pathfinding_recalculating = true;
-
-
 
     return true;
 }
@@ -464,7 +462,6 @@ void World::Update(){
     active_chunks_min.y = Calc::Clamp(chunk_focus_is_in.y - load_distance, 0, world_profile.height);
     active_chunks_max.x = Calc::Clamp(chunk_focus_is_in.x + load_distance, 0, world_profile.width);
     active_chunks_max.y = Calc::Clamp(chunk_focus_is_in.y + load_distance, 0, world_profile.height);
-
 
     bool change_made = false;
 

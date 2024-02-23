@@ -10,6 +10,7 @@
 #include "Settings.h"
 #include "World/TimeManager.h"
 #include "Items/Heavy.h"
+#include "Serilizer.h"
 
 GameClient* CommandParser::client = nullptr;
 
@@ -95,7 +96,21 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {""};
     }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /W", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /STRUCTURE, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /W", Globals::DEBUG_COLOUR};
+    }
+    else if(tokens[0] == "STRUCTURE"){
+
+        if(tokens.size() <= 1){
+            return {"'/STRUCTURE' requires additonal arguments, '/STRUCTURE filename", debug_error}; 
+        }
+
+        sf::Vector2f mouse_world_pos = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
+        
+        if(!Serilizer::SpawnStructureIntoWorld(tokens[1], client->world->WorldToCoord(mouse_world_pos.x, mouse_world_pos.y), client->world)){
+            return {"Serilizer failed to spawn structure", debug_error};
+        }
+
+        return {""};
     }
     else if(tokens[0] == "LIGHTBLUR"){
         if(Settings::_ACTIVE_LIGHT_BLUR_FACTOR == 0){

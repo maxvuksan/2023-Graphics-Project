@@ -134,11 +134,6 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
     
     Datafile wd;
 
-    Time::StartRecord();
-    // read exisiting 
-    Datafile::Read(wd, world_datapair.filepath);
-    Time::EndRecord();
-
     wd["name"].SetString(world_datapair.name);
 
     // header
@@ -147,10 +142,6 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
     wd["header"]["height"].SetInt(world->GetWorldProfile()->height);
     wd["header"]["spawnpoint"].SetInt(world->GetSpawnCoordinate().x, 0);
     wd["header"]["spawnpoint"].SetInt(world->GetSpawnCoordinate().y, 1);
-
-    Time::StartRecord();
-    Datafile::Write(wd, world_datapair.filepath);
-    Time::EndRecord();
 
 
     // loop through each chunk, saving tiles + other chunk specifics
@@ -306,43 +297,134 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
     Datafile::Write(wd, world_datapair.filepath);
 }
 
-void Serilizer::CreateNewWorld(std::string name, World* world){
+void Serilizer::SaveStructure(Serilizer::DataPair structure_datapair, World* world){
 
-    std::string filename = GetCollisionFreeFilename(name, ".world", Settings::SAVE_PATH + "/Worlds/");
-    TimeManager::SetTimeOfDay(1200);
-    SaveWorld({name, Settings::SAVE_PATH + "/Worlds/" + filename + ".world"}, world);
+    Datafile wd;
+
+    wd["name"].SetString(structure_datapair.name);
+
+    // header
+    wd["header"]["width"].SetInt(world->GetWorldProfile()->width);
+    wd["header"]["height"].SetInt(world->GetWorldProfile()->height);
+
+    // loop through each chunk, saving tiles + other chunk specifics
+    for(int chunk_x = 0; chunk_x < world->GetChunks()->size(); chunk_x++){
+        for(int chunk_y = 0; chunk_y < world->GetChunks()->at(chunk_x).size(); chunk_y++){
+            
+            
+            Chunk* chunk = world->GetChunks()->at(chunk_x).at(chunk_y);
+
+            std::string chunk_string = "chunk[" + std::to_string(chunk_x) + "]" + "[" + std::to_string(chunk_y) + "]";
+
+            // save foliage
+            int f = 0;
+            wd["world"][chunk_string]["foliage"]["count"].SetInt(chunk->GetFoliageMap().size());
+            for(auto& foliage : chunk->GetFoliageMap()){
+                wd["world"][chunk_string]["foliage"]["[" + std::to_string(f) + "]"].SetInt(foliage.first, 0);
+                wd["world"][chunk_string]["foliage"]["[" + std::to_string(f) + "]"].SetInt(foliage.second, 1);
+                f++;
+            }
+
+            UtilityStation* station;
+            wd["world"][chunk_string]["utility"]["count"].SetInt(chunk->GetUtilityStations()->size());
+            for(int i = 0; i < chunk->GetUtilityStations()->size(); i++){
+                station = chunk->GetUtilityStations()->at(i);
+                wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["type"].SetInt(station->GetItemCode());
+
+                wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["pos"].SetInt(station->GetTransform()->position.x, 0);
+                wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["pos"].SetInt(station->GetTransform()->position.y, 1);
+            }
+
+
+            // save each tile layer
+            for(int i = 0; i < 3; i++){
+                // select the correct tilemap
+                Tilemap* tilemap = tilemap = chunk->GetTilemap(SetLocation::MAIN);
+                std::string tilemap_name = "m";
+
+                switch(i){
+                    case 1: {
+                        tilemap_name = "b";
+                        tilemap = chunk->GetTilemap(SetLocation::BACKGROUND);
+                        break;
+                    }
+                    case 2: {
+                        tilemap_name = "f";
+                        tilemap = chunk->GetTilemap(SetLocation::FOREGROUND);
+                        break;
+                    }
+                }
+
+                // loop through each tile
+                for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+                    
+                    // rather than storing each tile, we can use run length encoding to reduce duplicates
+                    /*
+                        e.g.
+
+                        dirt, dirt, dirt, dirt, dirt ... could become 5*dirt
+                    */
+
+                    std::string row_name = "[" + std::to_string(y) + "]";
+
+                    int type_counter = 1;
+                    int array_index = 0;
+                    signed_byte current_tile = tilemap->GetTile(0, y);
+
+                    for(int x = 1; x < world->GetWorldProfile()->tilemap_profile.width; x++){
+
+                        signed_byte new_tile = tilemap->GetTile(x, y);
+                        
+                        if(new_tile == current_tile){
+                            type_counter++;
+                        }
+                        
+                        // right set
+                        if(new_tile != current_tile || x == world->GetWorldProfile()->tilemap_profile.width - 1){
+
+                            std::string encoded_set = std::to_string(type_counter) + "*" + std::to_string(current_tile);
+                            
+                            wd["world"][chunk_string]["rows"][row_name][tilemap_name].SetString(encoded_set, array_index);
+
+                            type_counter = 1;
+                            array_index++;
+                        }
+
+                        current_tile = new_tile;
+                    }
+                }
+
+            }
+        }
+    }
+
+    Datafile::Write(wd, structure_datapair.filepath);
+
+    std::cout << structure_datapair.filepath << "\n";
+    std::cout << "saved structure\n";
 
 }
 
-void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
-    
+void Serilizer::LoadStructureAsWorld(std::string filename, World* world){
+
     Datafile wd;
     
-    if(!Datafile::Read(wd, filepath)){
-        std::cout << "ERROR : Failed to read world from " << filepath << " Serilizer::LoadWorldIntoMemory()\n"; 
+    if(!Datafile::Read(wd, filename)){
+        std::cout << "ERROR : Failed to read structure from " << filename << " Serilizer::LoadWorldIntoMemory()\n"; 
         return;
     };
 
     int width = wd["header"]["width"].GetInt();
     int height = wd["header"]["height"].GetInt();
-    int spawn_x = wd["header"]["spawnpoint"].GetInt(0);
-    int spawn_y = wd["header"]["spawnpoint"].GetInt(1);
-
-    TimeManager::SetTimeOfDay(wd["header"]["time of day"].GetInt());
 
     world->Create(false, width, height);
-    world->SetSpawnCoordinate(spawn_x, spawn_y);
-
-
-    std::cout << "world created, looking at chunks\n";
-
+    
     // loop through each chunk
     for(int chunk_x = 0; chunk_x < width; chunk_x++){
         for(int chunk_y = 0; chunk_y < height; chunk_y++){
             
             std::string chunk_string = "chunk[" + std::to_string(chunk_x) + "]" + "[" + std::to_string(chunk_y) + "]";
             Chunk* chunk = world->GetChunks()->at(chunk_x).at(chunk_y);
-
 
 
             // load foliage --------------------------------------------------------------------
@@ -354,20 +436,6 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
                 chunk->AddFoliageViaMapIndex(type, map_val);
             }
 
-            // load utility --------------------------------------------------------------------
-
-/*
-            UtilityStation* station;
-            count = wd["world"][chunk_string]["utility"]["count"].GetInt();
-            for(int i = 0; i < count; i++){
-
-                station = chunk->GetUtilityStations()->at(i);
-                ItemCode item_code = (ItemCode)wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["type"].GetInt();
-
-                wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["pos"].GetInt(0) 
-                wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["pos"].SetInt(0);
-            }
-*/
 
             // for each layer
             for(int i = 0; i < 3; i++){
@@ -404,12 +472,12 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
                     int x_step = 0;
 
 
-                    while(result != "" && index < 50 && x_step < 50){
+                    while(result != "" && index < world->GetWorldProfile()->tilemap_profile.width && x_step < world->GetWorldProfile()->tilemap_profile.width){
 
                         int length_of_type = std::stoi(result.substr(0, result.find("*")));
                         int type = std::stoi(result.substr(result.find("*") + 1, result.length()));
 
-                        if(x_step + length_of_type > 50){
+                        if(x_step + length_of_type > world->GetWorldProfile()->tilemap_profile.width){
                             std::cout << "row length overflow, skipping remaining row\n";
                             break;
                         }
@@ -428,51 +496,203 @@ void Serilizer::LoadWorldIntoMemory(std::string filepath, World* world){
 
         }
     }
+}
 
+bool Serilizer::SpawnStructureIntoWorld(std::string filename, sf::Vector2i coordinate_to_spawn, World* world){
 
-    // loading minimap explored layer 
-    for(int chunk_y = 0; chunk_y < world->GetChunks()->at(0).size(); chunk_y++){
+    Datafile wd;
+    
+    if(!Datafile::Read(wd, Settings::SAVE_PATH + "/Structures/" + filename + ".structure")){
+        std::cout << "ERROR : Failed to read structure from " << filename << " Serilizer::LoadWorldIntoMemory()\n"; 
+        return false;
+    };
 
-
-        // loop through each row
-        for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+    int width = wd["header"]["width"].GetInt();
+    int height = wd["header"]["height"].GetInt();
+    
+    // loop through each chunk
+    for(int chunk_x = 0; chunk_x < width; chunk_x++){
+        for(int chunk_y = 0; chunk_y < height; chunk_y++){
             
-            int _real_y = y + chunk_y * world->GetWorldProfile()->tilemap_profile.height;
+            std::string chunk_string = "chunk[" + std::to_string(chunk_x) + "]" + "[" + std::to_string(chunk_y) + "]";
 
-            std::string row_name = "[" + std::to_string(_real_y) + "]";
+            // for each layer
+            for(int i = 0; i < 3; i++){
+                
 
-            int index = 0;
-            std::string result = wd["minimap"]["rows"][row_name].GetString(index);
-            index++;
-            int x_step = 0;
-
-            while(result != "" && x_step < world->GetWorldProfile()->width * world->GetWorldProfile()->tilemap_profile.width){
-
-
-                int length_of_type = std::stoi(result.substr(0, result.find("*")));
-                int alpha = std::stoi(result.substr(result.find("*") + 1, result.length()));
-
-                for(int i = 0; i < length_of_type; i++){
-
-                    if(x_step + i >= world->GetWorldProfile()->width * world->GetWorldProfile()->tilemap_profile.width){
-                        std::cout << _real_y << "\n";
-                        std::cout << "minimap x overflow?\n";
+                SetLocation set_location = SetLocation::MAIN;
+                std::string tilemap_name = "m";
+                
+                switch(i){
+                    case 1: {
+                        tilemap_name = "b";
+                        set_location = SetLocation::BACKGROUND;
                         break;
                     }
-
-                    world->GetMinimap()->GetExploredPixelGrid()->SetPixel(x_step + i, _real_y, sf::Color(0,0,0,alpha));
+                    case 2: {
+                        tilemap_name = "f";
+                        set_location = SetLocation::FOREGROUND;
+                        break;
+                    }
                 }
 
-                result = wd["minimap"]["rows"][row_name].GetString(index);
-                
-                x_step += length_of_type;
-                index++;
+                // loop through each row
+                for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+
+                    std::string row_name = "[" + std::to_string(y) + "]";
+
+                    int index = 0;
+                    std::string result = wd["world"][chunk_string]["rows"][row_name][tilemap_name].GetString(index);
+                    index++;
+                    int x_step = 0;
+
+
+                    while(result != "" && index < 50 && x_step < 50){
+
+                        int length_of_type = std::stoi(result.substr(0, result.find("*")));
+                        int type = std::stoi(result.substr(result.find("*") + 1, result.length()));
+
+                        if(x_step + length_of_type > 50){
+                            std::cout << "row length overflow, skipping remaining row\n";
+                            break;
+                        }
+
+                        for(unsigned int x = x_step; x < x_step + length_of_type; x++){
+
+                            sf::Vector2i coordinate = coordinate_to_spawn + sf::Vector2i(x + chunk_x * world->GetWorldProfile()->tilemap_profile.width, y + chunk_y * world->GetWorldProfile()->tilemap_profile.height);
+                            if(!world->CoordInBounds(coordinate.x, coordinate.y)){
+                                break;
+                            }
+                            world->SetTile((signed_byte)type, coordinate.x, coordinate.y, set_location, SetMode::OVERRIDE, true, true, false);         
+                        }
+
+                        result = wd["world"][chunk_string]["rows"][row_name][tilemap_name].GetString(index);
+                        
+                        x_step += length_of_type;
+                        index++;
+
+                    }
+
+                }
             }
 
         }
-
     }
+    return true;
+}
 
+void Serilizer::CreateNewWorld(std::string name, World* world){
+
+    std::string filename = GetCollisionFreeFilename(name, ".world", Settings::SAVE_PATH + "/Worlds/");
+    TimeManager::SetTimeOfDay(1200);
+    SaveWorld({name, Settings::SAVE_PATH + "/Worlds/" + filename + ".world"}, world);
+}
+
+void Serilizer::CreateNewStructure(std::string name, World* world){
+
+    std::string filename = GetCollisionFreeFilename(name, ".structure", Settings::SAVE_PATH + "/Structures/");
+    SaveStructure({name, Settings::SAVE_PATH + "/Structures/" + filename + ".structure"}, world);
+}
+
+void Serilizer::LoadWorldIntoMemory(std::string filename, World* world){
+    
+    Datafile wd;
+    
+    if(!Datafile::Read(wd, filename)){
+        std::cout << "ERROR : Failed to read world from " << filename << " Serilizer::LoadWorldIntoMemory()\n"; 
+        return;
+    };
+
+    int width = wd["header"]["width"].GetInt();
+    int height = wd["header"]["height"].GetInt();
+    int spawn_x = wd["header"]["spawnpoint"].GetInt(0);
+    int spawn_y = wd["header"]["spawnpoint"].GetInt(1);
+
+    TimeManager::SetTimeOfDay(wd["header"]["time of day"].GetInt());
+
+    world->Create(false, width, height);
+    world->SetSpawnCoordinate(spawn_x, spawn_y);
+
+
+    std::cout << "world created, looking at chunks\n";
+
+    // loop through each chunk
+    for(int chunk_x = 0; chunk_x < width; chunk_x++){
+        for(int chunk_y = 0; chunk_y < height; chunk_y++){
+            
+            std::string chunk_string = "chunk[" + std::to_string(chunk_x) + "]" + "[" + std::to_string(chunk_y) + "]";
+            Chunk* chunk = world->GetChunks()->at(chunk_x).at(chunk_y);
+
+
+            // load foliage --------------------------------------------------------------------
+            int count = wd["world"][chunk_string]["foliage"]["count"].GetInt();
+            for(int i = 0; i < count; i++){
+                int map_val = wd["world"][chunk_string]["foliage"]["[" + std::to_string(i) + "]"].GetInt(0);
+                Foliage type = (Foliage)wd["world"][chunk_string]["foliage"]["[" + std::to_string(i) + "]"].GetInt(1);
+            
+                chunk->AddFoliageViaMapIndex(type, map_val);
+            }
+
+
+            // for each layer
+            for(int i = 0; i < 3; i++){
+                
+
+                Tilemap* tilemap = chunk->GetTilemap(SetLocation::MAIN);
+                std::string tilemap_name = "m";
+                switch(i){
+                    case 1: {
+                        tilemap_name = "b";
+                        tilemap = chunk->GetTilemap(SetLocation::BACKGROUND);
+                        break;
+                    }
+                    case 2: {
+                        tilemap_name = "f";
+                        tilemap = chunk->GetTilemap(SetLocation::FOREGROUND);
+                        break;
+                    }
+                }
+
+                if(tilemap == nullptr){
+                    std::cout << "ERROR: tilemap variable is nullptr, Serilizer::LoadWorldIntoMemory\n";
+                }
+
+
+                // loop through each row
+                for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+
+                    std::string row_name = "[" + std::to_string(y) + "]";
+
+                    int index = 0;
+                    std::string result = wd["world"][chunk_string]["rows"][row_name][tilemap_name].GetString(index);
+                    index++;
+                    int x_step = 0;
+
+
+                    while(result != "" && index < world->GetWorldProfile()->tilemap_profile.width && x_step < world->GetWorldProfile()->tilemap_profile.width){
+
+                        int length_of_type = std::stoi(result.substr(0, result.find("*")));
+                        int type = std::stoi(result.substr(result.find("*") + 1, result.length()));
+
+                        if(x_step + length_of_type > world->GetWorldProfile()->tilemap_profile.width){
+                            std::cout << "row length overflow, skipping remaining row\n";
+                            break;
+                        }
+
+                        tilemap->SetArea((signed_byte)type, x_step, x_step + length_of_type, y, y + 1);
+
+                        result = wd["world"][chunk_string]["rows"][row_name][tilemap_name].GetString(index);
+                        
+                        x_step += length_of_type;
+                        index++;
+
+                    }
+
+                }
+            }
+
+        }
+    }
 
 }
 
@@ -519,4 +739,26 @@ std::vector<Serilizer::DataPair> Serilizer::LoadWorldList(){
         }
     }
     return found_worlds;
+}
+
+std::vector<Serilizer::DataPair> Serilizer::LoadStructureList(){
+
+    std::vector<DataPair> found_structures;
+
+    for (const auto& dir_entry : std::filesystem::recursive_directory_iterator(Settings::SAVE_PATH + "/Structures/")){
+
+        std::string filepath = FilepathFromDirectoryEntry(dir_entry);
+
+        if(ExtractExtension(filepath) == ".structure"){
+
+            Datafile wd;
+
+            if(!Datafile::Read(wd, filepath, "header")){
+                std::cout << "ERROR : Could not read from file: " << filepath << " Serilizer::LoadStructureList\n";
+            };
+
+            found_structures.push_back({wd["name"].GetString(), filepath});
+        }
+    }
+    return found_structures;
 }

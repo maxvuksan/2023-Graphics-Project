@@ -69,7 +69,8 @@
     "stop_token": "cpp",
     "thread": "cpp",
     "chrono": "cpp",
-    "strstream": "cpp"
+    "strstream": "cpp",
+    "cinttypes": "cpp"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

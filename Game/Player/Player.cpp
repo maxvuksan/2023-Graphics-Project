@@ -7,9 +7,12 @@ void Player::Start(){
 
     AddComponent<PhysicsBody>();
     auto ar = AddComponent<AnimationRenderer>();
-
     ar->SetAnimationSet("player");
     ar->SetRenderLayer(8);
+    
+    auto body_collider = AddComponent<BoxCollider>();
+    body_collider->SetSize(sf::Vector2f(8, 16));
+    body_collider->SetOffset(sf::Vector2f(-4,-8));
     
     AddComponent<PixelParticleSource>();
 

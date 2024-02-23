@@ -74,13 +74,15 @@ struct FoliageData{
 namespace ItemDictionary {
 
     const sf::Color torch_colour(255, 221, 199);
-    const float torch_propogate_decay = 0.03f;
+    const float torch_propogate_decay = 0.06f;
 
     const int tile_size = 8;
     const int half_tile_size = 4;
     const int inventory_item_tile_size = 16;
     
     const int main_tiles_sprites_per_row = 3;
+    const int background_tiles_sprites_per_row = 6;
+    const int foreground_tiles_sprites_per_row = 3;
     const int inventory_sprites_per_row = 12;
 
     const short TYPE_STACK_SIZES[type_NUMBER_OF_TYPES] = {
@@ -180,6 +182,7 @@ namespace ItemDictionary {
         {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},     
         {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},
 
+        {2, sf::Color(186, 97, 81), item_Wood_Ladder},
     };
 
     const BlockData FOREGROUND_BLOCK_DATA[foreground_NUMBER_OF_BLOCKS]{
@@ -212,7 +215,11 @@ namespace ItemDictionary {
         // vine berry
         {0, sf::Color(73, 109, 8), item_Berries, ForegroundBehaviour::VINE},
 
+        // log
         {20, sf::Color(186, 97, 81), item_Main_WoodPlanks},
+        // concrete
+        {5, sf::Color(186, 97, 81)}, 
+        {5, sf::Color(186, 97, 81)}, 
     };
 
     const BlockData BACKGROUND_BLOCK_DATA[background_NUMBER_OF_BLOCKS]{
@@ -423,6 +430,8 @@ namespace ItemDictionary {
         {"Mushroom", type_Food, food_Mushroom, isprite_Mushroom, sound_Soft},
         {"Berries", type_Food, food_Berries, isprite_Berries, sound_Soft},
         {"Berry Handful", type_Food, food_BerryHandful, isprite_BerryHandful, sound_Soft},
+
+        {"Wooden Ladder", type_Main, main_WoodLadder, isprite_WoodLadder, sound_Soft},
         
     };
 
@@ -436,6 +445,7 @@ namespace ItemDictionary {
 
         if(!get_inventory_sprite || item->inventory_sprite == isprite_USE_MAIN_SPRITE){
             switch(item->type){
+
 
                 case ItemType::type_Main:{
 
@@ -468,7 +478,6 @@ namespace ItemDictionary {
         }
         else{
             new_texture = AssetManager::GetTexture("inventory_sprites");
-
 
             int tex_x = item->inventory_sprite % inventory_sprites_per_row; 
             int tex_y = floor(item->inventory_sprite / (float)inventory_sprites_per_row);

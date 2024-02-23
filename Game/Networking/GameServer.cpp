@@ -186,6 +186,7 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
 
 
         case PACKET_PlayerControl: {
+
             ForwardPacketButExclude(event.packet, header.client_id, DISCARD);  
             break;
         }
@@ -196,7 +197,7 @@ void GameServer::InterpretPacket(ENetEvent& event, PACKET packet_type){
             break;
         }
         case PACKET_ChatMessage:       
-            ForwardPacketButExclude(event.packet, header.client_id, DISCARD);  
+            ForwardPacketButExclude(event.packet, header.client_id, QUEUE);  
             break;
 
         
@@ -221,7 +222,7 @@ void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id,
         // dont send position back to originally sender
         if(client_id != client.first){
             
-            ForwardPacketToSpecific(enet_packet, client_id, packet_loading_mode);
+            ForwardPacketToSpecific(enet_packet, client.first, packet_loading_mode);
         }
     }
 }
@@ -229,6 +230,7 @@ void GameServer::ForwardPacketButExclude(ENetPacket* enet_packet, int client_id,
 void GameServer::ForwardPacketToSpecific(ENetPacket* enet_packet, int client_id, PacketLoadingMode packet_loading_mode){
 
     if(!ClientIdExists(client_id)){
+        std::cout << "[SERVER] Discarding packet, target client is no longer valid\n";
         return;
     }
 

@@ -114,22 +114,19 @@ void GameClient::SendPlayerControl(){
 
     IF_ONLINE
 
-    std::cout << "[CLIENT] PACKET_PlayerControl broadcasted from client " << client_id << "\n";
-
     previous_player_position = player->GetTransform()->position;
     auto anim = player->GetComponent<AnimationRenderer>();
 
     SendPacket<p_PlayerControl>(
         server, 
-        {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), player->GetTransform()->position.x, player->GetTransform()->position.y },
-        ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+        {{PACKET_PlayerControl, client_id}, anim->GetFlip(), anim->GetStateIndex(), player->GetTransform()->position.x, player->GetTransform()->position.y });
 }
 
-void GameClient::SendSetBlock(short tile_index, int x, int y){
+void GameClient::SendSetBlock(signed_byte tile_index, int x, int y, SetLocation set_location){
     
     IF_ONLINE
 
-    SendPacket<p_SetBlock>(server, {{PACKET_SetBlock, client_id}, tile_index, x, y});
+    SendPacket<p_SetBlock>(server, {{PACKET_SetBlock, client_id}, tile_index, set_location, x, y});
 }
 
 void GameClient::SendChatMessage(const std::string& message){
@@ -197,7 +194,6 @@ void GameClient::Update(){
             bool search_for_missing_chunk = true;
 
             while(search_for_missing_chunk) {
-
 
                 if(chunk_transfer_x >= world->GetWorldProfile()->width){
                     chunk_transfer_x = 0;
@@ -394,7 +390,6 @@ void GameClient::InterpretPacket(ENetEvent& event){
                 world->CalculateMinimap();
                 
                 chunks_success_grid.clear();
-                world_loaded = true;
             }
 
             break;
@@ -414,9 +409,9 @@ void GameClient::InterpretPacket(ENetEvent& event){
             memcpy(&body, event.packet->data, sizeof(p_PlayerControl));
 
             // apply appropriate animation data
-            auto anim = connected_clients[header.client_id]->GetComponent<AnimationRenderer>();
-            anim->SetFlip(body.flip_sprite);
-            anim->SetStateByIndex(0);
+            //auto anim = connected_clients[header.client_id]->GetComponent<AnimationRenderer>();
+            //anim->SetFlip(body.flip_sprite);
+            //anim->SetStateByIndex(0);
             
             // set position
             connected_clients[header.client_id]->GetTransform()->position = sf::Vector2f(body.pos_x, body.pos_y);
@@ -432,7 +427,7 @@ void GameClient::InterpretPacket(ENetEvent& event){
             p_SetBlock body;
             memcpy(&body, event.packet->data, sizeof(p_SetBlock));
 
-            world->SetTile(body.tile_index, body.pos_x, body.pos_y, SetLocation::MAIN, SetMode::OVERRIDE, false);
+            world->SetTile(body.tile_index, body.pos_x, body.pos_y, (SetLocation)body.set_location, SetMode::OVERRIDE, false);
             
             break;
         }

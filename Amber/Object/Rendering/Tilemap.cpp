@@ -140,6 +140,17 @@ void Tilemap::SetArea(signed_byte tile_index, unsigned int x_min, unsigned int x
         }
     }
 }
+
+void Tilemap::SetAreaSafe(signed_byte tile_index, unsigned int x_min, unsigned int x_max, unsigned int y_min, unsigned int y_max){
+    for(unsigned int x = x_min; x < x_max; x++){
+        for(unsigned int y = y_min; y < y_max; y++){
+
+            SetTileSafe(tile_index, x, y);         
+        }
+    }
+}
+
+
 void Tilemap::SetAll(signed_byte tile_index){
     for(unsigned int y = 0; y < tilemap_profile->height; y++){
         for(unsigned int x = 0; x < tilemap_profile->width; x++){

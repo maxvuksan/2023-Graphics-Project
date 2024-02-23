@@ -13,6 +13,8 @@ class UIRectArray : public UIRect {
         std::vector<UIRect*>& GetUIRects(){return rects;}
         void ClearUIRects(){rects.clear();}
 
+        void CatchEventEventFocusBounded(sf::Event event) override;
+
         void OnSetActive() override;
         void OnDisable() override;
         

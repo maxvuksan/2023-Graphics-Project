@@ -64,7 +64,8 @@ enum SpriteInventory{
     isprite_Mushroom,
     isprite_Sticks,
     isprite_Torch,
+    isprite_WoodLadder,
 
-    isprite_USE_MAIN_SPRITE // use the sprite seen in the world
+    isprite_USE_MAIN_SPRITE // use the sprite seen in the world, for utility stations?
 };
 

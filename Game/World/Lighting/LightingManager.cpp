@@ -260,10 +260,11 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
             light_tile.intensity *= 0.2f;
         }
 
+
         queue.push({light_tile.coord + sf::Vector2i(0, 1), light_tile.intensity - decay, light_tile.chunk_origin});
-        queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.intensity - decay, light_tile.chunk_origin });
-        queue.push({light_tile.coord + sf::Vector2i(-1,0), light_tile.intensity - decay, light_tile.chunk_origin });
-        queue.push({light_tile.coord + sf::Vector2i(1,0), light_tile.intensity - decay, light_tile.chunk_origin });
+        queue.push({light_tile.coord + sf::Vector2i(0, -1), light_tile.intensity - decay, light_tile.chunk_origin});
+        queue.push({light_tile.coord + sf::Vector2i(-1,0), light_tile.intensity - decay, light_tile.chunk_origin});
+        queue.push({light_tile.coord + sf::Vector2i(1,0), light_tile.intensity - decay, light_tile.chunk_origin});
 
         chunk->lighting_closed_grid[light_tile.coord.x][light_tile.coord.y] = light_tile.intensity;
     }
