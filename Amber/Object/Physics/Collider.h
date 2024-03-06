@@ -17,6 +17,7 @@ class Collider : public Component{
     */
 
     public:
+
         virtual void Move(sf::Vector2f movement, PhysicsBody* pb){}
 
         // is the collider a trigger?
@@ -29,6 +30,7 @@ class Collider : public Component{
 
         void SetCollisionInteractionMode(CollisionInteractionMode mode){collision_interaction_mode = mode;}
         CollisionInteractionMode GetCollisionInteractionMode() const{return collision_interaction_mode;}
+
 
     protected:
         CollisionInteractionMode collision_interaction_mode;

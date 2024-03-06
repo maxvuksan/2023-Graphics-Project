@@ -20,10 +20,10 @@ float PlayerController::wall_kickoff_height = 0.15;
 
 void PlayerController::Start(){
     
-    // set player camera as scene camera
-    object->GetScene()->SetActiveCamera(object->AddComponent<Camera>());
 
     body_collider = object->GetComponent<BoxCollider>();
+    // allow stepping up 1 tile
+    body_collider->SetStepHeight(ItemDictionary::tile_size + 1);
 
     left = object->AddComponent<BoxCollider>();
     left->SetIsTrigger(true);

@@ -74,8 +74,61 @@ void Chunk::DrawDebug(sf::RenderTarget& surface){
 
     sf::RenderStates render_states;
     render_states.transform.translate(Scene::GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(0,0)));
-
     surface.draw(debug_vertex_array, render_states);
+
+    sf::VertexArray explored_vertex_array;
+    explored_vertex_array.setPrimitiveType(sf::Quads);
+
+    if(pathfinding_nodes.size() > 0){
+
+        debug_vertex_array.clear();
+        debug_vertex_array.setPrimitiveType(sf::Points);
+
+        sf::Vertex vertex;
+
+        for(int x = 0; x < world->tilemap_profile->width; x++){
+            for(int y = 0; y < world->tilemap_profile->height; y++){
+                
+                vertex.position = GetTransform()->position + sf::Vector2f(x, y) * (float)ItemDictionary::tile_size + sf::Vector2f(4,4);
+                vertex.color = Globals::DEBUG_COLOUR;
+
+                if(pathfinding_nodes[x][y].has_block){
+                    vertex.color = sf::Color::Red;
+                }
+                else if(pathfinding_nodes[x][y].next_to_block){
+                    vertex.color = sf::Color::Yellow;
+                }
+                else if(pathfinding_nodes[x][y].has_wall){
+                    vertex.color = sf::Color::Cyan;
+                }
+                
+                
+
+                debug_vertex_array.append(vertex);
+            
+                if(pathfinding_nodes[x][y].explored){
+                    vertex.color = sf::Color(255,0,255,100);
+                    vertex.position = GetTransform()->position + sf::Vector2f(x, y) * (float)ItemDictionary::tile_size;
+                    explored_vertex_array.append(vertex);           
+
+                    vertex.position = GetTransform()->position + sf::Vector2f(x + 1, y) * (float)ItemDictionary::tile_size;
+                    explored_vertex_array.append(vertex);        
+
+                    vertex.position = GetTransform()->position + sf::Vector2f(x + 1, y + 1) * (float)ItemDictionary::tile_size;
+                    explored_vertex_array.append(vertex);       
+
+                    vertex.position = GetTransform()->position + sf::Vector2f(x, y + 1) * (float)ItemDictionary::tile_size;
+                    explored_vertex_array.append(vertex);        
+    
+                }
+            }
+        }
+
+        surface.draw(debug_vertex_array, render_states);
+        surface.draw(explored_vertex_array, render_states);
+
+    }
+
 }
 
 void Chunk::Draw(sf::RenderTarget& surface){
@@ -423,9 +476,9 @@ void Chunk::RecalculateTorchPositions(){
 }
 
 void Chunk::OnSetActive(){
-    
 
     RecalculateTorchPositions();
+    CalculatePathfindingGrid();
     
     lighting_closed_grid.resize(world->tilemap_profile->width);
     for(int i = 0; i < lighting_closed_grid.size(); i++){
@@ -448,6 +501,7 @@ void Chunk::OnSetActive(){
 
 void Chunk::OnDisable(){
 
+    pathfinding_nodes.clear();
     lighting_closed_grid.clear();
     foliage_vertex_array.clear();
 
@@ -457,6 +511,60 @@ void Chunk::OnDisable(){
     foreground_tilemap->ClearVertexArray();
     background_tilemap->ClearVertexArray();
     water_tilemap->ClearVertexArray();
+}
+
+void Chunk::CalculatePathfindingGrid(){
+
+    /*
+        recalculating the entire pathfinding grid for the chunk
+    */
+
+    pathfinding_nodes.clear();
+    pathfinding_nodes.resize(world->GetWorldProfile()->tilemap_profile.width);
+
+    for(int x = 0; x < world->GetWorldProfile()->tilemap_profile.width; x++){
+        pathfinding_nodes[x].resize(world->GetWorldProfile()->tilemap_profile.height);
+
+        for(int y = 0; y < world->GetWorldProfile()->tilemap_profile.height; y++){
+            
+            bool has_wall = false;
+            bool has_block = false;
+
+            if(background_tilemap->GetTile(x, y) != -1){
+                has_wall = true;
+            }        
+            if(main_tilemap->GetTile(x, y) != -1){
+                has_block = true;
+            }
+
+            pathfinding_nodes[x][y].next_to_block = false;
+            for(int i = 0; i < 4; i++){
+                
+                sf::Vector2i new_pos(x + Globals::HORIZONTAL_OFFSETS[i].x, y + Globals::HORIZONTAL_OFFSETS[i].y);
+
+                // we are out of the chunk bounds
+                if(new_pos.x < 0 || new_pos.y < 0 || 
+                new_pos.x >= world->GetWorldProfile()->tilemap_profile.width ||
+                new_pos.y >= world->GetWorldProfile()->tilemap_profile.height){
+
+                    // must reference surrounding chunks
+                    if(world->GetTile(new_pos.x + chunk_coordinate.x, new_pos.y + chunk_coordinate.y, SetLocation::MAIN) != -1){
+                        pathfinding_nodes[x][y].next_to_block = true;
+                        break;
+                    }
+
+                }
+                // we are within the chunk
+                else if(main_tilemap->GetTile(new_pos.x, new_pos.y) != -1){
+                    pathfinding_nodes[x][y].next_to_block = true;
+                    break;
+                }
+            }
+
+            pathfinding_nodes[x][y].has_wall = has_wall;
+            pathfinding_nodes[x][y].has_block = has_block;
+        }
+    }
 }
 
 void Chunk::ClearColliders(){

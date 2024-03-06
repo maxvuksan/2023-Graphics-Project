@@ -51,12 +51,13 @@ void Pickup::Update(){
 
         attract_tracked += Time::Dt();
 
+        GetTransform()->position = Calc::Lerp(GetTransform()->position, target->position, attract_tracked / attract_speed);
+
         // add pickup to inventory, then destory
         if(attract_tracked > attract_speed){
             Destroy();
         }
 
-        GetTransform()->position = Calc::Lerp(GetTransform()->position, target->position, attract_tracked / attract_speed);
     }
 
 }

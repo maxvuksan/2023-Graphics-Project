@@ -2,6 +2,8 @@
 #include "TilemapCollider.h"
 #include "../../Core/Scene.h"
 #include "PhysicsBody.h"
+#include "CircleCollider.h"
+#include "../../Utility/Calc.h"
 
 
 
@@ -97,8 +99,18 @@ bool BoxCollider::Overlaps(float other_left, float other_right, float other_top,
 }
 
 void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
+    Move(movement, pb, 0);
+}
+
+void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb, int move_depth){
+
+    if(move_depth > 3){
+        return;
+    }
 
     Transform* transform = object->GetTransform();
+
+    // resolving collisions with rectangles ---------------------------------------
 
     float previous_frame_bottom = rects[0].Bottom();
 
@@ -113,13 +125,14 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
         // vertical (Y) collisions
         for(auto& other_rect : overlapping){
             
+            // collide bottom
             if(movement.y < 0){
                 
                 transform->position.y = other_rect->Bottom() - rects[0].y;
                 pb->velocity.y = 0;
                 pb->SetLastBottomCollision(0);
             }
-            else{ 
+            else{ // collide top
                 
                 transform->position.y = other_rect->Top() - rects[0].height - rects[0].y;
                 pb->velocity.y = 0;
@@ -137,20 +150,106 @@ void BoxCollider::Move(sf::Vector2f movement, PhysicsBody* pb){
         // horizontal (X) collisions
         for(auto& other_rect : overlapping){
             
-            if(movement.x < 0){
-                
-                transform->position.x = other_rect->Right() - rects[0].x;
-                pb->velocity.x = 0;
-                pb->SetLastLeftCollision(0);
-            }
-            else{ 
-                
-                transform->position.x = other_rect->Left() - rects[0].width - rects[0].x;
-                pb->velocity.x = 0;
-                pb->SetLastRightCollision(0);
+            // attempts to step up a collider
+            if(!StepUpCollider(movement.x, other_rect, pb)){
+
+                // otherwise
+                if(movement.x < 0){ // collide left
+                    
+                    transform->position.x = other_rect->Right() - rects[0].x;
+                    pb->velocity.x = 0;
+                    pb->SetLastLeftCollision(0);
+                }
+                else{ // collide right
+                    
+                    transform->position.x = other_rect->Left() - rects[0].width - rects[0].x;
+                    pb->velocity.x = 0;
+                    pb->SetLastRightCollision(0);
+                }
             }
         }
     }
+
+    // resolving collisions with circles ------------------------------------------
+
+    std::vector<CircleCollider*>* circle_colliders = GetThisObject()->GetScene()->GetCircleColliders();
+
+    // iterate over each box overlap
+    for(int i = 0; i < circle_colliders->size(); i++){
+
+        Transform* circle_transform =  circle_colliders->at(i)->GetThisObject()->GetTransform();
+
+        // circle is in bounds of rectangle
+        if(!Overlaps(circle_transform->position.x - circle_colliders->at(i)->GetRadius(), circle_transform->position.y - circle_colliders->at(i)->GetRadius(), circle_colliders->at(i)->GetRadius() * 2, circle_colliders->at(i)->GetRadius() * 2)){
+            continue;
+        }
+
+        sf::Vector2f clamped_pos;
+        clamped_pos.x = Calc::Clamp(transform->position.x, rects[0].Left(), rects[0].Right());
+        clamped_pos.y = Calc::Clamp(transform->position.y, rects[0].Top(), rects[0].Bottom());
+
+        sf::Vector2f overlap_vec = clamped_pos - transform->position;
+
+        float overlap = circle_colliders->at(i)->GetRadius() - Calc::Magnitude(overlap_vec);
+
+        // in the case the circle is right on the edge, calculating the magnitude would divide by zero
+        if(std::isnan(overlap)){
+            overlap = 0; 
+        }
+
+        // we are colliding
+        if(overlap > 0){
+            
+            pb->velocity *= 0.5f;
+            Move(Calc::Normalize(overlap_vec) * overlap, pb, move_depth + 1);
+        }
+    }
+    
+
+    this->ContainToSceneBounds();
+}
+
+bool BoxCollider::StepUpCollider(float movement_x, Rect* other_rect, PhysicsBody* pb){
+
+    Transform* transform = GetThisObject()->GetTransform();
+    sf::Vector2f starting_position = transform->position;
+
+    float height = other_rect->Top() - rects[0].Bottom();
+
+    if(abs(height) < step_height){
+
+        // translate upwards, 
+        transform->position.y = other_rect->Bottom() - rects[0].height - 0.5f;
+        // check if above space is free
+        std::vector<Rect*> found_collisions = DetermineBoxOverlaps(rects[0].Bottom());
+
+        // hit something
+        if(found_collisions.size() > 0){
+            transform->position = starting_position;
+            return false;
+        }
+
+        else{
+            // pushing collider over edge
+            if(movement_x > 0){
+                transform->position.x++;
+            }
+            else{
+                transform->position.x--;
+            }
+
+            // move by translation
+            Move(sf::Vector2f(0, 0), pb);
+        }
+        
+    }
+}
+
+
+
+void BoxCollider::ContainToSceneBounds(){
+
+    Transform* transform = object->GetTransform();
 
     // keep collider within bounds
 

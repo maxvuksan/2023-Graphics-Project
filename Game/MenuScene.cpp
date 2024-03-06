@@ -62,6 +62,8 @@ void MenuScene::Start(){
     
     create_world_button = AddUI<Object>()->AddComponent<UIButton>();
     create_world_button->SetString("Create");
+
+    
     create_world_button->SetOnClickCallback([this](){
         
         if(create_world_input->GetInput() != ""){

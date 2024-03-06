@@ -211,6 +211,7 @@ void Minimap::CatchEventEventFocusBounded(sf::Event event){
     if(event.type == sf::Event::MouseButtonPressed){
 
         if(event.mouseButton.button == sf::Mouse::Button::Left){
+            
             if(placing_marker){
             
                 map_markers.push_back({marker_type_to_place, ScreenToMinimapPosition(Mouse::DisplayPosition())});    
@@ -276,7 +277,7 @@ void Minimap::Draw(sf::RenderTarget& surface){
         // draw each placed marker
         for(auto& marker : map_markers){
                                         // move marker to center of tile
-            DrawMarker(marker.type, marker.position  + sf::Vector2f(-0.5f, -0.5f), surface);
+            DrawMarker(marker.type, marker.position, surface);
         }
 
         // draw players position

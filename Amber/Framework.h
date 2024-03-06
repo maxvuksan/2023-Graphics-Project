@@ -28,6 +28,7 @@
 #include "Object/Physics/TilemapCollider.h"
 #include "Object/Physics/TilemapCollisionTypeDivider.h"
 #include "Object/Physics/RotatingRect.h"
+#include "Object/Physics/CircleCollider.h"
 
 
 #include "Object/UI/UIImage.h"

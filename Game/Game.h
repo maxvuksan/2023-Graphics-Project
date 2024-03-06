@@ -15,7 +15,7 @@
 class Game : public Core{
 
     public:
-        Game() : Core(1800, 1350, 600, 450, "My Game")
+        Game() : Core(1800, 1200, 600, 400, "Blocky block")
         {
             if(!SteamAPI_Init()){
                 std::cout << "ERROR: Failed to call SteamAPI_Init, Game::Game()\n";

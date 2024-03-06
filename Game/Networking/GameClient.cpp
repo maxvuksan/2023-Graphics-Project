@@ -32,8 +32,8 @@ void GameClient::CreateObjects(){
     world->LinkClient(this);
 
     // pathfinding 
-    //pathfinding_graph = scene->AddObject<PathfindingGraph>();
-    //pathfinding_graph->LinkWorld(world);
+    pathfinding_graph = scene->AddObject<PathfindingGraph>();
+    pathfinding_graph->LinkWorld(world);
 
     // setting scene bounds
     WorldProfile* wp = world->GetWorldProfile();

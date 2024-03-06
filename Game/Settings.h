@@ -15,4 +15,5 @@ class Settings {
         static float AMBIENT_OCCLUSION_BLUR_FACTOR;
         static int AMBIENT_OCCLUSION_ALPHA;
 
+        static int CAMERA_CHUNK_BLENDING;
 };

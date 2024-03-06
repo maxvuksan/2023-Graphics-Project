@@ -30,6 +30,8 @@ class WorldScene : public Scene {
         UIButton* return_button;
         UIButton* quit_button;
 
+
+        Camera* camera;
         World* world;
         GameClient* client;
 };

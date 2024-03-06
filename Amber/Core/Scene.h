@@ -10,6 +10,7 @@
 class Tilemap;
 class Core;
 class BoxCollider;
+class CircleCollider;
 
 class Client;
 class Server;
@@ -138,6 +139,7 @@ class Scene {
         // checks if a box collider exists in each object
         void CollectBoxCollider(std::vector<Object*>& array);
         std::vector<BoxCollider*>* GetBoxColliders(){return &box_colliders;}
+        std::vector<CircleCollider*>* GetCircleColliders(){return &circle_colliders;}
 
         // checks if a tilemap exists in each object
         void CollectTilemap(std::vector<Object*>& array);
@@ -193,6 +195,7 @@ class Scene {
            
         std::vector<Tilemap*> tilemaps;
         std::vector<BoxCollider*> box_colliders;
+        std::vector<CircleCollider*> circle_colliders;
 
         // a sorted list of what render layers are in use
         std::vector<int> render_layers_in_use;

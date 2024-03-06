@@ -3,6 +3,7 @@
 #include "WorldSettings.h"
 #include <map>
 #include "../../Amber/Framework.h"
+#include "../Pathfinding/PathfindingGraph.h"
 
 struct EntireTile{
     signed_byte main;
@@ -31,6 +32,10 @@ class Chunk : public Object {
 
         virtual void OnSetActive() override;
         virtual void OnDisable() override;
+
+        // constructs a grid of nodes which can be interpretted for path finding 
+        void CalculatePathfindingGrid();
+        std::vector<std::vector<PathfindingNode>>& GetPathfindingGrid(){return pathfinding_nodes;}
 
         void DrawDebug(sf::RenderTarget& surface) override;
         void Draw(sf::RenderTarget& surface) override;
@@ -174,6 +179,8 @@ class Chunk : public Object {
     private:
 
         bool saving_dirty;
+
+        std::vector<std::vector<PathfindingNode>> pathfinding_nodes;
 
         sf::Vector2i chunk_coordinate;
 

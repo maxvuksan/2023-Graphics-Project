@@ -4,47 +4,86 @@
 
 
 std::vector<sf::Vector2i> PathfindingGraph::previous_traversal;
-std::vector<std::vector<bool>> PathfindingGraph::previous_traversal_closed;
-std::vector<std::vector<PathfindingNode>> PathfindingGraph::nodes;
 WorldProfile* PathfindingGraph::world_profile;
 World* PathfindingGraph::world; 
-sf::Vector2f PathfindingGraph::node_offset_from_chunk;   
 
 void PathfindingGraph::LinkWorld(World* _world){
     world = _world;
     world_profile = world->GetWorldProfile();
+
 }
 
-
-void PathfindingGraph::Update(){
-    ConstructNodeGrid();
-}
 
 
 std::vector<sf::Vector2i> PathfindingGraph::RequestPathWorld(sf::Vector2f start_world, sf::Vector2f end_world, int max_node_coverage){
     
-    if(nodes.size() == 0){
-        std::cout << "ERROR : No nodes to traverse, PathfindingGraph::ConstructNodeGrid may need to be called\n";
+    int start_x = Calc::Clamp(ceil((start_world.x - ItemDictionary::half_tile_size) / (float)world_profile->tilemap_profile.tile_width ), 0, world_profile->tilemap_profile.width * world_profile->width);
+    int start_y = Calc::Clamp(ceil((start_world.y - ItemDictionary::half_tile_size) / (float)world_profile->tilemap_profile.tile_height), 0, world_profile->tilemap_profile.height * world_profile->height);
+
+    int end_x = Calc::Clamp(ceil(end_world.x / (float)world_profile->tilemap_profile.tile_width), 0, world_profile->tilemap_profile.width * world_profile->width);
+    int end_y = Calc::Clamp(ceil(end_world.y / (float)world_profile->tilemap_profile.tile_height), 0, world_profile->tilemap_profile.height * world_profile->height);
+
+    sf::Vector2i start_chunk = world->ChunkFromCoord(start_x, start_y);
+    sf::Vector2i end_chunk = world->ChunkFromCoord(start_x, start_y);
+
+    // the start chunk has no pathfinding nodes calculated
+    if(world->GetChunks()->at(start_chunk.x)[start_chunk.y]->GetPathfindingGrid().size() == 0){
         return {};
     }
 
-    int start_x = Calc::Clamp(round(start_world.x / (float)world_profile->tilemap_profile.tile_width), 0, nodes.size() - 2);
-    int start_y = Calc::Clamp(round(start_world.y / (float)world_profile->tilemap_profile.tile_height), 0, nodes.at(0).size() - 2);
-
-    int end_x = Calc::Clamp(round(end_world.x / (float)world_profile->tilemap_profile.tile_width), 0, nodes.size() - 2);
-    int end_y = Calc::Clamp(round(end_world.y / (float)world_profile->tilemap_profile.tile_height), 0, nodes.at(0).size() - 2);
+    // the end chunk has no pathfinding nodes calculated
+    if(world->GetChunks()->at(end_chunk.x)[end_chunk.y]->GetPathfindingGrid().size() == 0){
+        return {};
+    }
 
     return RequestPath(sf::Vector2i(start_x, start_y), sf::Vector2i(end_x, end_y), TraversalMode::BREADTH_FIRST_SEARCH, max_node_coverage);
 }
 
-bool PathfindingGraph::CoordinateWithinBounds(const sf::Vector2i& coord){
-    if(coord.x > 0 && coord.x < nodes.size() - 1){
-        if(coord.y > 0 && coord.y < nodes.at(0).size() - 1){
-            return true;
+
+int PathfindingGraph::EstablishChunkPathData(std::vector<ChunkPathData>& chunk_paths, sf::Vector2i chunk_coordinate){
+    
+    // check if chunk has already been established
+    for(int i = 0; i < chunk_paths.size(); i++){
+        if(chunk_paths.at(i).chunk_coordinate == chunk_coordinate){
+            return i;
         }
     }
-    return false;
+
+    // other wise, establish chunk,
+
+    chunk_paths.push_back({chunk_coordinate, sf::Vector2i(chunk_coordinate.x * world_profile->tilemap_profile.width, chunk_coordinate.y * world_profile->tilemap_profile.height), {}, {}});
+
+    chunk_paths[chunk_paths.size() - 1].nodes.resize(world_profile->tilemap_profile.width, {});
+    chunk_paths[chunk_paths.size() - 1].closed.resize(world_profile->tilemap_profile.width, {});
+    chunk_paths[chunk_paths.size() - 1].parent_node_data.resize(world_profile->tilemap_profile.width, {});
+
+    for(int x = 0; x < world_profile->tilemap_profile.width; x++){
+        
+        chunk_paths[chunk_paths.size() - 1].nodes.at(x).resize(world_profile->tilemap_profile.height);
+        chunk_paths[chunk_paths.size() - 1].closed.at(x).resize(world_profile->tilemap_profile.height, false);
+        chunk_paths[chunk_paths.size() - 1].parent_node_data.at(x).resize(world_profile->tilemap_profile.height);
+
+        for(int y = 0; y < world_profile->tilemap_profile.height; y++){
+            // reset all tiles f cost
+            chunk_paths[chunk_paths.size() - 1].nodes[x][y].f_cost = 999999.0f;
+            chunk_paths[chunk_paths.size() - 1].nodes[x][y].chunk_index = chunk_paths.size() - 1;
+            chunk_paths[chunk_paths.size() - 1].nodes[x][y].coordinate.x = x;
+            chunk_paths[chunk_paths.size() - 1].nodes[x][y].coordinate.y = y;
+            chunk_paths[chunk_paths.size() - 1].parent_node_data[x][y] = {0, sf::Vector2i(0,0)};
+        }
+    }
+
+    std::vector<std::vector<PathfindingNode>>& pathfinding_grid = world->GetChunks()->at(chunk_coordinate.x).at(chunk_coordinate.y)->GetPathfindingGrid();
+
+    for(int x = 0; x < pathfinding_grid.size(); x++){
+        for(int y = 0; y < pathfinding_grid.at(x).size(); y++){
+            pathfinding_grid[x][y].explored = false;
+        }
+    }
+
+    return chunk_paths.size() - 1;
 }
+
 
 std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::Vector2i end, TraversalMode traversal_mode, int max_node_coverage){
 
@@ -53,115 +92,23 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
         return {};
     }
 
-    struct NodeData{
-        sf::Vector2i coord;
-        float f_cost;
-    };
+    std::vector<ChunkPathData> chunk_paths;
 
 
-    std::vector<std::vector<bool>> closed; // holds if the each node is closed
-    std::vector<std::vector<sf::Vector2i>> parent_node; // holds the coord of each nodes parent 
-
-    closed.resize(nodes.size(), {});
-    parent_node.resize(nodes.size(), {});
-
-    for(int x = 0; x < nodes.size(); x++){
-        
-        closed.at(x).resize(nodes.at(x).size());
-        parent_node.at(x).resize(nodes.at(x).size());
-
-        for(int y = 0; y < nodes.at(x).size(); y++){
-            nodes[x][y].f_cost = 999999.0f;
-        }
-    }
-    previous_traversal_closed = closed;
-
-
-
-
-    /*
-    #pragma region BREADTH_FIRST_SEARCH
-    std::queue<sf::Vector2i> queue;
-    queue.push(start);
-    int steps = 0;
-    while(!queue.empty()){
-
-        steps++;
-        if(steps > max_node_coverage){
-            break;
-        }
-
-        sf::Vector2i coord = queue.front();
-        closed.at(coord.x).at(coord.y) = true;
-        queue.pop();
-
-        if(coord == end){
-            previous_traversal_closed = closed;
-            previous_traversal = CalculatePathFromTraversal(start, end, parent_node);
-            return previous_traversal;
-        }
-
-
-        std::vector<sf::Vector2i> offsets;
-
-        // left
-        if(coord.x > 0){
-            offsets.push_back(sf::Vector2i(-1,0));
-            // diagonals
-            if(coord.y > 0){
-                offsets.push_back(sf::Vector2i(1, -1));
-            }
-            if(coord.y < nodes.at(coord.x).size() - 1){
-                offsets.push_back(sf::Vector2i(1, 1));
-            }
-        }
-        // right
-        if(coord.x < nodes.size() - 1){
-            offsets.push_back(sf::Vector2i(1,0));
-            // diagonals
-            if(coord.y > 0){
-                offsets.push_back(sf::Vector2i(1, -1));
-            }
-            if(coord.y < nodes.at(coord.x).size() - 1){
-                offsets.push_back(sf::Vector2i(1, 1));
-            }
-        }
-        // top
-        if(coord.y > 0){
-            offsets.push_back(sf::Vector2i(0,-1));
-        }
-        // bottom
-        if(coord.y < nodes.at(coord.x).size() - 1){
-            offsets.push_back(sf::Vector2i(0,1));
-        }
-
-        // pushing each new coordinate to the queue (if valid)
-        for(sf::Vector2i& offset : offsets){
-            sf::Vector2i new_coord = coord + offset;
-            if(!closed[new_coord.x][new_coord.y] && nodes[new_coord.x][new_coord.y].open){
-                closed[new_coord.x][new_coord.y] = true;
-                parent_node[new_coord.x][new_coord.y] = coord;
-                queue.push(new_coord);
-            }
-        }
-    }
-
-    #pragma endregion
-    */
-
-    #pragma region A_STAR
-
+    // using A* approach
 
     // how the priority queue should compare the data type (NodeData)
     auto f_cost_compare = [](NodeData a, NodeData b){
-        return a.f_cost > b.f_cost;
+        return a.f_cost >= b.f_cost;
     };
 
     // queue of node coordinates
     std::priority_queue<NodeData, std::vector<NodeData>, decltype(f_cost_compare)> queue(f_cost_compare);
 
-    queue.push({start});
-    nodes[start.x][start.y].f_cost = 0;
+    sf::Vector2i start_chunk_coordinate = world->ChunkFromCoord(start.x, start.y);
+
+    EstablishChunkPathData(chunk_paths, start_chunk_coordinate);
+    queue.push({0, world->OffsetFromCoord(start.x, start.y, start_chunk_coordinate.x, start_chunk_coordinate.y), 0});
 
     sf::Vector2i neighbours[8] = {
                                 sf::Vector2i(-1, 0), 
@@ -173,8 +120,21 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
                                 sf::Vector2i(1, 1),
                                 sf::Vector2i(-1, -1),
                                     };
-    
+ 
+    // how expensive moving on that neighbour is
+    float step_distance[8] = {
+        1,
+        1,
+        1,
+        1,
+        1.4,
+        1.4,
+        1.4,
+        1.4
+    };
+
     // 10 for left right up down, 14 for diagonals 
+   // std::cout << "passed setup\n";
 
     int steps = 0;
     while(!queue.empty()){
@@ -185,170 +145,151 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
         }
 
         NodeData node = queue.top();
-        closed.at(node.coord.x).at(node.coord.y) = true;
+        chunk_paths[node.chunk_index].closed.at(node.coordinate.x).at(node.coordinate.y) = true;
         queue.pop();
 
-        if(node.coord == end){
-            previous_traversal_closed = closed;
-            previous_traversal = CalculatePathFromTraversal(start, end, parent_node);
+        // we found our destination
+        if(chunk_paths[node.chunk_index].chunk_coordinate_tile_perspective + node.coordinate == end){
+            previous_traversal = CalculatePathFromTraversal(start, node, chunk_paths);
             return previous_traversal;
         }
+
+
+       // std::cout << "iterate\n";
 
         // pushing each new coordinate to the queue (if valid)
         for(int i = 0; i < 8; i++){
 
-            sf::Vector2i new_coord = node.coord + neighbours[i];
+            sf::Vector2i new_coord = node.coordinate + neighbours[i];
+            int new_chunk_index = node.chunk_index;
 
-            if(CoordinateWithinBounds(new_coord) && nodes[new_coord.x][new_coord.y].open){
+            // we are crossing over chunks
+            if(new_coord.x < 0 || new_coord.x >= world_profile->tilemap_profile.width ||
+            new_coord.y < 0 || new_coord.y >= world_profile->tilemap_profile.height
+            ){
+
+                sf::Vector2i new_chunk_coord = chunk_paths[node.chunk_index].chunk_coordinate;
+
+                if(new_coord.x < 0){
+                    new_chunk_coord.x--;
+                    new_coord.x = world_profile->tilemap_profile.width - 1;
+                }
+                else if(new_coord.x >= world_profile->tilemap_profile.width) {
+                    new_chunk_coord.x++;
+                    new_coord.x = 0;
+                }
+
+                if(new_coord.y < 0){
+                    new_chunk_coord.y--;
+                    new_coord.y = world_profile->tilemap_profile.height - 1;
+                }
+                else if(new_coord.y >= world_profile->tilemap_profile.height) {
+                    new_chunk_coord.y++;
+                    new_coord.y = 0;
+                }
+
+                // new tile is out of the world bounds
+                if(!world->ChunkInBounds(new_chunk_coord.x, new_chunk_coord.y)){
+                    continue;
+                }
+
+                new_chunk_index = EstablishChunkPathData(chunk_paths, new_chunk_coord);
+            }
+            
+            //std::cout << "passed chunk bound\n";
 
 
-                if(!closed[new_coord.x][new_coord.y]){
+            //std::cout << new_coord.x << " " << new_coord.y << "\n";
+            // the target node is open
+            if(!chunk_paths[new_chunk_index].closed[new_coord.x][new_coord.y]){
+
+              //  std::cout << "open\n";
+
+                std::vector<std::vector<PathfindingNode>>& pathfinding_grid = world->GetChunks()->at(chunk_paths[new_chunk_index].chunk_coordinate.x).at(chunk_paths[new_chunk_index].chunk_coordinate.y)->GetPathfindingGrid();
+
+                if(pathfinding_grid.size() == 0){
+                    continue;
+                }
+
+                // only allows traversal either next to blocks or on walls, 
+                if(!pathfinding_grid[new_coord.x][new_coord.y].has_block 
+                && (pathfinding_grid[new_coord.x][new_coord.y].has_wall || pathfinding_grid[new_coord.x][new_coord.y].next_to_block)){
 
 
-                    nodes[new_coord.x][new_coord.y].f_cost = Calc::DistanceSimple(new_coord, start) + Calc::DistanceSimple(new_coord, end);
-                    closed[new_coord.x][new_coord.y] = true;
-                    parent_node[new_coord.x][new_coord.y] = node.coord;
-                    queue.push({new_coord, nodes[new_coord.x][new_coord.y].f_cost});
+                    pathfinding_grid[new_coord.x][new_coord.y].explored = true;
+                    
+                    // add to previous node distance
+                    chunk_paths[new_chunk_index].nodes[new_coord.x][new_coord.y].distance_from_start = 
+                        step_distance[i] 
+                        + chunk_paths[node.chunk_index].nodes[node.coordinate.x][node.coordinate.y].distance_from_start;
+
+                    // calculate f cost
+                    chunk_paths[new_chunk_index].nodes[new_coord.x][new_coord.y].f_cost = 
+                        chunk_paths[new_chunk_index].nodes[new_coord.x][new_coord.y].distance_from_start
+                        + Calc::Distance(new_coord + chunk_paths[new_chunk_index].chunk_coordinate_tile_perspective, end);
+                    
+                    chunk_paths[node.chunk_index].closed[node.coordinate.x][node.coordinate.y] = true;
+
+                    chunk_paths[new_chunk_index].parent_node_data[new_coord.x][new_coord.y].chunk_index = node.chunk_index;
+                    chunk_paths[new_chunk_index].parent_node_data[new_coord.x][new_coord.y].coordinate = node.coordinate;
+
+                    queue.push({new_chunk_index, new_coord, chunk_paths[new_chunk_index].nodes[new_coord.x][new_coord.y].f_cost});
                 }
             }
+            
+
+
         }
     }
-
-    #pragma end
 
     previous_traversal = {};
     return {};
 }
 
-std::vector<sf::Vector2i> PathfindingGraph::CalculatePathFromTraversal(sf::Vector2i start, sf::Vector2i end, std::vector<std::vector<sf::Vector2i>>& parent_node){
+
+std::vector<sf::Vector2i> PathfindingGraph::CalculatePathFromTraversal(sf::Vector2i start, NodeData end_node, std::vector<ChunkPathData>& chunk_paths){
     
+
     // backtracking through parent_node vector, storing each node found on the path in a return vector
     std::vector<sf::Vector2i> path_so_far;
+    NodeData curr = end_node;
+    
+    curr = chunk_paths[curr.chunk_index].parent_node_data[curr.coordinate.x][curr.coordinate.y];
 
-    sf::Vector2i curr = parent_node[end.x][end.y];
-
+    start.x %= world_profile->tilemap_profile.width;
+    start.y %= world_profile->tilemap_profile.height;
+    
     // loop until start reached
-    while(curr != start){
-        
-        path_so_far.push_back(curr);
-        curr = parent_node[curr.x][curr.y];
+    while(!(curr.coordinate == start && curr.chunk_index == 0)){
+
+        path_so_far.push_back(
+            sf::Vector2i((curr.coordinate.x + chunk_paths[curr.chunk_index].chunk_coordinate_tile_perspective.x) * ItemDictionary::tile_size + ItemDictionary::half_tile_size,
+            (curr.coordinate.y + chunk_paths[curr.chunk_index].chunk_coordinate_tile_perspective.y) * ItemDictionary::tile_size + ItemDictionary::half_tile_size));
+
+        curr = chunk_paths[curr.chunk_index].parent_node_data[curr.coordinate.x][curr.coordinate.y];
     }
 
     std::reverse(path_so_far.begin(), path_so_far.end());
+
+
     return path_so_far;
 
+
 }
-
-void PathfindingGraph::ConstructNodeGrid(){
-
-    // only recalculates node grid when a change has been made
-    if(!world->GetWorldNeedsPathfindingRecalculating()){
-        return;
-    }
-    // tell the world object we are performing recalculations
-    world->SetWorldNeedsPathfindingRecalculating(false);
-
-    std::vector<std::vector<Chunk*>>* chunks = world->GetChunks();
-
-    if(chunks->size() <= 0){
-        return;
-    }
-
-    Transform* focus = world->GetFocus();
-    int load = world->GetLoadDistance();
-
-    sf::Vector2i chunk_with_focus = sf::Vector2i(floor(focus->position.x / ((float)world_profile->tilemap_profile.width * (float)world_profile->tilemap_profile.tile_width) )
-                                               , floor(focus->position.y / ((float)world_profile->tilemap_profile.height * (float)world_profile->tilemap_profile.tile_height)));
-
-    nodes.clear();
-    //nodes.resize((load + 1) * world_profile->tilemap_profile.width, {});
-
-    int chunk_x_min = Calc::Clamp(chunk_with_focus.x - load, 0, world_profile->width - 1);
-    int chunk_y_min = Calc::Clamp(chunk_with_focus.y - load, 0, world_profile->height - 1);
-    int chunk_x_max = Calc::Clamp(chunk_with_focus.x + load + 1, 0, world_profile->width);
-    int chunk_y_max = Calc::Clamp(chunk_with_focus.y + load + 1, 0, world_profile->height);
-    
-    node_offset_from_chunk = chunks->at(chunk_x_min)[chunk_y_min]->GetTransform()->position;
-  
-    nodes.resize(pow(chunk_x_max - chunk_x_min, 2) * world_profile->tilemap_profile.tile_width, {});
-    previous_traversal_closed.resize(nodes.size(), {});
-
-
-    for(int chunk_x = chunk_x_min; chunk_x < chunk_x_max; chunk_x++){
-
-        for(int chunk_y = chunk_y_min; chunk_y < chunk_y_max; chunk_y++){
-            
-            Chunk* curr_chunk = chunks->at(chunk_x).at(chunk_y);
-
-                for(int x = 0; x < world_profile->tilemap_profile.width; x++){
-                    
-                    for(int y = 0; y < world_profile->tilemap_profile.height; y++){
-        
-                    PathfindingNode new_node = {false};
-
-                    // curr_chunk->IsActive()                 is the tile empty? (valid)
-                    
-                    if(curr_chunk->GetTilemap(SetLocation::MAIN)->GetTile(x, y) <= -1){
-                        new_node.open = true;
-                    }
-                    nodes.at((chunk_x - chunk_x_min) * world_profile->tilemap_profile.width + x).push_back(new_node);
-                    previous_traversal_closed.at((chunk_x - chunk_x_min) * world_profile->tilemap_profile.width + x).push_back(false);
-                }
-            }
-
-        }
-    }
-}
-
-
 
 void PathfindingGraph::DrawDebug(sf::RenderTarget& surface){
-
-    // Draw Nodes ---------------------------------------------------------
-
-    sf::VertexArray points;
-
-    // shorthands
-    float half_t_width = world_profile->tilemap_profile.tile_width / 2.0f;
-    float half_t_height = world_profile->tilemap_profile.tile_height / 2.0f;
-
-    for(int x = 0; x < nodes.size(); x++){
-        for(int y = 0; y < nodes.at(x).size(); y++){
-
-            // ignore closed nodes
-            if(!nodes[x][y].open){
-                continue;
-            }
-
-
-            sf::Vertex vertex;
-            vertex.color = sf::Color::Green;
-
-            if(previous_traversal_closed[x][y]){
-                vertex.color = sf::Color::Blue;
-            }
     
-            vertex.position = Camera::WorldToScreenPosition(sf::Vector2f(
-                x * world_profile->tilemap_profile.tile_width + half_t_width + node_offset_from_chunk.x
-               ,y * world_profile->tilemap_profile.tile_height + half_t_height + node_offset_from_chunk.y));
-            
-            points.append(vertex);
-        }
-    }
-    points.setPrimitiveType(sf::Points);
-    surface.draw(points);
-
     // Draw Previous Traversal (path) -------------------------------------
 
+    sf::VertexArray points;
     points.clear();
 
     for(int i = 0; i < previous_traversal.size(); i++){
         sf::Vertex vertex;
         vertex.color = sf::Color::Yellow;
         vertex.position = Camera::WorldToScreenPosition(sf::Vector2f(
-                previous_traversal[i].x * world_profile->tilemap_profile.tile_width + half_t_width + node_offset_from_chunk.x
-               ,previous_traversal[i].y * world_profile->tilemap_profile.tile_height + half_t_height + node_offset_from_chunk.y));
-
+                previous_traversal[i].x
+               ,previous_traversal[i].y));
         points.append(vertex);
     }
 

@@ -120,7 +120,7 @@ void TilemapCollider::CreateCollidersOptimized(){
                 if(tracing_block){
                     // solid cannot merge with platform or platform cannot merge with solid
                     if((block.collision_mode == ColliderType::SOLID && tilemap->GetTile(x, y) >= TilemapCollisionTypeDivider::platform_collider_begins_at)
-                            || (block.collision_mode == ColliderType::PLATFORM && tilemap->GetTile(x, y) < TilemapCollisionTypeDivider::platform_collider_begins_at)){
+                        || (block.collision_mode == ColliderType::PLATFORM && tilemap->GetTile(x, y) < TilemapCollisionTypeDivider::platform_collider_begins_at)){
 
                         block.width = x - block.x;
                         
@@ -140,6 +140,9 @@ void TilemapCollider::CreateCollidersOptimized(){
                     // is this new rect a platform?
                     if(tilemap->GetTile(x, y) >= TilemapCollisionTypeDivider::platform_collider_begins_at){
                         block.collision_mode = ColliderType::PLATFORM;
+                    }
+                    else{
+                        block.collision_mode = ColliderType::SOLID;
                     }
                     tracing_block = true;
                 }

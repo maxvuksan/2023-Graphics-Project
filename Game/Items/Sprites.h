@@ -1,5 +1,3 @@
-
-
 // used for inventory icons
 enum SpriteInventory{
     

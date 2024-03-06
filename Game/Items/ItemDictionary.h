@@ -35,6 +35,7 @@ struct BlockData{
     sf::Color base_colour = sf::Color(0,0,0); // used for minimap
     ItemCode pickup = item_NO_DROP; // what item it drops
     ForegroundBehaviour behaviour = ForegroundBehaviour::NONE;
+    bool blocks_light = true; // does light pass through this block?
 };
 
 struct ItemData{
@@ -178,11 +179,11 @@ namespace ItemDictionary {
         {8, sf::Color(47,41,57), item_Main_Stone},
 
         // wooden platforms
-        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},
-        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},     
-        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM},
+        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM, false},
+        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM, false},     
+        {2, sf::Color(186, 97, 81), item_Main_Platform, ForegroundBehaviour::PLATFORM, false},
 
-        {2, sf::Color(186, 97, 81), item_Wood_Ladder},
+        {2, sf::Color(186, 97, 81), item_Wood_Ladder, ForegroundBehaviour::NONE, false},
     };
 
     const BlockData FOREGROUND_BLOCK_DATA[foreground_NUMBER_OF_BLOCKS]{

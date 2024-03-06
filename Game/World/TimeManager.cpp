@@ -1,9 +1,9 @@
 #include "TimeManager.h"
 #include "Lighting/LightingManager.h"
 
-sf::Color TimeManager::dawn_colour(255,207,186);
+sf::Color TimeManager::dawn_colour(186,186,207);
 sf::Color TimeManager::midday_colour(255,255,255);
-sf::Color TimeManager::dusk_colour(255,207,186);
+sf::Color TimeManager::dusk_colour(186,186,207);
 
 sf::Color TimeManager::start_night(42,37,63);
 sf::Color TimeManager::midnight_colour(0,0,0);

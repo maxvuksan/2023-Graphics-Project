@@ -11,6 +11,7 @@
 #include "World/TimeManager.h"
 #include "Items/Heavy.h"
 #include "Serilizer.h"
+#include "Pathfinding/CircleColliderBond.h"
 
 GameClient* CommandParser::client = nullptr;
 
@@ -90,13 +91,18 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
             noodle->GetTransform()->position = Camera::ScreenToWorldPosition(Mouse::DisplayPosition());
             return {""};
         }
+        else if(tokens[1] == "BOND"){
+            CircleColliderBond* bond = client->scene->AddObject<CircleColliderBond>();
+            bond->SetPosition(Camera::ScreenToWorldPosition(Mouse::DisplayPosition()));
+            return {""};
+        }
     }
     else if(tokens[0] == "OCCLUSION"){
         Settings::AMBIENT_OCCLUSION = !Settings::AMBIENT_OCCLUSION;
         return {""};
     }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /STRUCTURE, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /W", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /STRUCTURE, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /CIRCLE", Globals::DEBUG_COLOUR};
     }
     else if(tokens[0] == "STRUCTURE"){
 
@@ -184,6 +190,15 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         client->world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->water_tilemap->SetTile(16, chunk_offset.x, chunk_offset.y);
         client->world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->SetAwakeForWaterSim(true);
 
+        return {""};
+    }
+    else if(tokens[0] == "CIRCLE"){
+
+        Object* object = client->GetPlayer()->GetScene()->AddObject<Object>();
+        object->GetTransform()->position = Scene::GetActiveCamera()->ScreenToWorldPosition(Mouse::DisplayPosition());
+        object->AddComponent<CircleCollider>();
+        object->AddComponent<PhysicsBody>();
+        
         return {""};
     }
 

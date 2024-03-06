@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "../Utility/Time.h"
 #include "../Object/Physics/BoxCollider.h"
+#include "../Object/Physics/CircleCollider.h"
 #include "../Object/Rendering/Tilemap.h"
 #include <iostream>
 #include <algorithm>
@@ -44,9 +45,9 @@ void Scene::InternalUpdate(){
         return;
     }
 
-
-    box_colliders.clear();
     tilemaps.clear();
+    box_colliders.clear();
+    circle_colliders.clear();
 
     CollectBoxCollider(objects);
     CollectBoxCollider(objects_additional);
@@ -182,10 +183,21 @@ void Scene::CollectBoxCollider(std::vector<Object*>& array){
 
             box_colliders.push_back(bx_colliders[i]);
         }
+
+        std::vector<CircleCollider*> c_colliders = obj->GetAllComponentsOf<CircleCollider>();
+
+        for(int i = 0; i < c_colliders.size(); i++){
+
+            if(!c_colliders[i]->IsActive()){
+                continue;
+            }
+
+            circle_colliders.push_back(c_colliders[i]);
+        }
     }
 }
 void Scene::CollectTilemap(std::vector<Object*>& array){
-    
+
     for(auto obj : array){
         std::vector<Tilemap*> t_maps = obj->GetAllComponentsOf<Tilemap>();
 

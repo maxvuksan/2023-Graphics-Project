@@ -4,10 +4,10 @@
 #include <cmath>
 #include "../../Utility/Calc.h"
 
-float PhysicsBody::max_movement = 7;
+float PhysicsBody::max_movement = 2;
 int PhysicsBody::max_number_of_steps = 100; // allowed number of max_movement sub steps, ignores any after that point
 
-PhysicsBody::PhysicsBody() : velocity(0,0), gravity_on(true), gravity(1), last_left_collision(1000), last_right_collision(1000), last_bottom_collision(1000), last_top_collision(1000){}
+PhysicsBody::PhysicsBody() : velocity_blend(0), velocity(0,0), gravity_on(true), gravity(1), last_left_collision(1000), last_right_collision(1000), last_bottom_collision(1000), last_top_collision(1000){}
 
 void PhysicsBody::Update(){
 
@@ -34,7 +34,9 @@ void PhysicsBody::Update(){
         last_bottom_collision += Time::Dt();
     }
 
-    Move(velocity * Time::Dt());
+    sf::Vector2f final_vel = Calc::Lerp(velocity, secondary_velocity, velocity_blend);
+
+    Move(final_vel * Time::Dt());
 }
 
 void PhysicsBody::Move(sf::Vector2f movement){

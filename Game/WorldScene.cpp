@@ -4,7 +4,7 @@
 
 void WorldScene::Start(){
 
-    Camera* camera = AddObject<Object>()->AddComponent<Camera>();
+    camera = AddObject<Object>()->AddComponent<Camera>();
     camera->background_colour = sf::Color(42, 40, 48);
     SetActiveCamera(camera);
 
@@ -15,7 +15,6 @@ void WorldScene::Start(){
     world->LinkClient(client);
 
     client->LinkWorld(world);
-
 
     // singleplayer
     switch(client->GetPlayMode()){
@@ -94,11 +93,83 @@ void WorldScene::Start(){
 
 void WorldScene::Update(){
 
+    // the player does not exist yet
+    if(client->GetPlayer() == nullptr || world->GetFocus() == nullptr){
+        return;
+    }
+
    client->SendPlayerControl();
 
-    // some other ui has focus, 
-   if(this->GetEventFocus() != nullptr){
-   }
+    /*
+    if(camera->GetThisObject()->GetTransform()->position != client->GetPlayer()->GetTransform()->position){
+        
+        camera->GetThisObject()->GetTransform()->position = Calc::Lerp(camera->GetThisObject()->GetTransform()->position, client->GetPlayer()->GetTransform()->position, 0.1);
+    }
+    */
+   // camera lerping between chunks ---------------------------------------------------------------------------------------------------
+
+
+    sf::Vector2i player_coord = world->WorldToCoord(world->GetFocus()->position.x, world->GetFocus()->position.y);
+    sf::Vector2i chunk_coordinate = world->ChunkFromCoord(player_coord.x, player_coord.y);
+
+
+    int camera_move_threshhold = Settings::CAMERA_CHUNK_BLENDING;
+
+    
+    float player_x = world->GetFocus()->position.x / world->GetWorldProfile()->tilemap_profile.tile_width;
+    float player_y = world->GetFocus()->position.y / world->GetWorldProfile()->tilemap_profile.tile_height;
+
+    player_x = fmod(player_x, world->GetWorldProfile()->tilemap_profile.width);
+    player_y = fmod(player_y, world->GetWorldProfile()->tilemap_profile.height);
+
+    sf::Vector2f camera_shift_factor;
+
+    if(player_x < camera_move_threshhold){
+
+        float t = 1 - player_x / (float)camera_move_threshhold;
+        camera_shift_factor.x = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width  / 2.0f,
+                                            0,
+                                            t * t * t);
+    }
+    else if(player_x > world->GetWorldProfile()->tilemap_profile.width - camera_move_threshhold){
+       
+        float t = (player_x - world->GetWorldProfile()->tilemap_profile.width + camera_move_threshhold) / (float)camera_move_threshhold;
+
+
+        camera_shift_factor.x = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width / 2.0f, 
+                                            world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width, 
+                                            t * t * t);
+    }
+    else{
+        camera_shift_factor.x = world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width / 2.0f;
+    }
+
+    /*
+    if(player_y < camera_move_threshhold){
+        float t = player_y / (float)camera_move_threshhold;
+
+        camera_shift_factor.y = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height / 2.0f,
+                                            0, 
+                                            Calc::EaseOutCubic(t));
+    }
+    else if(player_y > world->GetWorldProfile()->tilemap_profile.height - camera_move_threshhold){
+
+        float t = (player_y - world->GetWorldProfile()->tilemap_profile.height + camera_move_threshhold) / (float)camera_move_threshhold;
+
+
+        camera_shift_factor.y = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height / 2.0f, 
+                                            world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height, 
+                                            Calc::EaseOutCubic(t));
+    }
+    else{
+        camera_shift_factor.y = world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height / 2.0f;
+    }
+    */
+    camera->GetThisObject()->GetTransform()->position.x = 
+        chunk_coordinate.x * world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width//, chunk_coordinate.y * world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height ) 
+        + camera_shift_factor.x;
+
+    camera->GetThisObject()->GetTransform()->position.y = Calc::Lerp(camera->GetThisObject()->GetTransform()->position.y, client->GetPlayer()->GetTransform()->position.y, 0.1);
 }
 
 

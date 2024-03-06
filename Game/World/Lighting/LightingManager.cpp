@@ -154,6 +154,10 @@ void LightingManager::ResetClosedTileVectorForChunk(sf::Vector2i chunk_pos){
 
 void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color& _colour, float decay){
 
+    if(!LightingManager::show_lighting){
+        return;
+    }
+
     struct LightTile {
         sf::Vector2i coord;
         float intensity; 
@@ -256,8 +260,8 @@ void LightingManager::PropogateLighting(sf::Vector2i coordinate, const sf::Color
 
         current_tile = chunk->GetTilemap(SetLocation::MAIN)->GetTile(light_tile.coord.x, light_tile.coord.y);
 
-        if(current_tile != -1 && ItemDictionary::MAIN_BLOCK_DATA[current_tile].behaviour != ForegroundBehaviour::PLATFORM){
-            light_tile.intensity *= 0.2f;
+        if(current_tile != -1 && ItemDictionary::MAIN_BLOCK_DATA[current_tile].blocks_light){
+            light_tile.intensity *= 0.3f;
         }
 
 

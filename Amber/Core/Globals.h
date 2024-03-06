@@ -4,7 +4,6 @@
 
 
 
-
 /*
     Configurable global values 
     accessed via Globals::var_name
@@ -16,8 +15,9 @@ namespace Globals {
 
     const int FRAMERATE_LIMIT = 300;
 
-    const float PI = 3.1416;
-    const float HALF_PI = 1.5708;
+    const float PI = 3.1415927;
+    const float HALF_PI = 1.5707963;
+    const float QUARTER_PI = 0.7853981;
 
     const sf::Color DEFAULT_BACKGROUND_COLOUR = sf::Color(140, 150, 163);   
     const sf::Color BASE_SHADOW_COLOUR = sf::Color(51, 29, 35); //sf::Color(150/2,130/2,170/2);

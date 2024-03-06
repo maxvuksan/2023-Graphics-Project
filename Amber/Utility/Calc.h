@@ -1,4 +1,5 @@
 #pragma once
+#include "../Core/Globals.h"
 #include <math.h>
 #include <SFML/Graphics.hpp>
 
@@ -14,7 +15,16 @@ class Calc{
             return 1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2);
         }
 
+        static float EaseInOutSine(float x){
+            return -(cos(Globals::PI * x) - 1) / 2.0f;
+        }
 
+        static float EaseInCubic(float x){
+            return x * x * x;
+        }
+        static float EaseOutCubic(float x){
+            return 1 - pow(1 - x, 3);
+        }
 
         // @returns true if @param val is within the min and max value (inclusive)
         static bool InRange(float val, float min, float max){
@@ -25,6 +35,11 @@ class Calc{
                 return false;
             }
             return true;        
+        }
+
+        // @returns the hypotenuse of a right angle triangle (calculated with pythag)
+        static float Hypotenuse(float width, float height){
+            return sqrt(pow(width, 2) + pow(height, 2));
         }
 
         static float Clamp(float val, float min, float max){
@@ -68,12 +83,12 @@ class Calc{
         }
 
         // @returns the interporlated vector between a and b by position t
-        static sf::Vector2f Lerp(const sf::Vector2f& a, const sf::Vector2f& b, float t){
+        static sf::Vector2f Lerp(sf::Vector2f a, sf::Vector2f b, float t){
             return sf::Vector2f(Lerp(a.x, b.x, t), Lerp(a.y, b.y, t));
         }
 
         // @returns the interpolated colour between a and by position t
-        static sf::Color Lerp(const sf::Color& a, const sf::Color& b, float t){
+        static sf::Color Lerp(sf::Color a, sf::Color b, float t){
             return sf::Color(Lerp(a.r, b.r, t), Lerp(a.g, b.g, t), Lerp(a.b, b.b, t), Lerp(a.a, b.a, t));
         }
 
@@ -106,6 +121,12 @@ class Calc{
         static float RadiansBetween(sf::Vector2f a, sf::Vector2f b){
             sf::Vector2f dif = b - a;
             return atan2(dif.y, dif.x);
+        }
+
+        // @returns the a normalized vector pointing from a to b
+        static sf::Vector2f VectorBetween(sf::Vector2f a, sf::Vector2f b){
+            float rad = RadiansBetween(a, b);
+            return RadiansToVector(rad);
         }
 
         static float VectorToRadians(sf::Vector2f vector){

@@ -45,6 +45,7 @@ class GameClient : public Client {
         const Serilizer::DataPair& GetCurrentPlayer() const{ return current_player;}
         const Serilizer::DataPair& GetCurrentWorld() const { return current_world;}
 
+        Player* GetPlayer(){return player;}
 
         // can the client timeout from the server?
         void SetAllowTimeout(bool allow_timeout);

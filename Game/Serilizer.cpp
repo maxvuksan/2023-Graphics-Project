@@ -215,6 +215,7 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
                     int type_counter = 1;
                     int array_index = 0;
                     signed_byte current_tile = tilemap->GetTile(0, y);
+                    bool needs_writing_still = false;
 
                     for(int x = 1; x < world->GetWorldProfile()->tilemap_profile.width; x++){
 
@@ -225,7 +226,7 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
                         }
                         
                         // right set
-                        if(new_tile != current_tile || x == world->GetWorldProfile()->tilemap_profile.width - 1){
+                        if(new_tile != current_tile){
 
                             std::string encoded_set = std::to_string(type_counter) + "*" + std::to_string(current_tile);
                             
@@ -237,6 +238,11 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
 
                         current_tile = new_tile;
                     }
+
+                    // writing last of row
+                    std::string encoded_set = std::to_string(type_counter) + "*" + std::to_string(current_tile);                 
+                    wd["world"][chunk_string]["rows"][row_name][tilemap_name].SetString(encoded_set, array_index);
+
                 }
 
             }
@@ -392,6 +398,11 @@ void Serilizer::SaveStructure(Serilizer::DataPair structure_datapair, World* wor
 
                         current_tile = new_tile;
                     }
+                
+                    // writing last of row
+                    std::string encoded_set = std::to_string(type_counter) + "*" + std::to_string(current_tile);                 
+                    wd["world"][chunk_string]["rows"][row_name][tilemap_name].SetString(encoded_set, array_index);
+
                 }
 
             }
@@ -490,7 +501,6 @@ void Serilizer::LoadStructureAsWorld(std::string filename, World* world){
                         index++;
 
                     }
-
                 }
             }
 
@@ -665,11 +675,10 @@ void Serilizer::LoadWorldIntoMemory(std::string filename, World* world){
 
                     int index = 0;
                     std::string result = wd["world"][chunk_string]["rows"][row_name][tilemap_name].GetString(index);
-                    index++;
                     int x_step = 0;
+                    index++;
 
-
-                    while(result != "" && index < world->GetWorldProfile()->tilemap_profile.width && x_step < world->GetWorldProfile()->tilemap_profile.width){
+                    while(result != "" && index < world->GetWorldProfile()->tilemap_profile.width){
 
                         int length_of_type = std::stoi(result.substr(0, result.find("*")));
                         int type = std::stoi(result.substr(result.find("*") + 1, result.length()));
@@ -682,11 +691,10 @@ void Serilizer::LoadWorldIntoMemory(std::string filename, World* world){
                         tilemap->SetArea((signed_byte)type, x_step, x_step + length_of_type, y, y + 1);
 
                         result = wd["world"][chunk_string]["rows"][row_name][tilemap_name].GetString(index);
-                        
-                        x_step += length_of_type;
                         index++;
-
+                        x_step += length_of_type;
                     }
+
 
                 }
             }
