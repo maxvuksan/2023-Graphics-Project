@@ -15,7 +15,7 @@ void UIInputField::CatchEventEventFocusBounded(sf::Event event){
             selected = false;
         }
     }
-    else if(event.type ==  sf::Event::TextEntered){
+    else if(event.type == sf::Event::TextEntered){
 
         if(selected){
             
@@ -25,7 +25,8 @@ void UIInputField::CatchEventEventFocusBounded(sf::Event event){
                     tracked_string.pop_back();
                 }
             }
-            else if(tracked_string.size() <= 20 ){
+            else if(tracked_string.size() <= 50 ){
+
                 tracked_string += event.text.unicode;
             }
         }

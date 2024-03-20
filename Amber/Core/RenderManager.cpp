@@ -11,6 +11,8 @@ sf::Text RenderManager::fps_text;
 int RenderManager::fps_refresh_delay_tracked;
 int RenderManager::fps_refresh_delay = 150;
 
+sf::Vector2f RenderManager::camera_smoothing_vector;
+
 
 void RenderManager::Construct() {
     
@@ -59,13 +61,8 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     sf::Sprite* background_sprite = Scene::GetActiveCamera()->GetBackgroundSprite();
 
-    // fetch the cameras background sprite, only draw if is valid
-    if(background_sprite != nullptr){
-        render_textures[SCENE]->clear(sf::Color::Transparent);
-    }
-    else{
-        render_textures[SCENE]->clear(sf::Color::Transparent);
-    }
+    render_textures[SCENE]->clear(sf::Color::Transparent);
+    render_textures[SCENE]->clear(sf::Color::Transparent);
 
     // draw all objects
     std::vector<int>* render_layers = scene->GetRenderLayers();
@@ -106,12 +103,17 @@ void RenderManager::Render(sf::RenderTarget& surface, Scene* scene){
 
     // smoothing camera movement
     sf::Vector2f cam_pos = Scene::GetActiveCamera()->GetBoundedPosition();
-    upscaled_image.setPosition(sf::Vector2f(
-        -camera_smoothing_edge_buffer,//-(cam_pos.x - floor(cam_pos.x)) * Core::GetDisplayToWindowMultiplier().x, 
-        -camera_smoothing_edge_buffer));//-(cam_pos.y - floor(cam_pos.y)) * Core::GetDisplayToWindowMultiplier().y ) );
+
+    camera_smoothing_vector = sf::Vector2f(
+        -(cam_pos.x - floor(cam_pos.x)) * Core::GetDisplayToWindowMultiplier().x, 
+        -(cam_pos.y - floor(cam_pos.y)) * Core::GetDisplayToWindowMultiplier().y );
+
+    upscaled_image.setPosition(camera_smoothing_vector);
     
     upscaled_image.setTexture(render_textures[SCENE]->getTexture());
     surface.draw(upscaled_image);
+    scene->DrawAtFullResolution(surface);
+
 
 
     // reusing Scene render texture to draw ui_overlay_colour

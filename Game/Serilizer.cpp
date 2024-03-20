@@ -170,6 +170,15 @@ void Serilizer::SaveWorld(Serilizer::DataPair world_datapair, World* world){
                 f++;
             }
 
+
+            int s = 0;
+            wd["world"][chunk_string]["structure"]["count"].SetInt(chunk->GetStructureMap().size());
+            for(auto& struc : chunk->GetStructureMap()){
+                wd["world"][chunk_string]["structure"]["[" + std::to_string(s) + "]"].SetInt(struc.first, 0);
+                wd["world"][chunk_string]["structure"]["[" + std::to_string(s) + "]"].SetInt(struc.second, 1);
+                s++;
+            }
+
             UtilityStation* station;
             wd["world"][chunk_string]["utility"]["count"].SetInt(chunk->GetUtilityStations()->size());
             for(int i = 0; i < chunk->GetUtilityStations()->size(); i++){
@@ -331,6 +340,15 @@ void Serilizer::SaveStructure(Serilizer::DataPair structure_datapair, World* wor
                 f++;
             }
 
+            int s = 0;
+            wd["world"][chunk_string]["structure"]["count"].SetInt(chunk->GetStructureMap().size());
+            for(auto& struc : chunk->GetStructureMap()){
+                wd["world"][chunk_string]["structure"]["[" + std::to_string(s) + "]"].SetInt(struc.first, 0);
+                wd["world"][chunk_string]["structure"]["[" + std::to_string(s) + "]"].SetInt(struc.second, 1);
+                s++;
+            }
+
+            /*
             UtilityStation* station;
             wd["world"][chunk_string]["utility"]["count"].SetInt(chunk->GetUtilityStations()->size());
             for(int i = 0; i < chunk->GetUtilityStations()->size(); i++){
@@ -341,6 +359,7 @@ void Serilizer::SaveStructure(Serilizer::DataPair structure_datapair, World* wor
                 wd["world"][chunk_string]["utility"]["[" + std::to_string(i) + "]"]["pos"].SetInt(station->GetTransform()->position.y, 1);
             }
 
+            */
 
             // save each tile layer
             for(int i = 0; i < 3; i++){
@@ -447,6 +466,13 @@ void Serilizer::LoadStructureAsWorld(std::string filename, World* world){
                 chunk->AddFoliageViaMapIndex(type, map_val);
             }
 
+            count = wd["world"][chunk_string]["structure"]["count"].GetInt();
+            for(int i = 0; i < count; i++){
+                int map_val = wd["world"][chunk_string]["structure"]["[" + std::to_string(i) + "]"].GetInt(0);
+                BackgroundStructure type = (BackgroundStructure)wd["world"][chunk_string]["structure"]["[" + std::to_string(i) + "]"].GetInt(1);
+            
+                chunk->AddStructureViaMapIndex(type, map_val);
+            }
 
             // for each layer
             for(int i = 0; i < 3; i++){
@@ -518,13 +544,37 @@ bool Serilizer::SpawnStructureIntoWorld(std::string filename, sf::Vector2i coord
     };
 
     int width = wd["header"]["width"].GetInt();
-    int height = wd["header"]["height"].GetInt();
+    int height = wd["header"]["height"].GetInt(); 
     
     // loop through each chunk
     for(int chunk_x = 0; chunk_x < width; chunk_x++){
         for(int chunk_y = 0; chunk_y < height; chunk_y++){
             
             std::string chunk_string = "chunk[" + std::to_string(chunk_x) + "]" + "[" + std::to_string(chunk_y) + "]";
+
+            // spawning background structures
+            int count = wd["world"][chunk_string]["structure"]["count"].GetInt();
+            for(int i = 0; i < count; i++){
+                int map_val = wd["world"][chunk_string]["structure"]["[" + std::to_string(i) + "]"].GetInt(0);
+                BackgroundStructure type = (BackgroundStructure)wd["world"][chunk_string]["structure"]["[" + std::to_string(i) + "]"].GetInt(1);
+            
+                int x_coord = map_val % world->GetWorldProfile()->tilemap_profile.width;
+                int y_coord = floor(map_val - x_coord) / world->GetWorldProfile()->tilemap_profile.width;
+
+                sf::Vector2i coordinate = sf::Vector2i(x_coord + coordinate_to_spawn.x + world->GetWorldProfile()->tilemap_profile.width * chunk_x,
+                                                        y_coord + coordinate_to_spawn.y + world->GetWorldProfile()->tilemap_profile.height * chunk_y);
+
+                sf::Vector2i real_chunk_coord = world->ChunkFromCoord(coordinate.x, coordinate.y);
+
+                if(world->ChunkInBounds(real_chunk_coord.x, real_chunk_coord.y)){
+
+                    sf::Vector2i offset = world->OffsetFromCoord(coordinate.x, coordinate.y, real_chunk_coord.x, real_chunk_coord.y);
+                    world->GetChunks()->at(real_chunk_coord.x).at(real_chunk_coord.y)->AddStructure(type, offset.x, offset.y);
+
+
+                }
+
+            }
 
             // for each layer
             for(int i = 0; i < 3; i++){
@@ -642,6 +692,15 @@ void Serilizer::LoadWorldIntoMemory(std::string filename, World* world){
             
                 chunk->AddFoliageViaMapIndex(type, map_val);
             }
+
+            count = wd["world"][chunk_string]["structure"]["count"].GetInt();
+            for(int i = 0; i < count; i++){
+                int map_val = wd["world"][chunk_string]["structure"]["[" + std::to_string(i) + "]"].GetInt(0);
+                BackgroundStructure type = (BackgroundStructure)wd["world"][chunk_string]["structure"]["[" + std::to_string(i) + "]"].GetInt(1);
+            
+                chunk->AddStructureViaMapIndex(type, map_val);
+            }
+
 
 
             // for each layer

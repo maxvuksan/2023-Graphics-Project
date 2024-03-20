@@ -6,7 +6,8 @@ class Chunk;
 class LightingManager : public Object{
 
     friend class BackgroundShadowManager;
-
+    friend class BackgroundFogLayer;
+    
     public:
 
         static void LinkWorld(World* world);
@@ -16,14 +17,16 @@ class LightingManager : public Object{
 
             @param coordinate of the light source
             @param colour to tint the light
-            @param decay how fast the light drops off
-            @param decay_dropoff is multiplied by the decay each step
+            @param decay the amount a channel drops off each step
+            @param decay_dropoff is subtracted from the decay each step
+            @param decay_min the minimum a decay can reach
         */
-        static void PropogateLighting(sf::Vector2i coordinate, const sf::Color& colour, float decay = 0.1f);
+        static void PropogateLighting(sf::Vector2i coordinate, const sf::Color& colour, int decay_step, int decay_dropoff = 2, int decay_min = 3);
 
         void Update() override;
 
-        void Draw(sf::RenderTarget& surface) override;
+        // is called by WorldScene, to draw over everything
+        static void _Draw(sf::RenderTarget& surface);
         
         // draws the screens lightmap to the provided surface
         static void DrawEachChunksLightmaps();
@@ -55,6 +58,8 @@ class LightingManager : public Object{
 
         // to save performance dont update lighting every single frame!
         static float light_update_delay_tracked;
+        static float previous_time_of_day_light_flush; // since daylight changes, lighting of skylight should too,
+        static float light_flush_difference; // the difference required for a light flush
 
         static std::vector<LightSource*> light_sources;
         static std::vector<Chunk*> light_propogation_explored_chunks;

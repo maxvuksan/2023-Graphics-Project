@@ -40,6 +40,10 @@ class Camera : public Component {
 
         // Converts a world space position to its position relative to the scenes active camera
         static sf::Vector2f WorldToScreenPosition(sf::Vector2f world);
+        // same as WorldToScreenPosition but does not floor end value (leaves floating points)
+        static sf::Vector2f WorldToScreenPositionNoFloor(sf::Vector2f world);
+
+
 
         // Converts a screen space position to its position in the world 
         static sf::Vector2f ScreenToWorldPosition(sf::Vector2f screen);

@@ -10,6 +10,7 @@
 #include "Foliage.h"
 #include "Water.h"
 #include "IndexPools.h"
+#include "BackgroundStructures.h"
 
 /*
 
@@ -74,8 +75,8 @@ struct FoliageData{
 
 namespace ItemDictionary {
 
-    const sf::Color torch_colour(255, 221, 199);
-    const float torch_propogate_decay = 0.06f;
+    const sf::Color torch_colour(255, 215, 200);
+    const float torch_propogate_decay = 0.065f;
 
     const int tile_size = 8;
     const int half_tile_size = 4;
@@ -104,6 +105,20 @@ namespace ItemDictionary {
         "item_rubble",
         "item_soft"
     };
+
+
+    const BackgroundStructreData BACKGROUND_STRUCTURES[structure_NUMBER_OF_STRUCTURES] = {
+        { "Boiler Plate", sf::Vector2i(0,0), sf::Vector2i(56, 72) },
+
+        { "Chamber Top", sf::Vector2i(0,80), sf::Vector2i(56, 8) },
+        { "Chamber", sf::Vector2i(0,96), sf::Vector2i(56, 40) },
+        { "Chamber Bottom", sf::Vector2i(0,144), sf::Vector2i(56, 8) },
+
+        { "Support Horizontal", sf::Vector2i(64,0), sf::Vector2i(88, 56) },
+        { "Support Vertical", sf::Vector2i(64,64), sf::Vector2i(56, 88) },
+        { "Support Boiler plate", sf::Vector2i(160,0), sf::Vector2i(56, 56) },
+    };
+
 
     /*
         provide setting multiple blocks under one item code
@@ -149,7 +164,6 @@ namespace ItemDictionary {
         {sf::Vector2i(16,16), sf::Vector2i(80,16), sf::Vector2i(8,16), item_Sticks},
         {sf::Vector2i(16,16), sf::Vector2i(80,32), sf::Vector2i(8,16), item_Sticks},
     };
-
 
     const BlockData MAIN_BLOCK_DATA[main_NUMBER_OF_BLOCKS]{
 

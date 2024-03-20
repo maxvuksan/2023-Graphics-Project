@@ -102,7 +102,7 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         return {""};
     }
     else if(tokens[0] == "HELP"){
-        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /STRUCTURE, /OCCLUSION, /HIT, /HEAL, /TIME, /WATER, /CIRCLE", Globals::DEBUG_COLOUR};
+        return {"/HELP, /RESPAWN, /CLEAR, /DEBUG, /FLY, /FPS, /SHOWMAP, /GIVE, /LIGHT, /LIGHTBLUR \n\n/SUMMON, /STRUCTURE, /OCCLUSION, /HIT, /HEAL, /TIME, /CIRCLE", Globals::DEBUG_COLOUR};
     }
     else if(tokens[0] == "STRUCTURE"){
 
@@ -177,19 +177,6 @@ ConsoleLine CommandParser::Execute(std::string cmd_raw){
         }
 
         TimeManager::SetTimeOfDay(new_time);
-        return {""};
-    }
-    else if(tokens[0] == "WATER"){
-
-        sf::Vector2f world_pos = Scene::GetActiveCamera()->ScreenToWorldPosition(Mouse::DisplayPosition());
-        sf::Vector2i coord = client->world->WorldToCoord(world_pos.x, world_pos.y);
-
-        sf::Vector2i chunk_coord = client->world->ChunkFromCoord(coord.x, coord.y);
-        sf::Vector2i chunk_offset = client->world->OffsetFromCoord(coord.x, coord.y, chunk_coord.x, chunk_coord.y);
-
-        client->world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->water_tilemap->SetTile(16, chunk_offset.x, chunk_offset.y);
-        client->world->GetChunks()->at(chunk_coord.x).at(chunk_coord.y)->SetAwakeForWaterSim(true);
-
         return {""};
     }
     else if(tokens[0] == "CIRCLE"){

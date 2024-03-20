@@ -73,6 +73,10 @@ void GameClient::CreateObjects(){
     console_visual = scene->AddUI<ConsoleVisual>();
 
 
+    if(play_mode == PlayMode::OFFLINE){
+        connected_clients[0] = player;
+    }
+
     world_loaded = true;
 }
 

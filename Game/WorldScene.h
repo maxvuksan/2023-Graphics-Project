@@ -19,6 +19,9 @@ class WorldScene : public Scene {
 
         void Update() override;
 
+        void DrawAtFullResolution(sf::RenderTarget& surface) override;
+
+
         void CatchEvent(sf::Event event) override;
 
     private:
@@ -29,6 +32,8 @@ class WorldScene : public Scene {
         UIRectArray* pause_rect_array;
         UIButton* return_button;
         UIButton* quit_button;
+
+        sf::RenderTexture light_render_texture;
 
 
         Camera* camera;

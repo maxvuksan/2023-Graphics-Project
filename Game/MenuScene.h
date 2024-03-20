@@ -12,6 +12,7 @@ class MenuScene : public Scene {
         enum MenuStates{
 
             SELECT_PLAY_MODE,
+            ENTER_JOIN_IP,
 
             SELECT_PLAYER,
             CREATE_PLAYER,
@@ -25,6 +26,8 @@ class MenuScene : public Scene {
 
         void Start() override;
 
+        void CatchEvent(sf::Event) override;
+
         void ClearFoundPlayersList();
         void ClearFoundWorldsList();
         void ClearFoundStructuresList();
@@ -36,6 +39,8 @@ class MenuScene : public Scene {
     private:
     
         MenuStates menu_state;
+        MenuStates previous_menu_state;
+
         PlayMode play_mode;
 
         GameClient* client;
@@ -44,6 +49,10 @@ class MenuScene : public Scene {
         UIButton* join_button;
         UIButton* host_button;
         UIButton* structure_button;
+
+        UIInputField* join_ip_input;
+        UIInputField* join_port_input;
+        UIButton* join_ip_button;
 
         UIButton* new_player_button;
 

@@ -14,6 +14,12 @@ sf::Vector2f Camera::WorldToScreenPosition(sf::Vector2f world){
     sf::Vector2f pos =  world - ceil_bounded_position + sf::Vector2f(Core::GetDisplayWidth() / 2.0f, Core::GetDisplayHeight() / 2.0f);
     return sf::Vector2f(floor(pos.x), floor(pos.y));
 }
+sf::Vector2f Camera::WorldToScreenPositionNoFloor(sf::Vector2f world){
+    
+    sf::Vector2f pos =  world - ceil_bounded_position + sf::Vector2f(Core::GetDisplayWidth() / 2.0f, Core::GetDisplayHeight() / 2.0f);
+    return sf::Vector2f(pos.x, pos.y);
+}
+
 
 
 sf::Vector2f Camera::ScreenToWorldPosition(sf::Vector2f screen){

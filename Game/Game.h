@@ -15,7 +15,7 @@
 class Game : public Core{
 
     public:
-        Game() : Core(1800, 1200, 600, 400, "Blocky block")
+        Game() : Core(1800, 900, 600, 300, "Blocky block")
         {
             if(!SteamAPI_Init()){
                 std::cout << "ERROR: Failed to call SteamAPI_Init, Game::Game()\n";
@@ -52,6 +52,7 @@ class Game : public Core{
             AssetManager::CreateTexture("foreground_tiles", "Images/sprite_overlays.png");       
             AssetManager::CreateTexture("background_tiles", "Images/tiles_background.png");
             AssetManager::CreateTexture("foliage", "Images/foliage.png");
+            AssetManager::CreateTexture("structures", "Images/structures.png");
             AssetManager::CreateTexture("water", "Images/water.png");
 
             AssetManager::CreateTexture("tree", "Images/tree.png");
@@ -69,11 +70,11 @@ class Game : public Core{
 
             AssetManager::CreateAnimationSet("fly", { Animation("fly", 4, 0, 2, 25)}, {"default"});
 
-            AssetManager::CreateAnimationSet("player", {Animation("player", 16, 0, 2, 350), // Idle
-                                                        Animation("player", 16, 2, 6, {200, 130, 200, 130}), // Run
-                                                        Animation("player", 16, 6, 7, 100), // FallUp
-                                                        Animation("player", 16, 7, 8, 100),  // FallDown
-                                                        Animation("player", 16, 8, 9, 100)  // OnWall
+            AssetManager::CreateAnimationSet("player", {Animation("player", 20, 0, 2, 350), // Idle
+                                                        Animation("player", 20, 2, 10, {105,45,105,45,105,45,105,45}), // Run
+                                                        Animation("player", 20, 10, 11, 100), // FallUp
+                                                        Animation("player", 20, 11, 12, 100),  // FallDown
+                                                        Animation("player", 20, 11, 12, 100)  // OnWall
                                                         }, {"idle", "run", "fallup", "falldown", "onwall"});
 
             AssetManager::CreateAnimationSet("tool_slash", { Animation("tool_slash", 28, 0, 4, {50, 100, 50, 50}, false)}, {"default"});

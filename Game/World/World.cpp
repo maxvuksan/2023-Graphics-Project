@@ -5,11 +5,10 @@
 #include "../WorldScene.h"
 #include "TileBehaviourManager.h"
 #include "RotatedRectManager.h"
-#include "WaterManager.h"
 
 #include "Lighting/LightingManager.h"
 #include "Lighting/BackgroundShadowManager.h"
-
+#include "Lighting/BackgroundFogLayer.h"
 
 void World::Create(bool minimal, int width, int height) {
 
@@ -46,14 +45,13 @@ void World::Create(bool minimal, int width, int height) {
     if(!minimal){
         GetScene()->AddObject<LightingManager>(50);
         GetScene()->AddObject<RotatedRectManager>();
-        GetScene()->AddObject<WaterManager>();
         GetScene()->AddObject<BackgroundShadowManager>(1);
+        GetScene()->AddObject<BackgroundFogLayer>(1);
         
         TilemapCollisionTypeDivider::platform_collider_begins_at = main_Platform;
         LightingManager::LinkWorld(this);
         TileBehaviourManager::LinkWorld(this);
         RotatedRectManager::LinkWorld(this);
-        WaterManager::LinkWorld(this);
     }
 
     LightingManager::ClearLightSources();
@@ -183,34 +181,19 @@ bool World::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     signed_byte old_tile = chunks.at(chunk.x).at(chunk.y)->GetTile(pos.x, pos.y, set_location);
 
     chunks.at(chunk.x).at(chunk.y)->SetTile(tile_index, pos.x, pos.y, set_location);
-    chunks[chunk.x][chunk.y]->dirty = true; // marking the chunk as "dirty" (changed)
+    chunks.at(chunk.x).at(chunk.y)->dirty = true; // marking the chunk as "dirty" (changed)
 
 
     if(propogate_to_other_tiles){
 
-        // communicate for water manager
-        chunks.at(chunk.x).at(chunk.y)->SetAwakeForWaterSim(true);
-        if(chunks.at(chunk.x).at(chunk.y)->water_updated.size() > 0){
-            chunks.at(chunk.x).at(chunk.y)->water_updated[pos.x][pos.y] = true;
-        }
+        chunks.at(chunk.x).at(chunk.y)->MarkSurroundingChunksLightmapDirty();
+        //LightingManager::PropogateLighting(sF::Vector2i(x,y), chunks.at(chunk.x).at(chunk.y)->light)
 
         TileBehaviourManager::PropogateTile(x, y, tile_index, old_tile, set_location);
     
         if(set_location == SetLocation::MAIN || set_location == SetLocation::BACKGROUND){
             chunks.at(chunk.x).at(chunk.y)->CalculateSkyLight();
-            /*
-            // solid
-            if(tile_index != -1){
-                // if we create a create a pickup the block has been hand broken, 
-                //we must tell the already calculated sky light of our changes
-                chunks.at(chunk.x).at(chunk.y)->IntroduceTileToSkylight(pos.x, pos.y);
 
-            }
-            else{
-                chunks.at(chunk.x).at(chunk.y)->RemoveTileFromSkylight(pos.x, pos.y);
-
-            }
-            */
         }
     }
 
@@ -528,7 +511,7 @@ void World::RevealMapAroundFocus(){
 
     sf::Vector2i pos = WorldToCoord(focus->position.x, focus->position.y);
 
-    int lightmap_max;
+    int total_lightmap_max;
     sf::Vector2i chunk_coord;
     sf::Vector2i chunk_offset;
 
@@ -552,14 +535,15 @@ void World::RevealMapAroundFocus(){
                 }
 
                 // find max colour attribute, from either dynamic lightmap or skylight, whatever is larger
-                lightmap_max = std::max(std::max(lightmap.getPixel(chunk_offset.x, chunk_offset.y).r,
+                total_lightmap_max = std::max(std::max(lightmap.getPixel(chunk_offset.x, chunk_offset.y).r,
                                             lightmap.getPixel(chunk_offset.x, chunk_offset.y).g),
                                             lightmap.getPixel(chunk_offset.x, chunk_offset.y).b);
                 
 
+
                 // only draw if the new colour is lighter (keeping exploration peristant)
-                if(255 - lightmap_max < minimap->GetExploredPixelGrid()->GetPixel(coord.x, coord.y).a){
-                    minimap->GetExploredPixelGrid()->SetPixel(coord.x, coord.y, sf::Color(0, 0, 0, 255 - lightmap_max));
+                if(255 - total_lightmap_max < minimap->GetExploredPixelGrid()->GetPixel(coord.x, coord.y).a){
+                    minimap->GetExploredPixelGrid()->SetPixel(coord.x, coord.y, sf::Color(0, 0, 0, 255 - total_lightmap_max));
                 }
 
             }

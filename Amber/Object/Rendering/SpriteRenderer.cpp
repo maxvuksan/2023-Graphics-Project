@@ -22,11 +22,12 @@ void SpriteRenderer::Draw(sf::RenderTarget& surface){
 
     if(show_outline){
 
-        AssetManager::GetShader("Amber_Outline")->setUniform("u_texture_pixel_step", 
+        AssetManager::GetShader("Amber_OutlineInner")->setUniform("u_texture_pixel_step", 
             sf::Vector2f(1 / (float)sprite.getTexture()->getSize().x,
                         1 / (float)sprite.getTexture()->getSize().y));
+        AssetManager::GetShader("Amber_OutlineInner")->setUniform("u_colour", sf::Glsl::Vec4(1.0, 1.0, 1.0, 1.0));
 
-        surface.draw(sprite, AssetManager::GetShader("Amber_Outline"));
+        surface.draw(sprite, AssetManager::GetShader("Amber_OutlineInner"));
     }
     else{
         surface.draw(sprite);

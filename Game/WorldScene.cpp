@@ -1,6 +1,7 @@
 #include "WorldScene.h"
 #include "Game.h"
 #include "Serilizer.h"
+#include "World/Lighting/LightingManager.h"
 
 void WorldScene::Start(){
 
@@ -33,7 +34,7 @@ void WorldScene::Start(){
         case PlayMode::HOSTING : {
 
             Serilizer::LoadWorldIntoMemory(client->GetCurrentWorld().filepath, world);
-            client->Connect("127.0.0.1", 6868);
+            client->Connect("127.0.0.1", 27015);
             client->SetAllowTimeout(false);
 
             client->CreateObjects();
@@ -47,7 +48,9 @@ void WorldScene::Start(){
             // stop the world from updating while it has not fully loaded
             world->SetActive(false);
 
-            client->Connect("127.0.0.1", 6868);
+            std::cout << client->GetTargetIPAddress() << " " << client->GetTargetPort() << "\n";
+
+            client->Connect(client->GetTargetIPAddress().c_str(), client->GetTargetPort());
             client->SetAllowTimeout(false);
             break;
         }
@@ -88,6 +91,55 @@ void WorldScene::Start(){
     player_list_rect_array->SetGap(UIRect::padding);
     player_list_rect_array->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     player_list_rect_array->SetActive(false);
+
+
+    light_render_texture.create(Core::GetDisplayWidth() + RenderManager::GetCameraSmoothingEdgeBuffer() * 2, Core::GetDisplayHeight() + RenderManager::GetCameraSmoothingEdgeBuffer() * 2);
+}
+
+void WorldScene::DrawAtFullResolution(sf::RenderTarget& surface){
+
+
+    // drawing players ________________________________________________________________________
+
+    for(auto map_item : client->GetConnectedClients()){
+
+        Player* player = map_item.second;
+
+        sf::Sprite player_render_sprite(player->GetPlayerRenderTexture().getTexture());
+
+        // use no floor to get smooth value
+        sf::Vector2f position = Camera::WorldToScreenPositionNoFloor(player->GetTransform()->position) - sf::Vector2f(50, 51);
+        sf::Vector2f final_pos = sf::Vector2f(position.x * Core::GetDisplayToWindowMultiplier().x, position.y * Core::GetDisplayToWindowMultiplier().y);
+        player_render_sprite.setPosition(final_pos);
+
+        sf::Vector2f cam_pos = Scene::GetActiveCamera()->GetBoundedPosition(); //sf::Vector2f(abs(Scene::GetActiveCamera()->GetBoundedPosition().x - final_pos.x), abs(Scene::GetActiveCamera()->GetBoundedPosition().y - final_pos.y));
+        cam_pos.x *= Core::GetDisplayToWindowMultiplier().x;
+        cam_pos.y *= Core::GetDisplayToWindowMultiplier().y;
+        
+        player_render_sprite.setPosition( player_render_sprite.getPosition() + sf::Vector2f(
+        floor(cam_pos.x) - cam_pos.x, 
+        floor(cam_pos.y) - cam_pos.y ) + sf::Vector2f(0, 1));
+    
+        player_render_sprite.setScale(Core::GetDisplayToWindowMultiplier());
+
+        surface.draw(player_render_sprite);
+    }
+
+    // finally drawing lighting ______________________________________________________________
+    
+    if(LightingManager::show_lighting){
+        light_render_texture.clear(sf::Color::Transparent);
+
+        LightingManager::_Draw(light_render_texture);
+        light_render_texture.display();
+
+        sf::Sprite light_sprite(light_render_texture.getTexture());
+        light_sprite.setScale(Core::GetDisplayToWindowMultiplier());
+        light_sprite.setPosition(RenderManager::GetCameraSmoothingVector());
+
+        surface.draw(light_sprite, sf::BlendMultiply);
+    }
+
 }
 
 
@@ -98,78 +150,10 @@ void WorldScene::Update(){
         return;
     }
 
-   client->SendPlayerControl();
+    client->SendPlayerControl();
 
-    /*
-    if(camera->GetThisObject()->GetTransform()->position != client->GetPlayer()->GetTransform()->position){
-        
-        camera->GetThisObject()->GetTransform()->position = Calc::Lerp(camera->GetThisObject()->GetTransform()->position, client->GetPlayer()->GetTransform()->position, 0.1);
-    }
-    */
-   // camera lerping between chunks ---------------------------------------------------------------------------------------------------
-
-
-    sf::Vector2i player_coord = world->WorldToCoord(world->GetFocus()->position.x, world->GetFocus()->position.y);
-    sf::Vector2i chunk_coordinate = world->ChunkFromCoord(player_coord.x, player_coord.y);
-
-
-    int camera_move_threshhold = Settings::CAMERA_CHUNK_BLENDING;
-
-    
-    float player_x = world->GetFocus()->position.x / world->GetWorldProfile()->tilemap_profile.tile_width;
-    float player_y = world->GetFocus()->position.y / world->GetWorldProfile()->tilemap_profile.tile_height;
-
-    player_x = fmod(player_x, world->GetWorldProfile()->tilemap_profile.width);
-    player_y = fmod(player_y, world->GetWorldProfile()->tilemap_profile.height);
-
-    sf::Vector2f camera_shift_factor;
-
-    if(player_x < camera_move_threshhold){
-
-        float t = 1 - player_x / (float)camera_move_threshhold;
-        camera_shift_factor.x = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width  / 2.0f,
-                                            0,
-                                            t * t * t);
-    }
-    else if(player_x > world->GetWorldProfile()->tilemap_profile.width - camera_move_threshhold){
-       
-        float t = (player_x - world->GetWorldProfile()->tilemap_profile.width + camera_move_threshhold) / (float)camera_move_threshhold;
-
-
-        camera_shift_factor.x = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width / 2.0f, 
-                                            world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width, 
-                                            t * t * t);
-    }
-    else{
-        camera_shift_factor.x = world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width / 2.0f;
-    }
-
-    /*
-    if(player_y < camera_move_threshhold){
-        float t = player_y / (float)camera_move_threshhold;
-
-        camera_shift_factor.y = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height / 2.0f,
-                                            0, 
-                                            Calc::EaseOutCubic(t));
-    }
-    else if(player_y > world->GetWorldProfile()->tilemap_profile.height - camera_move_threshhold){
-
-        float t = (player_y - world->GetWorldProfile()->tilemap_profile.height + camera_move_threshhold) / (float)camera_move_threshhold;
-
-
-        camera_shift_factor.y = Calc::Lerp(world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height / 2.0f, 
-                                            world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height, 
-                                            Calc::EaseOutCubic(t));
-    }
-    else{
-        camera_shift_factor.y = world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height / 2.0f;
-    }
-    */
-    camera->GetThisObject()->GetTransform()->position.x = 
-        chunk_coordinate.x * world->GetWorldProfile()->tilemap_profile.width * world->GetWorldProfile()->tilemap_profile.tile_width//, chunk_coordinate.y * world->GetWorldProfile()->tilemap_profile.height * world->GetWorldProfile()->tilemap_profile.tile_height ) 
-        + camera_shift_factor.x;
-
-    camera->GetThisObject()->GetTransform()->position.y = Calc::Lerp(camera->GetThisObject()->GetTransform()->position.y, client->GetPlayer()->GetTransform()->position.y, 0.1);
+    camera->GetThisObject()->GetTransform()->position.y = Calc::Lerp(camera->GetThisObject()->GetTransform()->position.y, client->GetPlayer()->GetTransform()->position.y, 0.03);
+    camera->GetThisObject()->GetTransform()->position.x = Calc::Lerp(camera->GetThisObject()->GetTransform()->position.x, client->GetPlayer()->GetTransform()->position.x, 0.03);
 }
 
 

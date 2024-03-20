@@ -41,6 +41,9 @@ class Scene {
         virtual void CatchEvent(sf::Event){}
         virtual void Draw(sf::RenderTarget&){}
 
+        // occurs right before any ui is drawn, allows additonal camera smoothing to be applied to things
+        virtual void DrawAtFullResolution(sf::RenderTarget& surface){}
+
         // Responsible for updating objects and object components
         void InternalUpdate();
         void InternalCatchEvent(sf::Event);

@@ -29,9 +29,16 @@ class AnimationRenderer : public Component{
         void SetFlip(bool state);
         bool GetFlip();
 
+        void SetUseFixedPosition(bool state){use_set_position = state;}
+        bool GetUseFixedPosition(){return use_set_position;}
+
+        void SetFixedPosition(sf::Vector2f position){fixed_position = position;}
+        sf::Vector2f GetFixedPosition(){return fixed_position;}
 
     private:
 
+        bool use_set_position;
+        sf::Vector2f fixed_position;
 
         int index = 0;
         float timer = 0;

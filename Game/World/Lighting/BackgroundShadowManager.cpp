@@ -3,10 +3,6 @@
 #include "LightingManager.h"
 #include "../World.h"
 
-void BackgroundShadowManager::Start(){
-
-}
-
 void BackgroundShadowManager::Draw(sf::RenderTarget& surface){
 
     if(Settings::AMBIENT_OCCLUSION){
@@ -45,10 +41,15 @@ void BackgroundShadowManager::Draw(sf::RenderTarget& surface){
         LightingManager::ambient_occlusion_texture.draw(sf::Sprite(LightingManager::back_lighting_texture.getTexture()), sf::BlendMultiply);
         LightingManager::ambient_occlusion_texture.display();
 
-        LightingManager::back_lighting_texture.clear(sf::Color::White);
-        sf::Sprite shadow_sprite(LightingManager::ambient_occlusion_texture.getTexture());
-        LightingManager::back_lighting_texture.draw(shadow_sprite);
+        // draw with banding shader to create 1px outline
+        AssetManager::GetShader("Amber_Banding")->setUniform("u_band_count", 1);
+        LightingManager::back_lighting_texture.draw(sf::Sprite(LightingManager::ambient_occlusion_texture.getTexture()), AssetManager::GetShader("Amber_Banding"));
         LightingManager::back_lighting_texture.display();
+
+        LightingManager::ambient_occlusion_texture.clear(sf::Color::White);
+        sf::Sprite shadow_sprite(LightingManager::back_lighting_texture.getTexture());
+        LightingManager::ambient_occlusion_texture.draw(shadow_sprite);
+        LightingManager::ambient_occlusion_texture.display();
 
         surface.draw(sf::Sprite(LightingManager::back_lighting_texture.getTexture()), sf::BlendMultiply);
 

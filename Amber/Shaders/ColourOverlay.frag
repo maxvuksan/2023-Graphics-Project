@@ -1,3 +1,5 @@
+#version 130
+
 uniform vec4 u_colour;
 uniform float u_blend;
 uniform sampler2D texture;

@@ -61,6 +61,22 @@ void EditorScene::Start(){
     set_location = SetLocation::MAIN;
     tiles_per_row = ItemDictionary::main_tiles_sprites_per_row;
     tool_mode = ToolMode::BRUSH;
+    object_mode = ObjectMode::TILES;
+
+
+    sf::Font* font = AssetManager::GetFont("m3x6");
+    
+    if(font == nullptr){
+        std::cout << "ERROR : font is nullptr, EditorScene::Start()\n";
+        return;
+    }
+
+    structures_text.setFont(*font);
+    structures_text.setCharacterSize(16);
+    structures_text.setPosition(sf::Vector2f(UIRect::padding, UIRect::padding));
+
+    structure_sprite.setColor(sf::Color(255,255,255,200));
+    structure_sprite.setTexture(*AssetManager::GetTexture("structures"));
 }
 
 
@@ -69,6 +85,20 @@ void EditorScene::CatchEvent(sf::Event event){
     if(event.type == sf::Event::KeyPressed){
         
         switch(event.key.scancode){
+
+            case sf::Keyboard::Scancode::Tab: {
+
+                int object_mode_int = (int)object_mode;
+                object_mode_int++;
+
+                if(object_mode_int >= (int)ObjectMode::NUMBER_OF_OBJECT_MODES){
+                    object_mode_int = 0;
+                }
+
+                object_mode = (ObjectMode)object_mode_int;
+
+                break;
+            }
 
             case sf::Keyboard::Scancode::S: {
 
@@ -85,111 +115,167 @@ void EditorScene::CatchEvent(sf::Event event){
 
                 break;
             }
-            case sf::Keyboard::Scancode::B: {
-                tool_mode = ToolMode::BRUSH;
-                drawing_rectangle = false;
-                break;
-            }
-            case sf::Keyboard::Scancode::R: {
-                tool_mode = ToolMode::RECTANGLE;
-                break;
-            }
+        }
+        if(object_mode == ObjectMode::TILES){
 
-            case sf::Keyboard::Scancode::Num1: {
-                tile_palette_sprite.setTexture(*AssetManager::GetTexture("tiles"), true);
-                set_location = SetLocation::MAIN;
-                selected_block = 0;
-                tiles_per_row = ItemDictionary::main_tiles_sprites_per_row;
-                break;
-            }
-            case sf::Keyboard::Scancode::Num2: {
-                tile_palette_sprite.setTexture(*AssetManager::GetTexture("background_tiles"), true);
-                set_location = SetLocation::BACKGROUND;
-                selected_block = 0;
-                tiles_per_row = ItemDictionary::background_tiles_sprites_per_row;
-                break;
-            }
-            case sf::Keyboard::Scancode::Num3: {
-                tile_palette_sprite.setTexture(*AssetManager::GetTexture("foreground_tiles"), true);
-                set_location = SetLocation::FOREGROUND;
-                selected_block = 0;
-                tiles_per_row = ItemDictionary::foreground_tiles_sprites_per_row;
-                break;
+            switch(event.key.scancode){
+
+                case sf::Keyboard::Scancode::B: {
+                    tool_mode = ToolMode::BRUSH;
+                    drawing_rectangle = false;
+                    break;
+                }
+                case sf::Keyboard::Scancode::R: {
+                    tool_mode = ToolMode::RECTANGLE;
+                    break;
+                }
+
+                case sf::Keyboard::Scancode::Num1: {
+                    tile_palette_sprite.setTexture(*AssetManager::GetTexture("tiles"), true);
+                    set_location = SetLocation::MAIN;
+                    selected_block = 0;
+                    tiles_per_row = ItemDictionary::main_tiles_sprites_per_row;
+                    break;
+                }
+                case sf::Keyboard::Scancode::Num2: {
+                    tile_palette_sprite.setTexture(*AssetManager::GetTexture("background_tiles"), true);
+                    set_location = SetLocation::BACKGROUND;
+                    selected_block = 0;
+                    tiles_per_row = ItemDictionary::background_tiles_sprites_per_row;
+                    break;
+                }
+                case sf::Keyboard::Scancode::Num3: {
+                    tile_palette_sprite.setTexture(*AssetManager::GetTexture("foreground_tiles"), true);
+                    set_location = SetLocation::FOREGROUND;
+                    selected_block = 0;
+                    tiles_per_row = ItemDictionary::foreground_tiles_sprites_per_row;
+                    break;
+                }
             }
         }
     }
+
     // scrolling through tiles
     if (event.type == sf::Event::MouseWheelScrolled)
     {
 
-        int tile_count = main_NUMBER_OF_BLOCKS;
+        if(object_mode == ObjectMode::TILES){
+            int tile_count = main_NUMBER_OF_BLOCKS;
 
-        if(set_location == SetLocation::FOREGROUND){
-            tile_count = foreground_NUMBER_OF_BLOCKS;
-        }
-        else if(set_location == SetLocation::BACKGROUND){
-            tile_count = background_NUMBER_OF_BLOCKS;
-        }
+            if(set_location == SetLocation::FOREGROUND){
+                tile_count = foreground_NUMBER_OF_BLOCKS;
+            }
+            else if(set_location == SetLocation::BACKGROUND){
+                tile_count = background_NUMBER_OF_BLOCKS;
+            }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)){
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)){
+
+                if (event.mouseWheelScroll.delta > 0) // moving up
+                {
+                    selected_block -= tiles_per_row;
+                }
+                else if (event.mouseWheelScroll.delta < 0) // moving down
+                {
+                    selected_block += tiles_per_row;
+                }
+
+                if(selected_block >= tile_count){
+                    selected_block = selected_block - tile_count + 1;
+                }
+                else if(selected_block < 0){
+                    selected_block = selected_block + tile_count - 1;
+                }
+            }
+            else{
+                if (event.mouseWheelScroll.delta > 0) // moving up
+                {
+                    selected_block--;
+                }
+                else if (event.mouseWheelScroll.delta < 0) // moving down
+                {
+                    selected_block++;
+                }
+            
+                if(selected_block >= tile_count){
+                    selected_block = 0;
+                }
+                else if(selected_block < 0){
+                    selected_block = tile_count - 1;
+                }
+            }
+        }
+        else if(object_mode == ObjectMode::STRUCTURES){
+
+            int structure_count = structure_NUMBER_OF_STRUCTURES;
 
             if (event.mouseWheelScroll.delta > 0) // moving up
             {
-                selected_block -= tiles_per_row;
+                selected_structure--;
             }
             else if (event.mouseWheelScroll.delta < 0) // moving down
             {
-                selected_block += tiles_per_row;
+                selected_structure++;
             }
 
-            if(selected_block >= tile_count){
-                selected_block = selected_block - tile_count + 1;
+            if(selected_structure < 0){
+                selected_structure = structure_NUMBER_OF_STRUCTURES;
             }
-            else if(selected_block < 0){
-                selected_block = selected_block + tile_count - 1;
+            else if(selected_structure >= structure_NUMBER_OF_STRUCTURES){
+                selected_structure = 0;
             }
-        }
-        else{
-            if (event.mouseWheelScroll.delta > 0) // moving up
-            {
-                selected_block--;
-            }
-            else if (event.mouseWheelScroll.delta < 0) // moving down
-            {
-                selected_block++;
-            }
-        
-            if(selected_block >= tile_count){
-                selected_block = 0;
-            }
-            else if(selected_block < 0){
-                selected_block = tile_count - 1;
-            }
+
+
         }
 
     }
 
     if(event.type == sf::Event::MouseButtonPressed){
 
-        if(event.mouseButton.button == sf::Mouse::Button::Left){
+        if(object_mode == ObjectMode::TILES){
 
-            // start drawing rectangle
-            if(tool_mode == ToolMode::RECTANGLE){
-                drawing_rectangle = true;
-                subtracting_rectangle = false;
-                rectangle_inital_mouse_position = Mouse::DisplayPosition();
-                rectangle_inital_coordinate = coord_mouse_position;
+            if(event.mouseButton.button == sf::Mouse::Button::Left){
+
+                // start drawing rectangle
+                if(tool_mode == ToolMode::RECTANGLE){
+                    drawing_rectangle = true;
+                    subtracting_rectangle = false;
+                    rectangle_inital_mouse_position = Mouse::DisplayPosition();
+                    rectangle_inital_coordinate = coord_mouse_position;
+                }
+            }
+            if(event.mouseButton.button == sf::Mouse::Button::Right){
+
+                // start subtracting rectangle
+                if(tool_mode == ToolMode::RECTANGLE){
+                    drawing_rectangle = false;
+                    subtracting_rectangle = true;
+                    rectangle_inital_mouse_position = Mouse::DisplayPosition();
+                    rectangle_inital_coordinate = coord_mouse_position;
+                }
             }
         }
-        if(event.mouseButton.button == sf::Mouse::Button::Right){
+        else if(object_mode == ObjectMode::STRUCTURES){
 
-            // start subtracting rectangle
-            if(tool_mode == ToolMode::RECTANGLE){
-                drawing_rectangle = false;
-                subtracting_rectangle = true;
-                rectangle_inital_mouse_position = Mouse::DisplayPosition();
-                rectangle_inital_coordinate = coord_mouse_position;
+            // place structure
+            if(event.mouseButton.button == sf::Mouse::Button::Left){
+
+                if(coord_mouse_position.x >= 0 && coord_mouse_position.y >= 0){
+
+                    sf::Vector2i chunk = world->ChunkFromCoord(coord_mouse_position.x, coord_mouse_position.y);
+
+                    if(world->ChunkInBounds(chunk.x, chunk.y)){
+
+                        sf::Vector2i pos = world->OffsetFromCoord(coord_mouse_position.x, coord_mouse_position.y, chunk.x, chunk.y);
+
+                        world->GetChunks()->at(chunk.x)[chunk.y]->AddStructure((BackgroundStructure)selected_structure, pos.x, pos.y);
+
+                    }
+                }
+
             }
+
+
         }
     }
 
@@ -290,6 +376,9 @@ void EditorScene::Update(){
 void EditorScene::Draw(sf::RenderTarget& surface){
 
 
+    canvas_bounds.setPosition(Camera::WorldToScreenPosition(world->GetTransform()->position));
+    surface.draw(canvas_bounds);
+
     sf::Vector2f camera_clamped(round(camera->GetThisObject()->GetTransform()->position.x / ItemDictionary::tile_size) * ItemDictionary::tile_size, round(camera->GetThisObject()->GetTransform()->position.y / ItemDictionary::tile_size) * ItemDictionary::tile_size);
     sf::Vector2f camera_difference = camera->GetThisObject()->GetTransform()->position - camera_clamped;
 
@@ -297,51 +386,79 @@ void EditorScene::Draw(sf::RenderTarget& surface){
     sf::Vector2f mouse_world_pos = Camera::ScreenToWorldPosition(sf::Vector2f(Mouse::DisplayPosition().x, Mouse::DisplayPosition().y));
     coord_mouse_position = sf::Vector2i(round(mouse_world_pos.x / ItemDictionary::tile_size), round(mouse_world_pos.y / ItemDictionary::tile_size));
 
-    sf::Vector2f visual_mouse_position(round((Mouse::DisplayPosition().x) / ItemDictionary::tile_size) * ItemDictionary::tile_size, round((Mouse::DisplayPosition().y) / ItemDictionary::tile_size) * ItemDictionary::tile_size );
+    //sf::Vector2f visual_mouse_position(round((Mouse::DisplayPosition().x) / ItemDictionary::tile_size) * ItemDictionary::tile_size, round((Mouse::DisplayPosition().y) / ItemDictionary::tile_size) * ItemDictionary::tile_size );
+    sf::Vector2f visual_mouse_position(Camera::WorldToScreenPosition(sf::Vector2f(coord_mouse_position.x * ItemDictionary::tile_size, coord_mouse_position.y * ItemDictionary::tile_size)));
 
-    if(tool_mode == ToolMode::BRUSH){
-        
-        cursor_shape.setPosition(visual_mouse_position);
-        cursor_shape.setSize(sf::Vector2f(ItemDictionary::tile_size, ItemDictionary::tile_size));
+    if(object_mode == ObjectMode::TILES){
 
-        if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)){
-            if(world->CoordInBounds(coord_mouse_position.x, coord_mouse_position.y)){
-                SetTile(selected_block, coord_mouse_position.x, coord_mouse_position.y, set_location);
-            }
-        }
-        else if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)){
-            if(world->CoordInBounds(coord_mouse_position.x, coord_mouse_position.y)){
-                SetTile(-1, coord_mouse_position.x, coord_mouse_position.y, set_location);
-            }
-        }
-    }
-    else if(tool_mode == ToolMode::RECTANGLE){
-
-        if(!drawing_rectangle && !subtracting_rectangle){
+        if(tool_mode == ToolMode::BRUSH){
+            
             cursor_shape.setPosition(visual_mouse_position);
             cursor_shape.setSize(sf::Vector2f(ItemDictionary::tile_size, ItemDictionary::tile_size));
+
+            if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)){
+                if(world->CoordInBounds(coord_mouse_position.x, coord_mouse_position.y)){
+                    SetTile(selected_block, coord_mouse_position.x, coord_mouse_position.y, set_location);
+                }
+            }
+            else if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)){
+                if(world->CoordInBounds(coord_mouse_position.x, coord_mouse_position.y)){
+                    SetTile(-1, coord_mouse_position.x, coord_mouse_position.y, set_location);
+                }
+            }
         }
-        else{
-            cursor_shape.setPosition(round((rectangle_inital_mouse_position.x) / ItemDictionary::tile_size) * ItemDictionary::tile_size, round((rectangle_inital_mouse_position.y) / ItemDictionary::tile_size) * ItemDictionary::tile_size );
-            cursor_shape.setSize(sf::Vector2f((coord_mouse_position.x - rectangle_inital_coordinate.x) * ItemDictionary::tile_size, (coord_mouse_position.y - rectangle_inital_coordinate.y) * ItemDictionary::tile_size));
+        else if(tool_mode == ToolMode::RECTANGLE){
+
+            if(!drawing_rectangle && !subtracting_rectangle){
+                cursor_shape.setPosition(visual_mouse_position);
+                cursor_shape.setSize(sf::Vector2f(ItemDictionary::tile_size, ItemDictionary::tile_size));
+            }
+            else{
+                cursor_shape.setPosition(round((rectangle_inital_mouse_position.x) / ItemDictionary::tile_size) * ItemDictionary::tile_size, round((rectangle_inital_mouse_position.y) / ItemDictionary::tile_size) * ItemDictionary::tile_size );
+                cursor_shape.setSize(sf::Vector2f((coord_mouse_position.x - rectangle_inital_coordinate.x) * ItemDictionary::tile_size, (coord_mouse_position.y - rectangle_inital_coordinate.y) * ItemDictionary::tile_size));
+            }
         }
+
+
+
+        surface.draw(tile_palette_sprite);
+
+
+        int x = selected_block % tiles_per_row; 
+        int y = floor(selected_block / (float)tiles_per_row);
+
+        selected_tile_shape.setPosition(sf::Vector2f(
+            UIRect::padding + x * ItemDictionary::tile_size - 1, 
+            UIRect::padding + y * ItemDictionary::tile_size - 1));
+
+        surface.draw(cursor_shape);
+        surface.draw(selected_tile_shape);
+
+
+    }
+    else if(object_mode == ObjectMode::STRUCTURES){
+
+        structures_text.setString("");
+
+        for(int i = 0; i < structure_NUMBER_OF_STRUCTURES; i++){
+            std::string name = ItemDictionary::BACKGROUND_STRUCTURES[i].name;
+            
+            // highlight the selected structure
+            if(selected_structure == i){
+                structure_sprite.setTextureRect(sf::IntRect(ItemDictionary::BACKGROUND_STRUCTURES[i].pixel_position_on_sprite_sheet.x ,
+                                                            ItemDictionary::BACKGROUND_STRUCTURES[i].pixel_position_on_sprite_sheet.y, 
+                                                            ItemDictionary::BACKGROUND_STRUCTURES[i].pixel_dimensions.x, 
+                                                            ItemDictionary::BACKGROUND_STRUCTURES[i].pixel_dimensions.y));
+                name = "* " + name;
+            }
+            structures_text.setString(structures_text.getString() + name + "\n");
+        }
+
+        structure_sprite.setPosition(visual_mouse_position);
+
+        surface.draw(structures_text);
+        surface.draw(structure_sprite);
     }
 
 
-    canvas_bounds.setPosition(Camera::WorldToScreenPosition(world->GetTransform()->position));
-
-    surface.draw(tile_palette_sprite);
-
-
-    int x = selected_block % tiles_per_row; 
-    int y = floor(selected_block / (float)tiles_per_row);
-
-    selected_tile_shape.setPosition(sf::Vector2f(
-        UIRect::padding + x * ItemDictionary::tile_size - 1, 
-        UIRect::padding + y * ItemDictionary::tile_size - 1));
-
-    surface.draw(selected_tile_shape);
-
-    surface.draw(canvas_bounds);
-    surface.draw(cursor_shape);
 }

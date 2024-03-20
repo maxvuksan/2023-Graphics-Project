@@ -1,3 +1,4 @@
+#pragma once
 #include "../../Amber/Framework.h"
 
 /*
@@ -7,7 +8,6 @@ class BackgroundShadowManager : public Object {
 
     public:
 
-        void Start() override;
         void Draw(sf::RenderTarget& surface) override;
 
 

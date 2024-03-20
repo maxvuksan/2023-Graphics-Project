@@ -12,14 +12,6 @@ void Inventory::Start() {
 
     SetRenderLayer(1);
 
-
-    sf::Font* font = AssetManager::GetFont("m3x6");
-    
-    if(font == nullptr){
-        std::cout << "ERROR : font is nullptr, Slot::Construct()\n";
-        return;
-    }
-
     hotbar_slot_set = GetScene()->AddUI<SlotSet>();
     backpack_slot_set = GetScene()->AddUI<SlotSet>();
 

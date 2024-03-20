@@ -1,3 +1,5 @@
+#version 130
+
 uniform vec2 u_light_position;
 uniform float u_strength;
 uniform float u_radius;

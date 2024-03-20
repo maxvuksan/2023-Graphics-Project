@@ -2,7 +2,6 @@
 #include "Lighting/LightingManager.h"
 #include "World.h"
 #include "../Utility/UtilityStation.h"
-#include "WaterManager.h"
 
 void Chunk::Init(World* world){
 
@@ -16,9 +15,6 @@ void Chunk::Init(World* world){
     foreground_tilemap = this->AddComponent<Tilemap>(6);
     background_tilemap = this->AddComponent<Tilemap>(-1);
     
-    water_tilemap = this->AddComponent<Tilemap>(2);
-    water_tilemap->Load("water", &world->world_profile.tilemap_profile);
-
     main_tilemap->Load("tiles", &world->world_profile.tilemap_profile);
     foreground_tilemap->Load("foreground_tiles", &world->world_profile.tilemap_profile);
     background_tilemap->Load("background_tiles", &world->world_profile.tilemap_profile);
@@ -28,10 +24,11 @@ void Chunk::Init(World* world){
     collider->SetTilemap(main_tilemap);
 
     foliage_vertex_array.setPrimitiveType(sf::PrimitiveType::Quads);
+    structure_vertex_array.setPrimitiveType(sf::PrimitiveType::Quads);
 
     light_map_dirty = false;
-    awake_decay_tracked = 0;
     skylight_first_calculated = false;
+
 }
 
 void Chunk::SetChunkCoordinate(int x, int y){
@@ -133,20 +130,33 @@ void Chunk::DrawDebug(sf::RenderTarget& surface){
 
 void Chunk::Draw(sf::RenderTarget& surface){
 
-    if(light_map_dirty){
-        light_map_dirty = false;    
+    if(light_map_needs_texture_reload){
+        light_map_needs_texture_reload = false;    
         light_texture.loadFromImage(light_map);
     }
 
     if(foliage_map_dirty){
         RecalculateFoliageVertexArray();
     }
+
     sf::RenderStates render_states;
     render_states.transform.translate(Scene::GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(0,0)));
-    render_states.texture = AssetManager::GetTexture("foliage");
 
+    render_states.texture = AssetManager::GetTexture("foliage");
     surface.draw(foliage_vertex_array, render_states);
 
+}
+
+void Chunk::DrawBackgroundStructures(sf::RenderTarget& surface){
+    if(structure_map_dirty){
+        RecalculateStructureVertexArray();
+    }
+
+    sf::RenderStates render_states;
+    render_states.transform.translate(Scene::GetActiveCamera()->WorldToScreenPosition(sf::Vector2f(0,0)));
+    
+    render_states.texture = AssetManager::GetTexture("structures");
+    surface.draw(structure_vertex_array, render_states);
 }
 
 void Chunk::StoreUtilityStationReference(UtilityStation* station){
@@ -184,6 +194,8 @@ void Chunk::RemoveTorchPosition(int coord_x, int coord_y){
 void Chunk::AddTorchPosition(int  coord_x, int coord_y){
     torch_positions.push_back(sf::Vector2i(coord_x, coord_y));
 
+    MarkSurroundingChunksLightmapDirty();
+
     //Object* particle_object = AddObjectToChunk<Object>(4);
     //particle_object->AddComponent<PixelParticleSource>()->SetOffset(sf::Vector2f(4,2));
     //particle_object->GetTransform()->position = world->CoordToWorld(coord_x, coord_y) + GetTransform()->position;
@@ -201,9 +213,6 @@ Tilemap* Chunk::GetTilemap(SetLocation set_location){
     else if(set_location == SetLocation::FOREGROUND){
         return foreground_tilemap;
     }
-    else{ // water
-        return water_tilemap;
-    }
 }
 
 signed_byte Chunk::GetTile(int x, int y, SetLocation get_location){
@@ -216,9 +225,6 @@ signed_byte Chunk::GetTile(int x, int y, SetLocation get_location){
     }
     else if(get_location == SetLocation::FOREGROUND){
         return foreground_tilemap->GetTile(x, y);
-    }
-    else{
-        return water_tilemap->GetTile(x, y);
     }
 }
 EntireTile Chunk::GetEntireTile(int x, int y){
@@ -237,6 +243,17 @@ void Chunk::AddFoliageViaMapIndex(Foliage foliage_index, int map_index){
     foliage_map.insert(std::make_pair(map_index, foliage_index));
     foliage_map_dirty = true;
 }
+
+void Chunk::AddStructure(BackgroundStructure structure_index, int x, int y){
+    structure_map.insert(std::make_pair(x + y * world->tilemap_profile->width, structure_index));
+    structure_map_dirty = true;
+    saving_dirty = true;
+}
+void Chunk::AddStructureViaMapIndex(BackgroundStructure structure_index, int map_index){
+    structure_map.insert(std::make_pair(map_index, structure_index));
+    structure_map_dirty = true;
+}
+
 
 void Chunk::RemoveFoliage(int x, int y){
 
@@ -258,6 +275,7 @@ void Chunk::RemoveFoliage(int x, int y){
     saving_dirty = true;
 
 }
+
 
 void Chunk::RecalculateFoliageVertexArray(){
 
@@ -305,6 +323,51 @@ void Chunk::RecalculateFoliageVertexArray(){
     foliage_map_dirty = false;
 }
 
+void Chunk::RecalculateStructureVertexArray(){
+
+    structure_vertex_array.clear();
+    
+    sf::Vertex vertex;
+
+    for(auto structure_object : structure_map){
+
+        int x_coord = structure_object.first % world->tilemap_profile->width;
+        int x = x_coord * (float)world->tilemap_profile->tile_width;
+        int y = (floor(structure_object.first - x_coord) / world->tilemap_profile->width) * (float)world->tilemap_profile->tile_height;
+
+        // set position to chunks position + tile offset + origin
+
+        // top left
+        vertex.position = GetTransform()->position + sf::Vector2f(x, y);
+
+        vertex.texCoords.x = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.x;
+        vertex.texCoords.y = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.y;
+        structure_vertex_array.append(vertex);
+
+        // top right
+        vertex.position = GetTransform()->position + sf::Vector2f(x + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.x, y);
+
+        vertex.texCoords.x = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.x + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.x;
+        vertex.texCoords.y = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.y;
+        structure_vertex_array.append(vertex);
+
+        // bottom right
+        vertex.position = GetTransform()->position + sf::Vector2f(x + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.x, y + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.y);
+
+        vertex.texCoords.x = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.x + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.x;
+        vertex.texCoords.y = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.y + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.y;
+        structure_vertex_array.append(vertex);
+
+        // bottom left
+        vertex.position = GetTransform()->position + sf::Vector2f(x, y  + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.y);
+
+        vertex.texCoords.x = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.x;
+        vertex.texCoords.y = ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_position_on_sprite_sheet.y + ItemDictionary::BACKGROUND_STRUCTURES[structure_object.second].pixel_dimensions.y;
+        structure_vertex_array.append(vertex);
+    }
+
+    structure_map_dirty = false;
+}
 
 void Chunk::SetTile(signed_byte tile_index, int x, int y, SetLocation set_location){
 
@@ -316,9 +379,6 @@ void Chunk::SetTile(signed_byte tile_index, int x, int y, SetLocation set_locati
     }
     else if(set_location == SetLocation::FOREGROUND){
         foreground_tilemap->SetTileSafe(tile_index, x, y);
-    }
-    else{ //water
-        water_tilemap->SetTileSafe(tile_index, x, y);
     }
 
     saving_dirty = true;
@@ -365,83 +425,17 @@ void Chunk::CalculateSkyLight(){
         }
     }    
 }
-/*
-void Chunk::IntroduceTileToSkylight(int x, int y){
 
-    if(background_tilemap->GetTile(x, y) == -1 && main_tilemap->GetTile(x,y) == -1){
-        // prevent duplicates
-        if(std::find(sky_tiles.begin(), sky_tiles.end(), sf::Vector2i(x,y)) == sky_tiles.end()){
-            sky_tiles.push_back(sf::Vector2i(x,y));
-        }
-    }
-    else{
-        return;
-    }
-
-    for(auto offset : Globals::HORIZONTAL_OFFSETS){
-        sf::Vector2i coord = sf::Vector2i(x,y) + world->WorldToCoord(GetTransform()->position.x, GetTransform()->position.y) + offset;
-
-        // the surrounding tile is not a sky tile
-        if(world->GetTile(coord.x, coord.y, SetLocation::MAIN) != -1 || world->GetTile(coord.x, coord.y, SetLocation::BACKGROUND) != -1){
-            
-            // prevent duplicates
-            if(std::find(sky_tiles_to_propogate.begin(), sky_tiles_to_propogate.end(), sf::Vector2i(coord.x,coord.y)) == sky_tiles_to_propogate.end()){
-                sky_tiles_to_propogate.push_back(sf::Vector2i(coord.x,coord.y));
-            }
-
-        }
-    }
-}
-
-void Chunk::RemoveTileFromSkylight(int x, int y){
-
-    sf::Vector2i chunk_coord = world->WorldToCoord(GetTransform()->position.x, GetTransform()->position.y);
-    sf::Vector2i coord = sf::Vector2i(x, y) + chunk_coord;
-    
-    bool found_skylight = false;  
-    bool all_skylight = true;  
-
-    for(auto offset : Globals::HORIZONTAL_OFFSETS){
-        sf::Vector2i shifted_coord = coord + offset;
-
-        // the surrounding tile is a sky tile
-        if(world->GetTile(shifted_coord.x, shifted_coord.y, SetLocation::MAIN) == -1 && world->GetTile(shifted_coord.x, shifted_coord.y, SetLocation::BACKGROUND) == -1){
-            found_skylight = true;
-        }
-        else{
-            all_skylight = false;
-        }
-    }
-
-    // surrounded all by skylight
-    if(all_skylight){
-        auto location = std::find(sky_tiles.begin(), sky_tiles.end(), sf::Vector2i(x,y));
-        
-        if(location != sky_tiles.end()){
-            sky_tiles.erase(location);
-        }
-    }
-    // no other offsets have
-    else if(!found_skylight){
-
-        auto location = std::find(sky_tiles_to_propogate.begin(), sky_tiles_to_propogate.end(), sf::Vector2i(coord.x,coord.y));
-        
-        if(location != sky_tiles_to_propogate.end()){
-            sky_tiles_to_propogate.erase(location);
-        }
-    }
-}
-*/
 void Chunk::PropogateTorches(){
 
     // sky light
     for(int i = 0; i < sky_tiles.size(); i++){
         light_map.setPixel(sky_tiles.at(i).x, sky_tiles.at(i).y, LightingManager::sunlight_colour);
     }
-    MarkLightmapDirty();
+    MarkLightmapForTextureReload();
 
     for(int i = 0; i < sky_tiles_to_propogate.size(); i++){
-        LightingManager::PropogateLighting(sky_tiles_to_propogate.at(i), LightingManager::sunlight_colour, 0.06f);    
+        LightingManager::PropogateLighting(sky_tiles_to_propogate.at(i), LightingManager::sunlight_colour, 3, 0);    
     }
 
     sf::Vector2i coord = world->WorldToCoord(GetTransform()->position.x, GetTransform()->position.y);
@@ -475,6 +469,22 @@ void Chunk::RecalculateTorchPositions(){
     }
 }
 
+void Chunk::MarkSurroundingChunksLightmapDirty(){
+    
+    // marking all surrounding chunks dirty
+    SetLightmapDirty(true);
+
+    for(int i = 0; i < 8; i++){
+        sf::Vector2i neighbour_chunk_coordinate = chunk_coordinate + Globals::ALL_OFFSETS[i];
+
+        if(world->ChunkInBounds(neighbour_chunk_coordinate.x, neighbour_chunk_coordinate.y)){
+            world->GetChunks()->at(neighbour_chunk_coordinate.x).at(neighbour_chunk_coordinate.y)->SetLightmapDirty(true);
+        }
+
+    }
+
+}
+
 void Chunk::OnSetActive(){
 
     RecalculateTorchPositions();
@@ -490,13 +500,21 @@ void Chunk::OnSetActive(){
         CalculateSkyLight();
     }
     ClearLightmap();
-    
-    light_map_dirty = true;
+
+    MarkSurroundingChunksLightmapDirty();
+    // mark neighbours of neightbours dirty too
+    for(int i = 0; i < 8; i++){
+        sf::Vector2i neighbour_chunk_coordinate = chunk_coordinate + Globals::ALL_OFFSETS[i];
+
+        if(world->ChunkInBounds(neighbour_chunk_coordinate.x, neighbour_chunk_coordinate.y)){
+            world->GetChunks()->at(neighbour_chunk_coordinate.x).at(neighbour_chunk_coordinate.y)->MarkSurroundingChunksLightmapDirty();
+        }
+
+    }
 
     main_tilemap->ConstructVertexArray();
     foreground_tilemap->ConstructVertexArray();
     background_tilemap->ConstructVertexArray();
-    water_tilemap->ConstructVertexArray();
 }
 
 void Chunk::OnDisable(){
@@ -510,7 +528,6 @@ void Chunk::OnDisable(){
     main_tilemap->ClearVertexArray();
     foreground_tilemap->ClearVertexArray();
     background_tilemap->ClearVertexArray();
-    water_tilemap->ClearVertexArray();
 }
 
 void Chunk::CalculatePathfindingGrid(){
@@ -589,12 +606,3 @@ Chunk::~Chunk(){
     }
 }
 
-void Chunk::SetAwakeForWaterSim(short new_awake_value)
-{   
-    if(new_awake_value > 0 && this->awake_decay_tracked <= 0){
-    
-        WaterManager::AddNewAwakeChunk(chunk_coordinate);
-    }
-    
-    this->awake_decay_tracked = new_awake_value;
-}

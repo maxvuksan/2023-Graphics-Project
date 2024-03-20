@@ -35,4 +35,6 @@ class TimeManager {
         static sf::Color start_night;
         static sf::Color midnight_colour;
         static sf::Color end_night;
+
+        static sf::Color nightime_sunlight_colour;
 };

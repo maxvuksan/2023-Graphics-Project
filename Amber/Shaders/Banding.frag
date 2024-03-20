@@ -1,11 +1,13 @@
-// restricts a textures colours to band thresholds
+#version 130
 
-uniform sampler2D texture;
+uniform sampler2D _texture;
 uniform float u_band_count; 
 
 void main()
 {
-    vec4 samp = texture(texture, gl_TexCoord[0].xy);
+    vec4 samp = texture(_texture, gl_TexCoord[0].xy);
     
-    gl_FragColor = round(samp * u_band_count) / u_band_count;
+    vec4 color = round((samp - 0.3) * u_band_count) / u_band_count;
+    color.a = 0.3;
+    gl_FragColor = color;
 }

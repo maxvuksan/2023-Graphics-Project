@@ -30,7 +30,7 @@ void MenuScene::Start(){
     // Create Player ----------------------------------------------------------------
 
     create_player_input = AddUI<Object>()->AddComponent<UIInputField>();
-    create_player_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    //create_player_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     create_player_input->SetPlaceholder("Enter Name...");
     
     create_player_button = AddUI<Object>()->AddComponent<UIButton>();
@@ -57,7 +57,7 @@ void MenuScene::Start(){
     // Create World ------------------------------------------------------------------
 
     create_world_input = AddUI<Object>()->AddComponent<UIInputField>();
-    create_world_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    //create_world_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     create_world_input->SetPlaceholder("Enter World Name...");
     
     create_world_button = AddUI<Object>()->AddComponent<UIButton>();
@@ -99,7 +99,7 @@ void MenuScene::Start(){
     // Create Structure ------------------------------------------------------------------
 
     create_structure_input = AddUI<Object>()->AddComponent<UIInputField>();
-    create_structure_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    //create_structure_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
     create_structure_input->SetPlaceholder("Enter Structure Name...");
     
     create_structure_button = AddUI<Object>()->AddComponent<UIButton>();
@@ -121,7 +121,49 @@ void MenuScene::Start(){
 
     });
 
+    // Create Structure ------------------------------------------------------------------
 
+    join_ip_input = AddUI<Object>()->AddComponent<UIInputField>();
+    //join_ip_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    join_ip_input->SetPlaceholder("Host IP Address...");
+
+    join_port_input = AddUI<Object>()->AddComponent<UIInputField>();
+    //join_ip_input->SetAlign(ScreenLocationX::CENTER, ScreenLocationY::CENTER);
+    join_port_input->SetPlaceholder("Port...");
+   
+
+    join_ip_button = AddUI<Object>()->AddComponent<UIButton>();
+    join_ip_button->SetString("Submit IP");
+    join_ip_button->SetOnClickCallback([this](){
+        
+        if(join_ip_input->GetInput() != ""){
+
+            client->SetTargetIPAddress(join_ip_input->GetInput());
+
+            try {
+                // Convert string to integer
+                int port = std::stoi(join_port_input->GetInput());
+                
+                client->SetTargetPort(port);
+                
+                this->SwitchMenuState(MenuStates::SELECT_PLAYER);
+                
+
+            } 
+            catch (const std::invalid_argument& e) {
+                // Handle the case where the string does not represent a valid integer
+                std::cout << "ERROR: invalid port number, MenuScene::Start()\n";
+            } 
+            catch (const std::out_of_range& e) {
+                // Handle the case where the string represents an integer out of the range of int
+                std::cout << "ERROR: port number out of range, MenuScene::Start()\n";
+            }
+
+            
+            
+        }
+
+    });
 
     // select play mode -----------------------------------------------------------
 
@@ -131,7 +173,6 @@ void MenuScene::Start(){
     offline_button->SetOnClickCallback([this](){
         play_mode = PlayMode::OFFLINE;
         this->SwitchMenuState(MenuStates::SELECT_PLAYER);
-        std::cout << "offline pressed\n";
     });
 
     join_button = AddUI<Object>()->AddComponent<UIButton>();
@@ -139,15 +180,13 @@ void MenuScene::Start(){
 
     join_button->SetOnClickCallback([this](){
         play_mode = PlayMode::JOINING;
-        this->SwitchMenuState(MenuStates::SELECT_PLAYER);
-        std::cout << "join pressed\n";
+        this->SwitchMenuState(MenuStates::ENTER_JOIN_IP);
     });
 
     host_button = AddUI<Object>()->AddComponent<UIButton>();
     host_button->SetString("Host");
 
     host_button->SetOnClickCallback([this](){
-        std::cout << "host pressed\n";
         play_mode = PlayMode::HOSTING;
         this->SwitchMenuState(MenuStates::SELECT_PLAYER);
     });
@@ -156,7 +195,6 @@ void MenuScene::Start(){
     structure_button->SetString("Dev");
 
     structure_button->SetOnClickCallback([this](){
-        std::cout << "structure (dev mode) pressed\n";
         play_mode = PlayMode::OFFLINE;
         this->SwitchMenuState(MenuStates::SELECT_STRUCTURE);
     });
@@ -176,8 +214,59 @@ void MenuScene::Start(){
     new_structure_button->SetActive(false);
     create_structure_button->SetActive(false);
     create_structure_input->SetActive(false);
+    
+    join_ip_input->SetActive(false);
+    join_ip_button->SetActive(false);
+    join_port_input->SetActive(false);
 
     this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+}
+
+void MenuScene::CatchEvent(sf::Event event){
+
+
+    if(event.type == sf::Event::KeyPressed){
+
+        if(event.key.scancode == sf::Keyboard::Scancode::Escape){
+
+            switch(menu_state){
+
+                case MenuStates::SELECT_PLAY_MODE:
+                    break;
+
+                case MenuStates::ENTER_JOIN_IP: 
+                    this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+                    break;
+
+                case MenuStates::SELECT_WORLD:
+                    this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+                    break;                 
+
+                case MenuStates::SELECT_PLAYER:
+                    this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+                    break;      
+
+                case MenuStates::SELECT_STRUCTURE:
+                    this->SwitchMenuState(MenuStates::SELECT_PLAY_MODE);
+                    break;     
+
+                case MenuStates::CREATE_STRUCTURE:
+                    this->SwitchMenuState(MenuStates::SELECT_STRUCTURE);
+                    break;        
+                case MenuStates::CREATE_WORLD:
+                    this->SwitchMenuState(MenuStates::SELECT_WORLD);
+                    break;           
+                case MenuStates::CREATE_PLAYER:
+                    this->SwitchMenuState(MenuStates::SELECT_PLAYER);
+                    break;      
+            }
+
+
+
+
+
+        }
+    }
 
 }
 
@@ -233,6 +322,16 @@ void MenuScene::SwitchMenuState(MenuStates new_state){
             rect_array->AddUIRect(structure_button);
             break;
         }
+
+        case ENTER_JOIN_IP: {
+            
+            rect_array->ClearUIRects();
+            rect_array->AddUIRect(join_ip_input);
+            rect_array->AddUIRect(join_port_input);
+            rect_array->AddUIRect(join_ip_button);
+            break;
+        }
+
         case SELECT_PLAYER : {
 
             rect_array->ClearUIRects();

@@ -39,9 +39,14 @@ class Chunk : public Object {
 
         void DrawDebug(sf::RenderTarget& surface) override;
         void Draw(sf::RenderTarget& surface) override;
+        void DrawBackgroundStructures(sf::RenderTarget& surface);
         void PropogateTorches();
 
         Tilemap* GetTilemap(SetLocation set_location);
+
+        Tilemap* GetTilemapMain(){return main_tilemap;}
+        Tilemap* GetTilemapBackground(){return background_tilemap;}
+        Tilemap* GetTilemapForeground(){return foreground_tilemap;}
 
         bool loaded_in_scene;
         bool dirty; // has a block been updated in this chunk?
@@ -95,6 +100,10 @@ class Chunk : public Object {
         */
         void AddFoliage(Foliage foliage_index, int x, int y);
         void AddFoliageViaMapIndex(Foliage foliage_index, int map_index);
+
+        void AddStructure(BackgroundStructure structure, int x, int y);
+        void AddStructureViaMapIndex(BackgroundStructure structure, int map_index);
+
         /*
             removes a foliage object at local position x, y
             @param x component of tilemap offset
@@ -108,6 +117,7 @@ class Chunk : public Object {
             by having all foliage on a single texture only one draw call is necassary aiding performance
         */
         void RecalculateFoliageVertexArray();
+        void RecalculateStructureVertexArray();
 
         /*
             stores a reference of a UtilityStation in this chunk.
@@ -144,10 +154,14 @@ class Chunk : public Object {
 
         sf::Image& GetLightmap(){return light_map; }
         sf::Texture& GetLightmapTexture(){return light_texture;}
-        void MarkLightmapDirty(){light_map_dirty = true;}
+        void MarkLightmapForTextureReload(){light_map_needs_texture_reload = true;}
+        void MarkSurroundingChunksLightmapDirty();
+        void SetLightmapDirty(bool state){light_map_dirty = state; light_map_needs_texture_reload = true;}
+        bool GetLightmapDirty(){return light_map_dirty;}
 
         // @returns map structured as... key (x offset + y offset * width) : foliage id
         const std::map<int, Foliage>& GetFoliageMap(){return foliage_map;}
+        const std::map<int, BackgroundStructure>& GetStructureMap(){return structure_map;}
 
         void RecalculateTorchPositions();
         void RemoveTorchPosition(int  coord_x, int coord_y);
@@ -157,8 +171,6 @@ class Chunk : public Object {
         void RefreshSkylight();
         void CalculateSkyLight();
 
-        short GetAwakeForWaterSim(){ return awake_decay_tracked;}
-        void SetAwakeForWaterSim(short awake_decay_tracked);
     /*
         // checks if the current position has already been considered, if not add it to the sky light vectors
         void IntroduceTileToSkylight(int x, int y);
@@ -167,9 +179,6 @@ class Chunk : public Object {
     */
         std::vector<std::vector<float>> lighting_closed_grid;
 
-        Tilemap* water_tilemap;
-        std::vector<std::vector<bool>> water_updated;
-        
         // saving dirty determines if a chunk has changed since it was last saved, only dirty chunks need to be scanned and written into the save file
         bool GetSavingDirty(){return saving_dirty;} 
         void SetSavingDirty(bool saving_dirty){this->saving_dirty = saving_dirty;}
@@ -184,20 +193,19 @@ class Chunk : public Object {
 
         sf::Vector2i chunk_coordinate;
 
-        // determines if this chunks water tilemap is simulated (through WaterManager)
-        // records how long a chunks water has been idle, if reaches 0 turn to 
-        short awake_decay_tracked;
-
         // local positions which should emit skylight, 
         std::vector<sf::Vector2i> sky_tiles_to_propogate;
         // do not propogate these values, simply set them, they are sky values
         std::vector<sf::Vector2i> sky_tiles;
 
         bool foliage_map_dirty;
+        bool structure_map_dirty;
         sf::VertexArray foliage_vertex_array;
+        sf::VertexArray structure_vertex_array;
 
         // key (x position + y * width) : foliage id
         std::map<int, Foliage> foliage_map;
+        std::map<int, BackgroundStructure> structure_map;
 
         std::vector<Object*> objects_bound_to_chunk;
         std::vector<Object*> ui_bound_to_chunk;
@@ -209,7 +217,8 @@ class Chunk : public Object {
 
         sf::Image light_map;
         sf::Texture light_texture;
-        bool light_map_dirty;
+        bool light_map_dirty; // does this chunks lighting need to be propogated again
+        bool light_map_needs_texture_reload; // are the image and texture are out of sync?
 
         World* world;
         Tilemap* foreground_tilemap;

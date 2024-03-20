@@ -70,6 +70,11 @@ class GameClient : public Client {
         // @returns a map of all the clients connected to the server
         const std::map<int, Player*>& GetConnectedClients(){return connected_clients;}
 
+        void SetTargetPort(int port){target_port = port;}
+        int GetTargetPort(){return target_port;}
+        void SetTargetIPAddress(const std::string& ip){target_ip_address = ip;}
+        const std::string& GetTargetIPAddress(){return target_ip_address;}
+
     private:
         
 
@@ -118,5 +123,9 @@ class GameClient : public Client {
         Serilizer::DataPair current_world;
 
         PathfindingGraph* pathfinding_graph;
+
+        // what IP are we connecting to ?
+        std::string target_ip_address;
+        int target_port;
 
 };

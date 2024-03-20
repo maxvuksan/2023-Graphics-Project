@@ -51,9 +51,37 @@ class Calc{
             }
             return val;
         }
+        static float ClampLower(float val, float min){
+            if(val < min){
+                val = min;
+            }
+            return val;
+        }
+        static float ClampUpper(float val, float max){
+            if(val > max){
+                val = max;
+            }
+            return val;
+        }
+        static int ClampLower(int val, int min){
+            if(val < min){
+                val = min;
+            }
+            return val;
+        }
+        static int ClampUpper(int val, int max){
+            if(val > max){
+                val = max;
+            }
+            return val;
+        }
 
         // @returns the distance between two points without traversing diagonally 
         static int ManhattenDistance(sf::Vector2i start, sf::Vector2i end){
+            return abs(start.x - end.x) + abs(start.y - end.y);
+        }
+        // @returns the distance between two points without traversing diagonally 
+        static float ManhattenDistance(sf::Vector2f start, sf::Vector2f end){
             return abs(start.x - end.x) + abs(start.y - end.y);
         }
         static float Distance(sf::Vector2i start, sf::Vector2i end){

@@ -26,7 +26,7 @@ void AnimationRenderer::Update(){
 }
 
 void AnimationRenderer::Draw(sf::RenderTarget& surface){
-    
+
     if(current_animation == nullptr){
         std::cout << "ERROR : current_animation property on AnimationRenderer is null, AnimationRenderer::Draw()\n";
         return;
@@ -35,9 +35,17 @@ void AnimationRenderer::Draw(sf::RenderTarget& surface){
     sprite.setTextureRect(sf::IntRect(current_animation->GetCellsize() * (index + current_animation->GetStart()), 0, current_animation->GetCellsize(), sprite.getTexture()->getSize().y));
     sprite.setOrigin(sf::Vector2f(current_animation->GetCellsize() / 2.0f, current_animation->GetCellsize() / 2.0f));    
     
-    sprite.setPosition(Camera::WorldToScreenPosition(object->GetTransform()->position));
+    sf::Vector2f position;
+    if(use_set_position){
+        position = fixed_position;
+    }   
+    else{
+        position = Camera::WorldToScreenPosition(object->GetTransform()->position);
+    }
+
+    sprite.setPosition(position);
     
-    sprite.setScale(sf::Vector2f(object->GetTransform()->scale.x * flip_factor, object->GetTransform()->scale.y * 1));
+    sprite.setScale(sf::Vector2f(object->GetTransform()->scale.x * flip_factor, object->GetTransform()->scale.y));
     sprite.setRotation(object->GetTransform()->rotation);
     
     surface.draw(sprite);

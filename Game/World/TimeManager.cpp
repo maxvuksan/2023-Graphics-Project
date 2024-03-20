@@ -6,8 +6,10 @@ sf::Color TimeManager::midday_colour(255,255,255);
 sf::Color TimeManager::dusk_colour(186,186,207);
 
 sf::Color TimeManager::start_night(42,37,63);
-sf::Color TimeManager::midnight_colour(0,0,0);
+sf::Color TimeManager::midnight_colour(42,37,63);
 sf::Color TimeManager::end_night(20,23,38);
+
+sf::Color TimeManager::nightime_sunlight_colour(210,220,235);
 
 float TimeManager::cycle_passing_speed = 0.003;
 float TimeManager::time_of_day = 0;
@@ -55,7 +57,7 @@ void TimeManager::SetTimeOfDay(int new_time){
 void TimeManager::Tick(){
 
     time_of_day += Time::Dt() * cycle_passing_speed;
-
+    LightingManager::sunlight_colour = nightime_sunlight_colour;
     // the lerp t division is based of the the start and end values of each threshold
     /*
         e.g. 200 -> 400
@@ -64,6 +66,7 @@ void TimeManager::Tick(){
     */
 
     // is midnight
+    /*
     if(time_of_day < 200){
         LightingManager::sunlight_colour = end_night;
         Scene::GetActiveCamera()->SetConstantScreenShake(0);
@@ -123,5 +126,5 @@ void TimeManager::Tick(){
         LightingManager::sunlight_colour = Calc::Lerp(start_night, midnight_colour, (time_of_day - 2000) / 200.0f); 
 
     }
-
+    */
 }

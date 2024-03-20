@@ -123,14 +123,14 @@ std::vector<sf::Vector2i> PathfindingGraph::RequestPath(sf::Vector2i start, sf::
  
     // how expensive moving on that neighbour is
     float step_distance[8] = {
-        1,
-        1,
-        1,
-        1,
-        1.4,
-        1.4,
-        1.4,
-        1.4
+        1.1,
+        1.1,
+        1.1,
+        1.1,
+        1.5,
+        1.5,
+        1.5,
+        1.5
     };
 
     // 10 for left right up down, 14 for diagonals 

@@ -21,6 +21,14 @@ class EditorScene : public Scene {
         RECTANGLE_OUTLINE, // PRESS O
     };
 
+    // PRESS TAB to switch
+    enum class ObjectMode{
+        TILES,
+        STRUCTURES,
+
+        NUMBER_OF_OBJECT_MODES,
+    };
+
     public: 
 
         void Start() override;
@@ -32,13 +40,19 @@ class EditorScene : public Scene {
         void Update();
         void Draw(sf::RenderTarget& surface) override;
 
+
     private:
 
         Camera* camera;
         World* world;
         GameClient* client;
 
+        sf::Text structures_text;
+        int selected_structure;
+        sf::Sprite structure_sprite;
+        
         ToolMode tool_mode;
+        ObjectMode object_mode;
 
         sf::RectangleShape selected_tile_shape; // outlines the selected tile to easily see what is currently selected
         sf::RectangleShape cursor_shape;

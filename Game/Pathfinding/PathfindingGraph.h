@@ -31,7 +31,7 @@ class PathfindingGraph : public Object {
         void DrawDebug(sf::RenderTarget& surface) override;
 
         // converts start and end world based positions to node based positions, then @returns series of points representing the path between start and end
-        static std::vector<sf::Vector2i> RequestPathWorld(sf::Vector2f start_world, sf::Vector2f end_world, int max_node_coverage = 8000);
+        static std::vector<sf::Vector2i> RequestPathWorld(sf::Vector2f start_world, sf::Vector2f end_world, int max_node_coverage = 3000);
         
 
     private:
@@ -51,7 +51,7 @@ class PathfindingGraph : public Object {
             std::vector<std::vector<NodeData>> parent_node_data; // the node traversed to get to this node
         };
 
-        static std::vector<sf::Vector2i> RequestPath(sf::Vector2i start, sf::Vector2i end, TraversalMode traversal_mode = TraversalMode::BREADTH_FIRST_SEARCH, int max_node_coverage = 8000);
+        static std::vector<sf::Vector2i> RequestPath(sf::Vector2i start, sf::Vector2i end, TraversalMode traversal_mode = TraversalMode::BREADTH_FIRST_SEARCH, int max_node_coverage = 3000);
         // @returns the chunk index of the establishded chunk
         static int EstablishChunkPathData(std::vector<ChunkPathData>& chunk_path_data, sf::Vector2i chunk_coordinate);
         // called by Traverse(), performs backtracking to determine the path of traversal

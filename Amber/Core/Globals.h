@@ -27,6 +27,9 @@ namespace Globals {
     const sf::Color DEBUG_COLOUR_3 = sf::Color(255,100,100);
 
     const sf::Vector2i HORIZONTAL_OFFSETS[4] = { sf::Vector2i(1,0), sf::Vector2i(-1, 0), sf::Vector2i(0, 1), sf::Vector2i(0, -1)};
+    // all neighbours, horizontal + diagonal
+    const sf::Vector2i ALL_OFFSETS[8] = { sf::Vector2i(1,0), sf::Vector2i(-1, 0), sf::Vector2i(0, 1), sf::Vector2i(0, -1),
+                                                 sf::Vector2i(1,1), sf::Vector2i(-1, 1), sf::Vector2i(1, -1), sf::Vector2i(-1, -1)};
     
 };
 
